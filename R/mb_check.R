@@ -6,10 +6,11 @@
 #' pollutant leaves than enters). A violation makes self-reference
 #' infeasible in the weak-G-disposability program, so that DMU's LP
 #' solves only if some peer mix meets every constraint within its
-#' materials-balance cap; conversely, every infeasible
-#' weak-G-disposability LP belongs to a DMU with an exact violation,
-#' \code{gap < 0} (satisfying DMUs always solve via self-reference).
-#' Audit before estimation.
+#' materials-balance cap; conversely, infeasibility is confined to DMUs
+#' with an exact violation, \code{gap < 0}, in at least one pollutant
+#' account (pollutant \eqn{p}'s LP can be infeasible because of a
+#' violation in a different pollutant \eqn{q}; DMUs satisfying every
+#' account always solve via self-reference). Audit before estimation.
 #'
 #' @param tech A [pgt_tech()] object.
 #' @param tol Relative tolerance: a DMU-pollutant account is flagged
@@ -98,7 +99,7 @@ print.pgt_mb <- function(x, ...) {
   cat(sprintf("  closure gap (gap / potential): min %.4f, median %.4f, max %.4f\n",
               min(x$rel_gap), stats::median(x$rel_gap), max(x$rel_gap)))
   ne <- sum(x$gap < 0)
-  cat(sprintf("  accounts with gap < 0 (exact): %d; any infeasible weak-G LPs are confined to these\n",
+  cat(sprintf("  accounts with gap < 0 (exact): %d; any infeasible weak-G LPs are confined to DMUs with gap < 0 in at least one account\n",
               ne))
   if (!is.null(x$closure)) {
     cat(sprintf("  equality closure (gap - a): largest |closure| / potential = %.2g (model = \"fdmo\" requires exact closure)\n",

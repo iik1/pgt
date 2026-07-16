@@ -71,9 +71,11 @@ and Oh (2010) define the (global) Malmquist-Luenberger index, so
 bad output as reducible down to the peer emission envelope with no
 proportional output sacrifice, the same lower-envelope treatment as
 the corresponding [pgt()] programs, with (\code{"wgd"}) and without
-(\code{"envelope"}) the input constraints. These technologies nest
-the weak-disposability set, so their distances, and hence measured
-inefficiencies, are weakly larger than under \code{"wd"}.
+(\code{"envelope"}) the input constraints. Under constant returns
+the free-disposal technologies contain the weak-disposability set,
+so their distances are weakly larger than under \code{"wd"}; under
+variable returns the sets are not nested in general, because the
+Kuosmanen form lets the active intensity weights sum below one.
 
 This estimator is experimental: the global Malmquist-Luenberger
 index under a materials-balance technology is not yet settled in the

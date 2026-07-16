@@ -31,6 +31,14 @@ the frontier, \eqn{b_l - b^*_l}. DMUs are ordered by increasing
 marginal cost and the potential is accumulated.
 }
 \details{
+The curve therefore combines two margins. It orders DMUs by the
+shadow price at their frontier projection and plots against it the
+abatement available from eliminating inefficiency (the gap
+\eqn{b_l - b^*_l}), which the model itself prices at zero output
+loss; the \code{mac} value is the marginal cost of abatement beyond
+the frontier point. The area under the curve is consequently not a
+total-cost estimate.
+
 DMUs with \eqn{\eta_l = 0} are excluded: a zero output dual arises
 when the output constraint is slack, i.e. the DMU projects onto the
 flat segment of the \eqn{(y, b)} frontier, where abatement via
@@ -60,6 +68,17 @@ tech <- pgt_tech(
 fit <- pgt(tech, model = "wgd")
 mac <- mac_curve(fit, price = 550)
 plot(mac)
+}
+\references{
+Fare, R., Grosskopf, S., Lovell, C. A. K., & Yaisawarng, S. (1993).
+Derivation of shadow prices for undesirable outputs: A distance
+function approach. \emph{The Review of Economics and Statistics},
+75(2), 374--380. \doi{10.2307/2109448}
+
+Rodseth, K. L. (2025). On the development of a unified, nonparametric
+materials balance-based efficiency analysis model and its
+applications. \emph{Journal of Productivity Analysis}, 64(3),
+305--319. \doi{10.1007/s11123-025-00768-0}
 }
 \seealso{
 [pgt()], [shadow_prices()]

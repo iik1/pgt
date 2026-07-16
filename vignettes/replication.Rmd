@@ -15,18 +15,29 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(pgt)
 ```
 
-The estimators are validated against the numerical examples printed in
-their source papers. These replications run as unit tests on every check;
-this vignette reproduces them in the open.
+The estimators with a numerical example printed in their source paper
+are validated against it: the weak-G-disposability and directional
+models against Rødseth (2025) Tables 2 and 3, and the by-production
+model against the analytic Example 1 of Murty, Russell and Levkoff
+(2012). These replications run as unit tests on every check; this
+vignette reproduces them in the open. The remaining estimators carry
+analytic hand-computed checks in the test suite rather than
+published-table replications; the final section shows the
+internal-consistency check for the materials-balance cost model.
 
-## Rodseth (2025), Table 2: minimal controlled emissions
+## Rødseth (2025), Table 2: minimal controlled emissions
 
-The `pigfarms` data is Table 1 of Rodseth (2025): five pig-finishing
+The `pigfarms` data is Table 1 of Rødseth (2025): five pig-finishing
 farms with feed and piglets as material inputs, meat as the good output,
 and controlled, uncontrolled and abatement emission columns for
-nitrogen. The uncontrolled emission equals controlled plus abatement,
-so the uncontrolled column is the pollutant carrier ($u = 1$,
-$v = 0$).
+nitrogen. Because the paper does not print the nitrogen coefficients of
+feed and piglets, the uncontrolled-emission aggregate replaces them as
+the single material carrier ($u = 1$, $v = 0$); the uncontrolled
+emission equals controlled plus abatement, so the accounts close
+exactly. Keeping all five columns as inputs with zero material
+coefficients on feed and piglets (the mapping in the `pigfarms` help
+page) yields the same Table 2 minima; the test suite asserts the two
+mappings agree.
 
 ```{r}
 data(pigfarms)
@@ -49,7 +60,7 @@ data.frame(farm = fit$results$id, b_star = fit$results$b_star)
 The minimal controlled emissions are $(16, 16, 16, 20, 16)$, which match
 the paper's Table 2.
 
-## Rodseth (2025), Table 3: the directional representation
+## Rødseth (2025), Table 3: the directional representation
 
 The factorially determined multi-output model (Eq. 13, abatement fixed at
 each farm's own level) jointly expands the good output and contracts the
@@ -72,27 +83,35 @@ tech3 <- pgt_tech(
 )
 fdmo <- pgt(tech3, model = "fdmo")
 r3 <- fdmo$results
-data.frame(
+comparison <- data.frame(
   farm = r3$id,
   good_eff = round(r3$good_eff, 3),
+  paper_good = c(0, 0, 3, 0, 0.8),
   bad_eff = round(r3$bad_eff, 3),
-  gross = round(r3$gross, 3),
+  paper_bad = c(0, 0, 3.5, 0, 1.0),
   maximal_y = round(r3$maximal_y, 3)
 )
+comparison
 ```
 
-Farms A, B and D are on the frontier (gross inefficiency 0). Farm C
+Farms A, B and D are on the frontier (gross inefficiency 0), and farm C
 expands its good output by 3 and cuts its bad output by 3.5, a gross
-inefficiency of 6.5; these figures reproduce Table 3 exactly. Farm E's
-good-output
-expansion rounds to the paper's 0.8; its bad-output figure is
-$v$ times the good-output figure, the ratio the materials balance forces
-whenever uncontrolled emission equals controlled plus abatement.
+inefficiency of 6.5: farms A to D reproduce Table 3 exactly. Farm E is
+the one divergence, shown side by side above. The paper prints
+$(\theta_y, \theta_b) = (0.8, 1.0)$; the package returns
+$(0.789, 0.921)$. The two cannot both be exact: whenever the
+uncontrolled emission equals controlled plus abatement, the
+materials-balance row forces $\theta_b = v\,\theta_y$ for every farm,
+and $7/6 \times 0.8 \approx 0.93$, not $1.0$. The package's pair
+satisfies the forced ratio to machine precision, so we read the printed
+row as rounded; farm E's maximal good output still rounds to the
+paper's 10.8.
 
 ## Murty, Russell and Levkoff (2012): the by-production example
 
-Their Example 1 is a constant-returns technology with one input, one good
-output $y$ and one bad output $z$, solved analytically in the paper.
+Their Example 1 is a constant-returns technology with one input, one
+good output $y$ and one bad output, written $z$ in the paper (our $b$),
+solved analytically in the paper.
 
 ```{r}
 mrl <- pgt_tech(
@@ -112,13 +131,16 @@ For DMU3 the output efficiency is $1/3$, the emission efficiency $1/2$
 and the graph measure $5/12$; for DMU2 they are $3/4$, $1$ and $7/8$.
 These match the analytic scores in the paper.
 
-## Coelli, Lauwers and Van Huylenbroeck (2007): material-flow coefficients
+## Coelli, Lauwers and Van Huylenbroeck (2007): coefficients and the EE = TE x EAE decomposition
 
-Coelli et al. (2007) measure environmental efficiency against a
-materials-balance cost model and report the phosphorus contents used
-(their footnote 16): feed 0.0124, piglet 0.0117 and meat 0.0117 kg P per
-kg. The cost model decomposes environmental efficiency as
-$EE = TE \times EAE$.
+This section is an internal-consistency check, not a replication of a
+printed table: the paper's farm-level data are not published, so the
+four farms below are invented. What comes from the paper are the
+phosphorus contents (their footnote 16): feed 0.0124, piglet 0.0117 and
+meat 0.0117 kg P per kg. The check confirms that the implemented cost
+model decomposes environmental efficiency as $EE = TE \times EAE$ with
+these coefficients; the model's LPs are verified against hand-computed
+solutions in the test suite.
 
 ```{r}
 farms <- data.frame(
@@ -140,4 +162,21 @@ data.frame(id = rc$id, EE = round(rc$efficiency, 4),
 all.equal(rc$efficiency, rc$te * rc$eae)
 ```
 
-The identity $EE = TE \times EAE$ holds to machine precision.
+The identity $EE = TE \times EAE$ holds to machine precision. (The
+identity holds by construction of the reported components, so this
+check guards the wiring, not the mathematics; the LP solutions
+themselves are checked by hand in the test suite.)
+
+## References
+
+- Coelli, T., Lauwers, L., & Van Huylenbroeck, G. (2007). Environmental
+  efficiency measurement and the materials balance condition. *Journal
+  of Productivity Analysis*, 28(1-2), 3-12. doi:10.1007/s11123-007-0052-8
+- Murty, S., Russell, R. R., & Levkoff, S. B. (2012). On modeling
+  pollution-generating technologies. *Journal of Environmental
+  Economics and Management*, 64(1), 117-135.
+  doi:10.1016/j.jeem.2012.02.005
+- Rødseth, K. L. (2025). On the development of a unified, nonparametric
+  materials balance-based efficiency analysis model and its
+  applications. *Journal of Productivity Analysis*, 64(3), 305-319.
+  doi:10.1007/s11123-025-00768-0

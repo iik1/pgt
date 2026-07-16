@@ -30,9 +30,11 @@ The dual of the peer emission envelope
 \eqn{\sum_l \lambda_l b_l \le b} is not reported: in this reduced
 form it equals \eqn{-1} whenever the LP solves (dual feasibility on
 the emission variable, with the materials-balance row slack at any
-optimum), so it carries no cross-DMU information. A materials-balance
-cap that would bind manifests as an infeasible LP, not as a capped
-projection.
+optimum), so it carries no cross-DMU information. In the boundary
+case \eqn{b^* = u'x_l - v y_l} exactly, the split of this dual
+between the envelope and cap rows is basis-dependent. A
+materials-balance cap that would bind manifests as an infeasible LP,
+not as a capped projection.
 
 Values are reported in the units of the linear program (quantities,
 not money). To monetise the output dual, combine it with an output
@@ -50,6 +52,17 @@ tech <- pgt_tech(
 )
 fit <- pgt(tech, model = "wgd")
 head(shadow_prices(fit))
+}
+\references{
+Fare, R., Grosskopf, S., Lovell, C. A. K., & Yaisawarng, S. (1993).
+Derivation of shadow prices for undesirable outputs: A distance
+function approach. \emph{The Review of Economics and Statistics},
+75(2), 374--380. \doi{10.2307/2109448}
+
+Rodseth, K. L. (2025). On the development of a unified, nonparametric
+materials balance-based efficiency analysis model and its
+applications. \emph{Journal of Productivity Analysis}, 64(3),
+305--319. \doi{10.1007/s11123-025-00768-0}
 }
 \seealso{
 [pgt()], [mac_curve()]

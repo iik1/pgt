@@ -34,7 +34,13 @@ carbon intensities, four material inputs expressed in CO2-potential
 units (so the material flow coefficients are \eqn{u = 1}), crude
 steel output, and Scope 1 CO2 emissions satisfying the
 materials-balance identity \eqn{u'x - v y \ge b} with
-\eqn{v = 0.01467} (carbon retained in the product). The data are
-synthetic; they mimic magnitudes, not any real plant.
+\eqn{v = 0.01467} (carbon retained in the product). The synthetic
+generator (see \code{data-raw/steeldemo.R}) assumes roughly 0.4 per
+cent retained carbon by mass, converted to CO2 units:
+\eqn{0.004 \times 44/12 = 0.01467} tonnes of CO2 per tonne of steel;
+emissions are drawn as the CO2 potential minus this retained content,
+minus a small non-emitted remainder, so the identity holds in every
+row. The data are synthetic; they mimic magnitudes, not any real
+plant.
 }
 \keyword{datasets}

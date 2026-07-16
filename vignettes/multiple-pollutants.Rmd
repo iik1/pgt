@@ -1,0 +1,152 @@
+---
+title: "Multiple pollutants and heterogeneous coefficients"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Multiple pollutants and heterogeneous coefficients}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6,
+                      fig.height = 4)
+```
+
+```{r setup}
+library(pgt)
+```
+
+A technology can carry several pollutants, each with its own
+materials-balance account, and the material flow coefficients can vary
+across units (heterogeneous input quality; Eder 2022, Rødseth 2025).
+This vignette demonstrates both features and the staged decomposition,
+on a small synthetic example.
+
+## A two-pollutant technology
+
+Forty plants burn coal and gas. Each fuel carries CO2 potential and SO2
+potential, with different coefficients; a share of the CO2 potential is
+retained in the product ($v_{CO2} = 0.1$), none of the SO2. `b` is a
+matrix with one named column per pollutant, `u` a named list with one
+element per pollutant, and `v` a named vector.
+
+```{r}
+set.seed(42)
+L <- 40
+coal <- runif(L, 20, 60)
+gas <- runif(L, 10, 40)
+y <- runif(L, 15, 45)
+u_co2 <- c(coal = 2.5, gas = 1.4)
+u_so2 <- c(coal = 0.020, gas = 0.001)
+cap_co2 <- 2.5 * coal + 1.4 * gas - 0.1 * y
+cap_so2 <- 0.020 * coal + 0.001 * gas
+b_co2 <- cap_co2 * runif(L, 0.55, 0.95)
+b_so2 <- cap_so2 * runif(L, 0.55, 0.95)
+# three plants under-report scrubbing and breach their SO2 account
+b_so2[1:3] <- cap_so2[1:3] * runif(3, 1.05, 1.25)
+
+tech2 <- pgt_tech(
+  x = cbind(coal = coal, gas = gas),
+  y = y,
+  b = cbind(co2 = b_co2, so2 = b_so2),
+  u = list(co2 = u_co2, so2 = u_so2),
+  v = c(co2 = 0.1, so2 = 0),
+  group = factor(rep(c("A", "B"), each = L / 2))
+)
+tech2
+```
+
+`mb_check()` audits one account per plant and pollutant; the three
+seeded SO2 violations surface immediately.
+
+```{r}
+mb <- mb_check(tech2)
+table(subset(as.data.frame(mb), violated)$pollutant)
+```
+
+## Every pollutant's cap constrains the projection
+
+`pgt(model = "wgd")` selects one pollutant for the objective through
+`pollutant`, but the caps of every pollutant constrain the peer mix
+(see `vignette("models", "pgt")` for the collapsed cap rows). A peer
+that looks attractive on CO2 can be unusable because leaning on it
+would breach the evaluated plant's SO2 account.
+
+```{r}
+fit_co2 <- pgt(tech2, model = "wgd", pollutant = "co2")
+summary(fit_co2)
+```
+
+Dropping the SO2 account (a single-pollutant technology on the same
+data) weakly lowers every `b_star`, since the projection loses one set
+of constraints:
+
+```{r}
+tech1 <- pgt_tech(
+  x = cbind(coal = coal, gas = gas), y = y, b = b_co2, u = u_co2,
+  v = 0.1, group = factor(rep(c("A", "B"), each = L / 2))
+)
+fit1 <- pgt(tech1, model = "wgd")
+summary(fit1$results$b_star - fit_co2$results$b_star)
+```
+
+The three SO2 violators show the documented boundary behaviour: a plant
+violating another pollutant's identity loses its self-reference, so its
+CO2 score can exceed 1 (its MB-consistent projection emits more CO2
+than the plant reports) or its programme can be infeasible. Neither
+happens for plants whose accounts all hold.
+
+```{r}
+head(cbind(fit_co2$results[c("id", "efficiency", "status")],
+           so2_violated = mb$violated[mb$pollutant == "so2"]), 5)
+```
+
+## DMU-specific coefficients
+
+Coefficients can vary by plant, for example with coal quality (Eder
+2022): pass an $L \times N$ matrix per pollutant instead of a vector.
+Here the first twenty plants burn higher-carbon coal.
+
+```{r}
+U_co2 <- matrix(u_co2, L, 2, byrow = TRUE,
+                dimnames = list(NULL, c("coal", "gas")))
+U_co2[1:20, "coal"] <- 2.8
+tech_het <- pgt_tech(
+  x = cbind(coal = coal, gas = gas), y = y,
+  b = pmin(b_co2, (2.8 * coal + 1.4 * gas - 0.1 * y) * 0.95),
+  u = U_co2, v = 0.1
+)
+fit_het <- pgt(tech_het, model = "wgd")
+median(fit_het$results$efficiency, na.rm = TRUE)
+```
+
+Each plant's cap now uses its own coefficients, so two plants with the
+same fuel bill face different materials-balance ceilings.
+
+## The staged decomposition
+
+With a technology group, `pgt_decompose(type = "rodseth")` decomposes
+the full weak-G-disposability score in three stages: own-group peers
+(technical efficiency), all peers (technology gap), and all peers with
+the input constraints dropped (input-mix component), an exact
+multiplicative identity for rows with all stages feasible.
+
+```{r}
+dec <- pgt_decompose(tech2, type = "rodseth", pollutant = "co2")
+summary(dec)
+```
+
+The caveats of the estimator carry over: a plant violating another
+pollutant's account can have `te` and `total` above 1, and infeasible
+stages return `NA` (see `?pgt_decompose`).
+
+## References
+
+- Eder, A. (2022). Environmental efficiency measurement when producers
+  control pollutants under heterogeneous conditions: a generalization
+  of the materials balance approach. *Journal of Productivity
+  Analysis*, 57(2), 157-176. doi:10.1007/s11123-021-00623-y
+- Rødseth, K. L. (2025). On the development of a unified, nonparametric
+  materials balance-based efficiency analysis model and its
+  applications. *Journal of Productivity Analysis*, 64(3), 305-319.
+  doi:10.1007/s11123-025-00768-0

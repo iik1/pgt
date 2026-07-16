@@ -43,7 +43,7 @@ test_that("byprod defaults polluting inputs to those with u > 0", {
   x <- cbind(fuel = c(10, 12, 14), labour = c(5, 4, 6))
   tech <- pgt_tech(x, y = c(3, 4, 5), b = c(8, 9, 11),
                    u = c(fuel = 1, labour = 0))
-  expect_equal(unname(.polluting_inputs(tech)), 1L)
+  expect_equal(unname(pgt:::.polluting_inputs(tech)), 1L)
   fit <- pgt(tech, model = "byprod")
   expect_true(all(fit$results$efficiency > 0 &
                     fit$results$efficiency <= 1 + 1e-9))

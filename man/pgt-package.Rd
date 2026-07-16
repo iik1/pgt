@@ -3,9 +3,35 @@
 \docType{package}
 \name{pgt-package}
 \alias{pgt-package}
-\title{pgt: Data Envelopment Analysis for Pollution-Generating Technologies}
+\title{pgt: Pollution-generating technologies under the materials balance}
 \description{
-Nonparametric efficiency analysis for pollution-generating technologies under the materials-balance principle. Implements the weak-G-disposability model of Rodseth (2025) \doi{10.1007/s11123-025-00768-0} and its factorially determined multi-output representation, the by-production intersection technology of Murty, Russell and Levkoff (2012) \doi{10.1016/j.jeem.2012.02.005}, the materials-balance cost model of Coelli, Lauwers and Van Huylenbroeck (2007) \doi{10.1007/s11123-007-0052-8} and a weak-disposability reference model, with an enforced materials-balance identity, a pre-estimation feasibility audit, metafrontier decompositions, bad-output shadow prices, marginal abatement cost curves, a cross-axiom comparison harness, a global Malmquist-Luenberger productivity index and subsampling inference. Estimators are solved with 'lpSolveAPI'.
+Nonparametric efficiency analysis of pollution-generating
+technologies built on the materials-balance condition
+\eqn{u'x - v y \ge b}: the pollutant bound in a DMU's material
+inputs (\eqn{u'x}, with material flow coefficients \eqn{u}) is
+either retained in the good output (\eqn{v y}) or leaves as the bad
+output \eqn{b}. How bad outputs should enter the technology is
+contested, and the package implements the competing axiom systems
+(weak-G-disposability, by-production, materials-balance cost, weak
+disposability and the directional representation) behind one
+interface, so results can be compared across systems on identical
+data.
+}
+\details{
+The workflow: construct the technology with [pgt_tech()], audit the
+materials-balance accounts with [mb_check()], estimate with [pgt()],
+and post-process with [pgt_decompose()] (metafrontier
+decompositions), [shadow_prices()] and [mac_curve()] (output duals
+and marginal abatement costs) and [compare_models()] (cross-system
+agreement). [pgt_ml()] computes global Malmquist-Luenberger
+productivity change and [boot_pgt()] bootstrap inference.
+
+Scope: each technology carries one good output (several pollutants
+and DMU-specific material flow coefficients are supported). The
+efficiency estimators treat the rows as an independent
+cross-section; panel structure enters only through [pgt_ml()]'s
+pooled global frontier, and [boot_pgt()] warns on panel
+technologies.
 }
 \seealso{
 Useful links:

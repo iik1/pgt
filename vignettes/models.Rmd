@@ -1,0 +1,200 @@
+---
+title: "The estimating programmes"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The estimating programmes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Every estimator in `pgt` solves one linear programme per evaluated unit
+$i$ against a reference (peer) set. This vignette states each programme
+as solved, so the mapping from the cited papers to the code can be
+checked without reading the source. Throughout, $\lambda \ge 0$ are
+intensity weights over the peers, $x$ the $N$ material inputs, $y$ the
+good output, $b$ the bad output of the selected pollutant, and the
+variable-returns row $\sum_l \lambda_l = 1$ is dropped under constant
+returns. The materials-balance cap of unit $i$ for pollutant $p$ is
+$c_{pi} = u_{pi}'x_i - v_{pi} y_i$, with DMU-specific coefficients
+$u_{pi}$ (a row of the $L \times N \times P$ array) and $v_{pi}$.
+
+## Weak-G-disposability (`model = "wgd"`)
+
+The reduced form of Rødseth (2025, Eq. 6) used by the package is
+$$
+\begin{aligned}
+\min_{\lambda,\, b_q}\quad & b_q \\
+\text{s.t.}\quad
+& \textstyle\sum_l \lambda_l y_l \ge y_i, \\
+& \textstyle\sum_l \lambda_l x_{nl} \le x_{ni}, \qquad n = 1, \dots, N,\\
+& \textstyle\sum_l \lambda_l b_l \le b_q, \\
+& b_q \le c_{pi}, \\
+& \textstyle\sum_l \lambda_l b_{ql} \le c_{qi}, \qquad q \ne p,\\
+& \textstyle\sum_l \lambda_l = 1, \qquad \lambda \ge 0,\ b_q \ge 0.
+\end{aligned}
+$$
+The first three rows are the free-disposal envelope of outputs, inputs
+and the peer emissions; the cap row keeps the projected bad output
+consistent with the evaluated unit's own pollutant potential, which is
+how the weak-G summing-up condition on the disposal slacks enters the
+reduced form. The environmental efficiency is $b^*/b_i$. Faithfulness
+to the paper is exercised numerically: the programme reproduces the
+Table 2 minima of Rødseth (2025) and agrees with an independent
+reference implementation in the test suite.
+
+With several pollutants, each remaining pollutant $q \ne p$ contributes
+the single row shown above. This collapse is exact: pollutant $q$
+carries no objective term, so introducing its own emission variable
+$b_q'$ with $\sum_l \lambda_l b_{ql} \le b_q' \le c_{qi}$ is feasible
+exactly when the combined row $\sum_l \lambda_l b_{ql} \le c_{qi}$
+holds (take $b_q' = \sum_l \lambda_l b_{ql}$).
+
+A unit whose own account violates a cap ($b_{qi} > c_{qi}$ for some
+$q$) loses its self-reference: its programme is feasible only if some
+peer mix satisfies every row, it may be infeasible (an `NA` score), and
+its projection can emit more of pollutant $p$ than observed, so its
+score can exceed 1. Units satisfying every account always solve with
+scores in $(0, 1]$.
+
+## The $(y, b)$ lower envelope (`model = "envelope"`)
+
+Freeing the inputs reduces Eq. 6 to the convex lower envelope of the
+$(y, b)$ scatter:
+$$
+\min_{\lambda}\ \textstyle\sum_l \lambda_l b_l
+\quad\text{s.t.}\quad
+\textstyle\sum_l \lambda_l y_l \ge y_i,\qquad
+\textstyle\sum_l \lambda_l = 1,\qquad \lambda \ge 0.
+$$
+With the inputs free, the weak-G slack equality is absorbed by the
+input reallocation: whatever peer mix is chosen, the inputs adjust with
+it and the emissions follow the pollutant they carry. Self-reference is
+always feasible, so every score lies in $(0, 1]$.
+
+## The directional representation (`model = "fdmo"`)
+
+The factorially determined multi-output form of Rødseth (2025, Eq. 13),
+with the abatement output $a$ held at the evaluated unit's own level:
+$$
+\begin{aligned}
+\max_{\lambda,\, \theta_y,\, \theta_b}\quad & \theta_y + \theta_b \\
+\text{s.t.}\quad
+& \textstyle\sum_l \lambda_l y_l - \theta_y \ge y_i, \\
+& \textstyle\sum_l \lambda_l a_l \ge a_i, \\
+& \textstyle\sum_l \lambda_l x_{nl} \le x_{ni}, \qquad n = 1, \dots, N,\\
+& v_i\,\theta_y - \theta_b = c_{pi} - b_i - a_i, \\
+& \textstyle\sum_l \lambda_l = 1, \qquad
+  \lambda \ge 0,\ \theta_y \ge 0,\ \theta_b \ge 0.
+\end{aligned}
+$$
+The materials-balance row is an exact equality, so the model requires
+accounts that close exactly ($c_{pi} = b_i + a_i$); open accounts
+either make the programme infeasible or shift the closure gap into the
+scores, and `pgt()` warns when it detects them. When the account
+closes, the row forces $\theta_b = v_i\,\theta_y$. The gross
+inefficiency $\theta_y + \theta_b$ adds good-output units to bad-output
+units (direction $(1, 1)$), so it is unit-dependent.
+
+## The materials-balance cost model (`model = "mb_cost"`)
+
+Coelli, Lauwers and Van Huylenbroeck (2007), with the material flow
+coefficients in the role of prices. Two programmes: radial technical
+efficiency,
+$$
+TE = \min\{\theta :\ \textstyle\sum_l \lambda_l x_{nl} \le \theta
+x_{ni}\ \forall n,\ \sum_l \lambda_l y_l \ge y_i,\ \sum_l \lambda_l =
+1\},
+$$
+and the material-inflow minimisation over a free input point $\chi$,
+$$
+EE = \frac{\min\{u_{pi}'\chi :\ \sum_l \lambda_l x_{nl} \le \chi_n\
+\forall n,\ \sum_l \lambda_l y_l \ge y_i,\ \sum_l \lambda_l = 1\}}
+{u_{pi}'x_i},
+$$
+with environmental-allocative efficiency $EAE = EE / TE$. The headline
+score is $EE$, a material-inflow ratio rather than an emission ratio;
+the implied minimal controlled emission $u_{pi}'\chi^* - v_{pi} y_i$ is
+reported as `b_star` and can be negative under DMU-specific
+coefficients, in which case `pgt()` warns.
+
+## The by-production intersection (`model = "byprod"`)
+
+Murty, Russell and Levkoff (2012): the technology is the intersection
+of an intended-production sub-technology and a residual-generation
+sub-technology over the emission-causing inputs $\mathcal{P}$. Output
+efficiency inverts the maximal radial expansion of $y$,
+$$
+E_1 = 1 \big/ \max\{\phi :\ \textstyle\sum_l \lambda_l y_l \ge \phi
+y_i,\ \sum_l \lambda_l x_{nl} \le x_{ni}\ \forall n,\ \sum_l \lambda_l
+= 1\},
+$$
+and emission efficiency is the maximal radial contraction of $b$ with
+the polluting inputs bounded below,
+$$
+E_2 = \min\{\psi :\ \textstyle\sum_l \mu_l b_l \le \psi b_i,\ \sum_l
+\mu_l x_{nl} \ge x_{ni}\ \forall n \in \mathcal{P},\ \sum_l \mu_l =
+1\}.
+$$
+$E_2$ is the headline environmental efficiency; `fgl` is the arithmetic
+mean $(E_1 + E_2)/2$, in the spirit of the Färe-Grosskopf-Lovell graph
+measure. If either sub-programme fails, every score of that unit is
+`NA`.
+
+## Weak disposability (`model = "wd"`)
+
+The Kuosmanen (2005) variable-returns form, a reference system with no
+materials balance. The intensity weights split into an active part $z$
+(scaling good and bad outputs together) and an abatement part $w$
+(scaling inputs only):
+$$
+\begin{aligned}
+\min_{z,\, w,\, \phi}\quad & \phi \\
+\text{s.t.}\quad
+& \textstyle\sum_l z_l y_l \ge y_i, \qquad
+  \textstyle\sum_l z_l b_l = \phi\, b_i, \\
+& \textstyle\sum_l (z_l + w_l)\, x_{nl} \le x_{ni}, \qquad n = 1,
+  \dots, N,\\
+& \textstyle\sum_l (z_l + w_l) = 1, \qquad z, w \ge 0.
+\end{aligned}
+$$
+The equality on the bad output is weak disposability: emissions shrink
+only with a proportional scaling of the active production plan.
+
+## The productivity-index distances (`pgt_ml()`)
+
+The global Malmquist-Luenberger index scores every observation $k$ on a
+directional distance with direction $g = (y_k, b_k)$ against a
+reference set $R$ (a period or the pooled panel). Under
+`technology = "wd"` the distance uses the Kuosmanen weak-disposability
+technology above with $\sum_{l \in R} z_l b_l = (1 - \beta) b_k$ and
+$\sum_{l \in R} z_l y_l \ge (1 + \beta) y_k$; this is the technology
+under which Chung, Färe and Grosskopf (1997) and Oh (2010) define the
+index. Under `technology = "wgd"` and `"envelope"` the bad-output row
+is the free-disposal envelope $\sum_{l \in R} \lambda_l b_l \le (1 -
+\beta) b_k$, with and without the input rows; these exploratory
+variants bound emissions by the peer envelope rather than imposing weak
+disposability.
+
+## References
+
+- Chung, Y. H., Färe, R., & Grosskopf, S. (1997). Productivity and
+  undesirable outputs: A directional distance function approach.
+  *Journal of Environmental Management*, 51(3), 229-240.
+  doi:10.1006/jema.1997.0146
+- Coelli, T., Lauwers, L., & Van Huylenbroeck, G. (2007). Environmental
+  efficiency measurement and the materials balance condition. *Journal
+  of Productivity Analysis*, 28(1-2), 3-12. doi:10.1007/s11123-007-0052-8
+- Kuosmanen, T. (2005). Weak disposability in nonparametric production
+  analysis with undesirable outputs. *American Journal of Agricultural
+  Economics*, 87(4), 1077-1082. doi:10.1111/j.1467-8276.2005.00788.x
+- Murty, S., Russell, R. R., & Levkoff, S. B. (2012). On modeling
+  pollution-generating technologies. *Journal of Environmental
+  Economics and Management*, 64(1), 117-135.
+  doi:10.1016/j.jeem.2012.02.005
+- Oh, D.-h. (2010). A global Malmquist-Luenberger productivity index.
+  *Journal of Productivity Analysis*, 34(3), 183-197.
+  doi:10.1007/s11123-010-0178-y
+- Rødseth, K. L. (2025). On the development of a unified, nonparametric
+  materials balance-based efficiency analysis model and its
+  applications. *Journal of Productivity Analysis*, 64(3), 305-319.
+  doi:10.1007/s11123-025-00768-0

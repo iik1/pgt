@@ -2,7 +2,7 @@
 #'
 #' The synthetic manure-transport example printed as Table 1 of Rodseth
 #' (2025): five pig-finishing farms with piglets and feed as material
-#' inputs, labor and capital as non-material inputs, saleable meat as
+#' inputs, labour and capital as non-material inputs, saleable meat as
 #' the good output, and nitrogen emissions as the bad output, extended
 #' with end-of-pipe abatement. The example descends from Coelli, Lauwers
 #' and Van Huylenbroeck (2007) via Rodseth (2016). The columns satisfy
@@ -22,7 +22,7 @@
 #'   \item{farm}{Farm identifier, \code{"A"} to \code{"E"}.}
 #'   \item{feed}{Feed input.}
 #'   \item{piglet}{Piglet input.}
-#'   \item{labor}{Labor input.}
+#'   \item{labor}{Labour input.}
 #'   \item{capital}{Capital input.}
 #'   \item{meat}{Saleable meat (good output).}
 #'   \item{controlled}{Controlled nitrogen emissions (bad output).}
@@ -34,6 +34,11 @@
 #'   nonparametric materials balance-based efficiency analysis model and
 #'   its applications. \emph{Journal of Productivity Analysis}, 64(3),
 #'   305--319, Table 1. \doi{10.1007/s11123-025-00768-0}
+#' @references
+#' Rodseth, K. L. (2016). Environmental efficiency measurement and the
+#' materials balance condition reconsidered. \emph{European Journal of
+#' Operational Research}, 250(1), 342--346.
+#' \doi{10.1016/j.ejor.2015.10.061}
 #' @examples
 #' data(pigfarms)
 #' tech <- pgt_tech(
@@ -58,8 +63,14 @@
 #' units (so the material flow coefficients are \eqn{u = 1}), crude
 #' steel output, and Scope 1 CO2 emissions satisfying the
 #' materials-balance identity \eqn{u'x - v y \ge b} with
-#' \eqn{v = 0.01467} (carbon retained in the product). The data are
-#' synthetic; they mimic magnitudes, not any real plant.
+#' \eqn{v = 0.01467} (carbon retained in the product). The synthetic
+#' generator (see \code{data-raw/steeldemo.R}) assumes roughly 0.4 per
+#' cent retained carbon by mass, converted to CO2 units:
+#' \eqn{0.004 \times 44/12 = 0.01467} tonnes of CO2 per tonne of steel;
+#' emissions are drawn as the CO2 potential minus this retained content,
+#' minus a small non-emitted remainder, so the identity holds in every
+#' row. The data are synthetic; they mimic magnitudes, not any real
+#' plant.
 #'
 #' @format A data frame with 180 rows (60 plants over 3 years) and 9
 #'   columns:

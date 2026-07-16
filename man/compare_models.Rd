@@ -42,7 +42,9 @@ An object of class \code{"pgt_compare"}: a list with
       share of the DMUs this model places in its own bottom
       efficiency quartile that the reference model (the first entry
       of \code{models}) also places in its bottom quartile
-      (top-of-agenda overlap).}
+      (top-of-agenda overlap). The bottom quartile includes all DMUs
+      tied at the 25 per cent cutoff, so it can exceed a quarter of
+      the sample and its size can differ across models.}
     \item{\code{models}, \code{returns}, \code{peers}}{Call settings.}
   }
 }
@@ -56,11 +58,19 @@ function puts the competing systems side by side so the sensitivity of
 conclusions to that choice is visible.
 }
 \details{
-All models report an environmental efficiency \eqn{b^*/b \in (0, 1]}
-(the directional model \code{"fdmo"} is excluded, since its score is a
-gross inefficiency on a different scale). Rank agreement is measured
-by Spearman correlation over the DMUs solved by both members of each
-pair.
+Each model reports its headline environmental-efficiency score,
+normalised so that 1 is efficient: \eqn{b^*/b} for \code{"wgd"},
+\code{"envelope"}, \code{"byprod"} and \code{"wd"}, and the
+material-inflow ratio \eqn{EE = u'x^*/u'x} for \code{"mb_cost"}. The
+directional model \code{"fdmo"} stays excluded, since its score is a
+gross inefficiency on another scale. Because the scores measure
+different quantities, only the rank-based statistics (the Spearman
+matrix and the bottom-quartile overlap) are strictly comparable
+across models; the median column is a per-model summary. Rank
+agreement is measured by Spearman correlation over the DMUs solved
+by both members of each pair. Note that \code{"wgd"} scores can
+exceed 1 for DMUs violating another pollutant's materials-balance
+identity (see [pgt()]); such DMUs enter the comparison unflagged.
 }
 \examples{
 data(steeldemo)

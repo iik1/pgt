@@ -1,3 +1,66 @@
+# pgt 0.5.0
+
+Revisions from a full peer review of the package as a software
+submission.
+
+## Inference
+
+* `boot_pgt()` no longer forces the evaluated DMU into every subsample:
+  each unit is scored against the subsample frontier alone, so frontier
+  units carry genuine resampling variation instead of a degenerate
+  zero-width interval. Replicates with an infeasible programme surface
+  as `NA`; the new `per_dmu$n_ok` column counts feasible replicates and
+  a warning fires when they run thin. Interval endpoints truncate to
+  `[0, max(1, estimate)]`, respecting above-1 violator scores.
+* The default `kappa` for `model = "byprod"` now uses the
+  polluting-input dimension of the T2 sub-programme; `boot_pgt()` warns
+  when a panel technology is subsampled as a cross-section; group-mean
+  intervals are documented as a descriptive stability band (the
+  aggregate theory of Kneip, Simar and Wilson 2015 is not implemented).
+* `boot_pgt_sensitivity()` reports the implied rate exponent
+  `kappa_hat` from the Politis-Romano-Wolf log-spread regression, so
+  the borrowed DEA rate is checkable, plus the median over strictly
+  positive widths.
+* A Monte Carlo coverage study under a known envelope-model DGP ships
+  as `inst/simulations/coverage.R`; its results are reported in the
+  productivity vignette.
+
+## Productivity index
+
+* `pgt_ml()` gains `technology = "wd"`: the weak-disposability
+  directional distance in the Kuosmanen form, the technology under
+  which Chung, Fare and Grosskopf (1997) and Oh (2010) define the
+  index, making it the faithful Oh (2010) comparator. The free-disposal
+  semantics of the default `"wgd"` and `"envelope"` options are now
+  stated plainly and the claim that they coincide with the
+  weak-disposability index when the cap does not bind has been removed
+  (it was not what the kernel computed).
+
+## Documentation and validation
+
+* The validation claims are scoped honestly: published-table
+  replications (wgd, fdmo, byprod) are distinguished from analytic
+  hand-computed checks (mb_cost, wd, envelope) and property checks; the
+  replication vignette shows the farm E divergence from Rodseth (2025)
+  Table 3 side by side and explains why the printed row cannot satisfy
+  the materials-balance-forced ratio; the two documented pigfarms
+  mappings are stated and tested to agree.
+* Two new vignettes: `models` states every estimating programme in
+  full, and `multiple-pollutants` demonstrates multi-pollutant
+  technologies, DMU-specific coefficients and the staged decomposition.
+* `compare_models()` documents that the headline scores are different
+  quantities (EE for mb_cost) and that only rank-based statistics are
+  strictly comparable; `mac_curve()` documents which margin the curve
+  prices; foundational and origin literature is cited (Ayres and
+  Kneese 1969; Lauwers 2009; Dakpo, Jeanneaux and Latruffe 2016; Chung,
+  Fare and Grosskopf 1997; Chambers, Chung and Fare 1996; Kuosmanen and
+  Podinovski 2009; O'Donnell, Rao and Battese 2008; Hampf 2014; Fare,
+  Grosskopf, Lovell and Yaisawarng 1993), every vignette carries a
+  reference list, and DOIs are attached throughout.
+* `inst/CITATION` added; a package overview with a scope statement
+  replaces the empty `pgt-package` help page; the README states the
+  package's scope and labels the experimental and heuristic modules.
+
 # pgt 0.4.1
 
 Fixes from a whole-package review.

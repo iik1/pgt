@@ -1,0 +1,19 @@
+citHeader("To cite pgt in publications use:")
+
+bibentry(
+  bibtype = "Manual",
+  title   = "pgt: Data Envelopment Analysis for Pollution-Generating Technologies",
+  author  = person("Erik", "Enstad"),
+  year    = "2026",
+  note    = sprintf("R package version %s",
+                    utils::packageVersion("pgt")),
+  url     = "https://github.com/iik1/pgt",
+  textVersion = sprintf(paste0(
+    "Enstad, E. (2026). pgt: Data Envelopment Analysis for ",
+    "Pollution-Generating Technologies. R package version %s. ",
+    "https://github.com/iik1/pgt"), utils::packageVersion("pgt"))
+)
+
+citFooter(paste0(
+  "Please also cite the methodological papers behind the estimators ",
+  "you use; see the references in ?pgt."))

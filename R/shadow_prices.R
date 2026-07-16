@@ -13,9 +13,11 @@
 #' \eqn{\sum_l \lambda_l b_l \le b} is not reported: in this reduced
 #' form it equals \eqn{-1} whenever the LP solves (dual feasibility on
 #' the emission variable, with the materials-balance row slack at any
-#' optimum), so it carries no cross-DMU information. A materials-balance
-#' cap that would bind manifests as an infeasible LP, not as a capped
-#' projection.
+#' optimum), so it carries no cross-DMU information. In the boundary
+#' case \eqn{b^* = u'x_l - v y_l} exactly, the split of this dual
+#' between the envelope and cap rows is basis-dependent. A
+#' materials-balance cap that would bind manifests as an infeasible LP,
+#' not as a capped projection.
 #'
 #' Values are reported in the units of the linear program (quantities,
 #' not money). To monetise the output dual, combine it with an output
@@ -27,6 +29,17 @@
 #' @return A data frame with one row per DMU: \code{id}, \code{group}
 #'   (if present), \code{b}, \code{b_star}, \code{dual_output} and
 #'   \code{mb_headroom} (\code{NA} for the envelope model).
+#'
+#' @references
+#' Fare, R., Grosskopf, S., Lovell, C. A. K., & Yaisawarng, S. (1993).
+#' Derivation of shadow prices for undesirable outputs: A distance
+#' function approach. \emph{The Review of Economics and Statistics},
+#' 75(2), 374--380. \doi{10.2307/2109448}
+#'
+#' Rodseth, K. L. (2025). On the development of a unified, nonparametric
+#' materials balance-based efficiency analysis model and its
+#' applications. \emph{Journal of Productivity Analysis}, 64(3),
+#' 305--319. \doi{10.1007/s11123-025-00768-0}
 #'
 #' @seealso [pgt()], [mac_curve()]
 #' @examples
@@ -68,6 +81,14 @@ shadow_prices <- function(fit) {
 #' the frontier, \eqn{b_l - b^*_l}. DMUs are ordered by increasing
 #' marginal cost and the potential is accumulated.
 #'
+#' The curve therefore combines two margins. It orders DMUs by the
+#' shadow price at their frontier projection and plots against it the
+#' abatement available from eliminating inefficiency (the gap
+#' \eqn{b_l - b^*_l}), which the model itself prices at zero output
+#' loss; the \code{mac} value is the marginal cost of abatement beyond
+#' the frontier point. The area under the curve is consequently not a
+#' total-cost estimate.
+#'
 #' DMUs with \eqn{\eta_l = 0} are excluded: a zero output dual arises
 #' when the output constraint is slack, i.e. the DMU projects onto the
 #' flat segment of the \eqn{(y, b)} frontier, where abatement via
@@ -92,6 +113,17 @@ shadow_prices <- function(fit) {
 #' @return A data frame of class \code{"pgt_mac"}, ordered by
 #'   \code{mac}: \code{id}, \code{group} (if present), \code{mac},
 #'   \code{abatement} (\eqn{b - b^*}) and \code{cum_abatement}.
+#'
+#' @references
+#' Fare, R., Grosskopf, S., Lovell, C. A. K., & Yaisawarng, S. (1993).
+#' Derivation of shadow prices for undesirable outputs: A distance
+#' function approach. \emph{The Review of Economics and Statistics},
+#' 75(2), 374--380. \doi{10.2307/2109448}
+#'
+#' Rodseth, K. L. (2025). On the development of a unified, nonparametric
+#' materials balance-based efficiency analysis model and its
+#' applications. \emph{Journal of Productivity Analysis}, 64(3),
+#' 305--319. \doi{10.1007/s11123-025-00768-0}
 #'
 #' @seealso [pgt()], [shadow_prices()]
 #' @examples

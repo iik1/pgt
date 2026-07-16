@@ -10,7 +10,7 @@ A data frame with 5 rows and 9 columns:
   \item{farm}{Farm identifier, \code{"A"} to \code{"E"}.}
   \item{feed}{Feed input.}
   \item{piglet}{Piglet input.}
-  \item{labor}{Labor input.}
+  \item{labor}{Labour input.}
   \item{capital}{Capital input.}
   \item{meat}{Saleable meat (good output).}
   \item{controlled}{Controlled nitrogen emissions (bad output).}
@@ -31,7 +31,7 @@ pigfarms
 \description{
 The synthetic manure-transport example printed as Table 1 of Rodseth
 (2025): five pig-finishing farms with piglets and feed as material
-inputs, labor and capital as non-material inputs, saleable meat as
+inputs, labour and capital as non-material inputs, saleable meat as
 the good output, and nitrogen emissions as the bad output, extended
 with end-of-pipe abatement. The example descends from Coelli, Lauwers
 and Van Huylenbroeck (2007) via Rodseth (2016). The columns satisfy
@@ -61,5 +61,11 @@ tech <- pgt_tech(
 mb_check(tech)$gap
 # minimal controlled emissions of Rodseth (2025), Table 2
 pgt(tech, model = "wgd")$results$b_star
+}
+\references{
+Rodseth, K. L. (2016). Environmental efficiency measurement and the
+materials balance condition reconsidered. \emph{European Journal of
+Operational Research}, 250(1), 342--346.
+\doi{10.1016/j.ejor.2015.10.061}
 }
 \keyword{datasets}

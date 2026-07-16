@@ -227,7 +227,8 @@
 #                     sum_l mu_l x_nl >= x_ni  (n in polluting),
 #                     [sum mu = 1], mu >= 0 }.
 #
-# The graph (Farre-Grosskopf-Lovell) measure is the average
+# The arithmetic mean of the two sub-efficiencies (in the spirit of the
+# Fare-Grosskopf-Lovell graph measure) is
 # E_FGL = (E1 + E2) / 2. E2 = b*/b is the environmental efficiency,
 # reported as the headline; E1 and E_FGL are returned alongside.
 .lp_byprod_one <- function(i, X, y, b, pol, peers, vrs = TRUE) {

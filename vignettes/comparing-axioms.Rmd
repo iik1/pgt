@@ -20,9 +20,12 @@ library(pgt)
 
 How to model a technology that produces both a good and a bad output is
 an open question in the productivity literature. The 2021 symposium in
-the *Journal of Productivity Analysis* set the weak-disposability school
-against the by-production school, with the materials-balance view running
-through both. The choice of axiom changes the efficiency scores, so a
+the *Journal of Productivity Analysis*, anchored by Førsund (2021) and
+continued in the comments of Murty and Russell (2021), Ang and Dakpo
+(2021) and Färe and Grosskopf (2021), with Førsund's (2021) rejoinder,
+set the weak-disposability school against the by-production school, with
+the materials-balance view running through both. The choice of axiom
+changes the efficiency scores, so a
 result that holds under one system need not hold under another. `pgt`
 implements the competing systems on one data object and reports how far
 their conclusions agree.
@@ -30,7 +33,7 @@ their conclusions agree.
 The models split into two families. The materials-balance models enforce
 $u'x_l - v y_l \ge b_l$:
 
-- `wgd`: weak-G-disposability (Rodseth 2025).
+- `wgd`: weak-G-disposability (Rødseth 2025).
 - `mb_cost`: the materials-balance cost model (Coelli et al. 2007),
   reporting the technical and environmental-allocative components of
   $EE = TE \times EAE$.
@@ -44,6 +47,9 @@ The reference models come from the competing systems:
   balance.
 
 ## Fitting each model
+
+The examples use the synthetic `steeldemo` panel shipped with the
+package.
 
 ```{r}
 data(steeldemo)
@@ -68,6 +74,13 @@ they reduce a different quantity: `byprod` contracts the observed
 emission over the emission-causing inputs, while `mb_cost` minimises the
 total material inflow.
 
+The headline scores are all normalised so that 1 is efficient, but they
+are not the same quantity: `wgd`, `byprod` and `wd` report the emission
+ratio $b^*/b$, while `mb_cost` reports the material-inflow ratio $EE$.
+Only the rank-based statistics, the Spearman matrix and the quartile
+overlap below, are strictly comparable across models; the median column
+should be read model by model.
+
 ## The comparison harness
 
 `compare_models()` fits the efficiency-scored models and reports rank
@@ -86,7 +99,7 @@ of its own worst-quartile plants that the reference model (the first
 model listed) also places in its worst quartile, the plants a regulator
 would target first.
 
-```{r, fig.alt = "Efficiency score profiles across four models"}
+```{r, fig.alt = "Line plot of efficiency profiles under four models, with plants ordered by the first model's score and one line per model; where lines cross, the models disagree on a plant's rank"}
 plot(cmp)
 ```
 
@@ -94,3 +107,44 @@ Reading the plot: plants are ordered along the horizontal axis by their
 weak-G-disposability score, and each line is one model. Where the lines
 track together the axiom choice is immaterial; where they cross, a plant's
 relative standing depends on which system is used.
+
+## References
+
+Ang, F., & Dakpo, K. H. (2021). Comment: Performance measurement and
+joint production of intended and unintended outputs. *Journal of
+Productivity Analysis*, 55(3), 185-188. doi:10.1007/s11123-021-00606-z
+
+Coelli, T., Lauwers, L., & Van Huylenbroeck, G. (2007). Environmental
+efficiency measurement and the materials balance condition. *Journal of
+Productivity Analysis*, 28(1-2), 3-12. doi:10.1007/s11123-007-0052-8
+
+Färe, R., & Grosskopf, S. (2021). Comments: Performance measurement and
+joint production of intended and unintended outputs. *Journal of
+Productivity Analysis*, 55(3), 189-193. doi:10.1007/s11123-021-00604-1
+
+Førsund, F. R. (2021). Performance measurement and joint production of
+intended and unintended outputs. *Journal of Productivity Analysis*,
+55(3), 157-175. doi:10.1007/s11123-021-00599-9
+
+Førsund, F. R. (2021). Rejoinders to the comments on my paper
+"Performance measurement and joint production of intended and unintended
+outputs". *Journal of Productivity Analysis*, 55(3), 195-201.
+doi:10.1007/s11123-021-00605-0
+
+Kuosmanen, T. (2005). Weak disposability in nonparametric production
+analysis with undesirable outputs. *American Journal of Agricultural
+Economics*, 87(4), 1077-1082. doi:10.1111/j.1467-8276.2005.00788.x
+
+Murty, S., & Russell, R. R. (2021). A commentary on "Performance
+measurement and joint production of intended and unintended outputs" by
+Finn Førsund. *Journal of Productivity Analysis*, 55(3), 177-184.
+doi:10.1007/s11123-021-00603-2
+
+Murty, S., Russell, R. R., & Levkoff, S. B. (2012). On modeling
+pollution-generating technologies. *Journal of Environmental Economics
+and Management*, 64(1), 117-135. doi:10.1016/j.jeem.2012.02.005
+
+Rødseth, K. L. (2025). On the development of a unified, nonparametric
+materials balance-based efficiency analysis model and its applications.
+*Journal of Productivity Analysis*, 64(3), 305-319.
+doi:10.1007/s11123-025-00768-0

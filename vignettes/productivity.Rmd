@@ -18,10 +18,12 @@ library(pgt)
 
 ## Productivity change with a bad output
 
-The Malmquist-Luenberger index measures productivity change when part of
-the output is undesirable, by scoring each unit on a directional distance
-that expands the good output and contracts the bad output together. The
-adjacent-period version can be infeasible across periods; the global
+The Malmquist-Luenberger index (Chung, Färe and Grosskopf 1997) measures
+productivity change when part of the output is undesirable, by scoring
+each unit on a directional distance function (Chambers, Chung and Färe
+1996) that expands the good output and contracts the bad output
+together. The adjacent-period version can be infeasible across periods
+(Aparicio, Pastor and Zofío 2013); the global
 index of Oh (2010) pools every period into one reference technology,
 which removes the infeasibility and makes the index circular. `pgt_ml()`
 computes it under the pollution-generating technology and splits it into
@@ -30,8 +32,16 @@ $GML = EC \times BPC$, with $GML > 1$ signalling growth.
 
 This estimator is experimental: the global Malmquist-Luenberger index
 under a materials-balance technology is not yet settled in the
-literature. When the materials-balance cap does not bind, the index
-coincides with the standard weak-disposability version.
+literature, and the default technologies do not re-impose the per-DMU
+materials-balance cap on the projected point.
+
+The `technology` argument selects the reference technology.
+`technology = "wd"` imposes weak disposability of the bad output in the
+Kuosmanen (2005) form; this is the technology under which Chung, Färe
+and Grosskopf (1997) and Oh (2010) define the index, so it is the
+faithful comparator. The default `"wgd"` and the `"envelope"` option
+treat the bad output as reducible to the peer emission envelope and are
+exploratory companions.
 
 ### A constructed panel
 
@@ -84,7 +94,11 @@ Efficiency scores are point estimates from a finite sample of DMUs.
 `boot_pgt()` gauges their sampling variability by re-solving each unit
 against random subsamples of the reference set (m out of n, without
 replacement), the resampling scheme with the firmest footing for
-boundary estimators.
+boundary estimators (Politis and Romano 1994; Politis, Romano and Wolf
+1999; Kneip, Simar and Wilson 2008). `boot_pgt()` covers cross-sectional
+efficiency scores only; no inference is currently available for the
+`pgt_ml()` index. The example takes the first 60 plants of the synthetic
+`steeldemo` panel.
 
 ```{r}
 data(steeldemo)
@@ -98,6 +112,12 @@ bt <- boot_pgt(tech, model = "wgd", B = 40, seed = 1)
 head(bt$per_dmu)
 ```
 
+Each unit is evaluated against the subsample frontier alone; the unit
+itself is not appended to the subsample. Replicates in which its
+programme is infeasible are dropped and counted in `per_dmu$n_ok`, and
+the point estimate can lie above its own upper endpoint, because the
+interval targets the true score, which the estimate overestimates.
+
 The intervals follow the subsampling recipe: the subsample scores are
 recentred at the point estimate and rescaled by the relative
 convergence rate $(m/L)^\kappa$, so the interval extends downward from
@@ -107,7 +127,7 @@ intervals remain heuristic: resampling theory for data envelopment
 analysis covers the radial and directional technologies, not the
 materials-balance programs here, so $\kappa$ borrows the DEA rate as an
 approximation. Before relying on the intervals, check that their width
-is stable in the subsample size.
+is stable in the subsample size (Simar and Wilson 2011).
 
 ```{r}
 boot_pgt_sensitivity(tech, model = "wgd", B = 25,
@@ -117,3 +137,54 @@ boot_pgt_sensitivity(tech, model = "wgd", B = 25,
 A width that changes little across the grid supports the chosen
 subsample size; a strong trend means the size, not the data, is driving
 the interval.
+
+When the technology carries groups, `boot_pgt()` also reports intervals
+for the group mean scores. These are a descriptive stability band, not
+supported inference: the replicate statistic averages all group members
+against a common subsample frontier, so replicate variation reflects
+movement of the frontier only, and the per-DMU convergence rate is
+reused for the mean (Kneip, Simar and Wilson 2015 give the theory for
+aggregates of efficiency scores).
+
+<!-- coverage-table -->
+
+## References
+
+Aparicio, J., Pastor, J. T., & Zofío, J. L. (2013). On the inconsistency
+of the Malmquist-Luenberger index. *European Journal of Operational
+Research*, 229(3), 738-742. doi:10.1016/j.ejor.2013.03.031
+
+Chambers, R. G., Chung, Y., & Färe, R. (1996). Benefit and distance
+functions. *Journal of Economic Theory*, 70(2), 407-419.
+doi:10.1006/jeth.1996.0096
+
+Chung, Y. H., Färe, R., & Grosskopf, S. (1997). Productivity and
+undesirable outputs: A directional distance function approach. *Journal
+of Environmental Management*, 51(3), 229-240. doi:10.1006/jema.1997.0146
+
+Kneip, A., Simar, L., & Wilson, P. W. (2008). Asymptotics and consistent
+bootstraps for DEA estimators in nonparametric frontier models.
+*Econometric Theory*, 24(6), 1663-1697. doi:10.1017/S0266466608080651
+
+Kneip, A., Simar, L., & Wilson, P. W. (2015). When bias kills the
+variance: Central limit theorems for DEA and FDH efficiency scores.
+*Econometric Theory*, 31(2), 394-422. doi:10.1017/S0266466614000413
+
+Kuosmanen, T. (2005). Weak disposability in nonparametric production
+analysis with undesirable outputs. *American Journal of Agricultural
+Economics*, 87(4), 1077-1082. doi:10.1111/j.1467-8276.2005.00788.x
+
+Oh, D.-h. (2010). A global Malmquist-Luenberger productivity index.
+*Journal of Productivity Analysis*, 34(3), 183-197.
+doi:10.1007/s11123-010-0178-y
+
+Politis, D. N., & Romano, J. P. (1994). Large sample confidence regions
+based on subsamples under minimal assumptions. *The Annals of
+Statistics*, 22(4), 2031-2050. doi:10.1214/aos/1176325770
+
+Politis, D. N., Romano, J. P., & Wolf, M. (1999). *Subsampling*.
+Springer, New York. doi:10.1007/978-1-4612-1554-7
+
+Simar, L., & Wilson, P. W. (2011). Inference by the m out of n bootstrap
+in nonparametric frontier models. *Journal of Productivity Analysis*,
+36(1), 33-53. doi:10.1007/s11123-010-0200-4

@@ -2,8 +2,10 @@
 #'
 #' Metafrontier decompositions of the environmental efficiency score
 #' \eqn{b^*/b} into within-group and technology-gap components, built on
-#' Rodseth's (2025) weak-G-disposability technology and the
-#' technology-gap ratio of Battese, Rao and O'Donnell (2004).
+#' Rodseth's (2025) weak-G-disposability technology and the DEA
+#' metafrontier and technology-gap ratio of O'Donnell, Rao and Battese
+#' (2008); the metafrontier idea originates with Battese, Rao and
+#' O'Donnell (2004).
 #'
 #' \describe{
 #'   \item{\code{"envelope"}}{The \eqn{(y, b)}-envelope decomposition
@@ -14,7 +16,7 @@
 #'           WR = \frac{b^*_{group}}{b}, \quad
 #'           TGR = \frac{b^*_{all}}{b^*_{group}}.}
 #'     \eqn{WR} is within-group reallocation efficiency; \eqn{TGR} is the
-#'     technology-gap ratio (Battese, Rao and O'Donnell 2004).
+#'     technology-gap ratio (O'Donnell, Rao and Battese 2008).
 #'     Self-reference is always feasible, so every component lies in
 #'     \eqn{(0, 1]} with no feasibility screen.}
 #'   \item{\code{"rodseth"}}{A three-stage decomposition of the full
@@ -63,6 +65,11 @@
 #' metafrontier production function for estimation of technical
 #' efficiencies and technology gaps for firms operating under different
 #' technologies. \emph{Journal of Productivity Analysis}, 21(1), 91--103.
+#'
+#' O'Donnell, C. J., Rao, D. S. P., & Battese, G. E. (2008).
+#' Metafrontier frameworks for the study of firm-level efficiencies and
+#' technology ratios. \emph{Empirical Economics}, 34(2), 231--255.
+#' \doi{10.1007/s00181-007-0119-4}
 #'
 #' Rodseth, K. L. (2025). On the development of a unified, nonparametric
 #' materials balance-based efficiency analysis model and its

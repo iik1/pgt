@@ -34,6 +34,8 @@ articles:
     navbar: ~
     contents:
       - introduction
+      - models
       - replication
       - comparing-axioms
+      - multiple-pollutants
       - productivity
