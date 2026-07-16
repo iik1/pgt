@@ -5,13 +5,12 @@ bibentry(
   title   = "pgt: Data Envelopment Analysis for Pollution-Generating Technologies",
   author  = person("Erik", "Enstad"),
   year    = "2026",
-  note    = sprintf("R package version %s",
-                    utils::packageVersion("pgt")),
+  note    = sprintf("R package version %s", meta$Version),
   url     = "https://github.com/iik1/pgt",
   textVersion = sprintf(paste0(
     "Enstad, E. (2026). pgt: Data Envelopment Analysis for ",
     "Pollution-Generating Technologies. R package version %s. ",
-    "https://github.com/iik1/pgt"), utils::packageVersion("pgt"))
+    "https://github.com/iik1/pgt"), meta$Version)
 )
 
 citFooter(paste0(
