@@ -65,6 +65,7 @@
 #' metafrontier production function for estimation of technical
 #' efficiencies and technology gaps for firms operating under different
 #' technologies. \emph{Journal of Productivity Analysis}, 21(1), 91--103.
+#' \doi{10.1023/B:PROD.0000012454.06094.29}
 #'
 #' O'Donnell, C. J., Rao, D. S. P., & Battese, G. E. (2008).
 #' Metafrontier frameworks for the study of firm-level efficiencies and

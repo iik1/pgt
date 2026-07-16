@@ -56,10 +56,12 @@
 #' Forsund, F. R. (2021). Performance measurement and joint production of
 #' intended and unintended outputs. \emph{Journal of Productivity
 #' Analysis}, 55(3), 157--175.
+#' \doi{10.1007/s11123-021-00599-9}
 #'
 #' Murty, S., Russell, R. R., & Levkoff, S. B. (2012). On modeling
 #' pollution-generating technologies. \emph{Journal of Environmental
 #' Economics and Management}, 64(1), 117--135.
+#' \doi{10.1016/j.jeem.2012.02.005}
 #'
 #' @seealso [pgt()]
 #' @examples

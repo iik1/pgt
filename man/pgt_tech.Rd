@@ -149,11 +149,13 @@ applications. \emph{Journal of Productivity Analysis}, 64(3),
 Coelli, T., Lauwers, L., & Van Huylenbroeck, G. (2007). Environmental
 efficiency measurement and the materials balance condition.
 \emph{Journal of Productivity Analysis}, 28(1--2), 3--12.
+\doi{10.1007/s11123-007-0052-8}
 
 Eder, A. (2022). Environmental efficiency measurement when producers
 control pollutants under heterogeneous conditions: a generalization
 of the materials balance approach. \emph{Journal of Productivity
 Analysis}, 57(2), 157--176.
+\doi{10.1007/s11123-021-00623-y}
 }
 \seealso{
 [mb_check()], [pgt()], [pgt_decompose()]

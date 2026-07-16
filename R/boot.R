@@ -89,21 +89,26 @@
 #' Kneip, A., Simar, L., & Wilson, P. W. (2008). Asymptotics and
 #' consistent bootstraps for DEA estimators in nonparametric frontier
 #' models. \emph{Econometric Theory}, 24(6), 1663--1697.
+#' \doi{10.1017/S0266466608080651}
 #'
 #' Kneip, A., Simar, L., & Wilson, P. W. (2015). When bias kills the
 #' variance: Central limit theorems for DEA and FDH efficiency scores.
 #' \emph{Econometric Theory}, 31(2), 394--422.
+#' \doi{10.1017/S0266466614000413}
 #'
 #' Politis, D. N., & Romano, J. P. (1994). Large sample confidence
 #' regions based on subsamples under minimal assumptions. \emph{The
 #' Annals of Statistics}, 22(4), 2031--2050.
+#' \doi{10.1214/aos/1176325770}
 #'
 #' Politis, D. N., Romano, J. P., & Wolf, M. (1999).
 #' \emph{Subsampling}. Springer, New York.
+#' \doi{10.1007/978-1-4612-1554-7}
 #'
 #' Simar, L., & Wilson, P. W. (2011). Inference by the m out of n
 #' bootstrap in nonparametric frontier models. \emph{Journal of
 #' Productivity Analysis}, 36(1), 33--53.
+#' \doi{10.1007/s11123-010-0200-4}
 #'
 #' @seealso [pgt()], [boot_pgt_sensitivity()]
 #' @examples

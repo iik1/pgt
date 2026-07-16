@@ -71,17 +71,21 @@
 #' @references
 #' Chambers, R. G., Chung, Y., & Fare, R. (1996). Benefit and distance
 #' functions. \emph{Journal of Economic Theory}, 70(2), 407--419.
+#' \doi{10.1006/jeth.1996.0096}
 #'
 #' Chung, Y. H., Fare, R., & Grosskopf, S. (1997). Productivity and
 #' undesirable outputs: A directional distance function approach.
 #' \emph{Journal of Environmental Management}, 51(3), 229--240.
+#' \doi{10.1006/jema.1997.0146}
 #'
 #' Oh, D.-h. (2010). A global Malmquist-Luenberger productivity index.
 #' \emph{Journal of Productivity Analysis}, 34(3), 183--197.
+#' \doi{10.1007/s11123-010-0178-y}
 #'
 #' Aparicio, J., Pastor, J. T., & Zofio, J. L. (2013). On the
 #' inconsistency of the Malmquist-Luenberger index. \emph{European
 #' Journal of Operational Research}, 229(3), 738--742.
+#' \doi{10.1016/j.ejor.2013.03.031}
 #'
 #' @seealso [pgt()], [pgt_tech()]
 #' @examples

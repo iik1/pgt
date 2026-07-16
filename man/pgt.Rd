@@ -147,6 +147,10 @@ Environmental efficiency measurement and the materials balance
 condition. \emph{Journal of Productivity Analysis}, 28(1--2), 3--12.
 \doi{10.1007/s11123-007-0052-8}
 
+Fare, R., Grosskopf, S., & Lovell, C. A. K. (1985). \emph{The
+Measurement of Efficiency of Production}. Kluwer-Nijhoff, Boston.
+\doi{10.1007/978-94-015-7721-2}
+
 Hampf, B. (2014). Separating environmental efficiency into production
 and abatement efficiency: A nonparametric model with application to
 US power plants. \emph{Journal of Productivity Analysis}, 41(3),
