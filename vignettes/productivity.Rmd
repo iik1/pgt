@@ -146,7 +146,35 @@ movement of the frontier only, and the per-DMU convergence rate is
 reused for the mean (Kneip, Simar and Wilson 2015 give the theory for
 aggregates of efficiency scores).
 
-<!-- coverage-table -->
+### Coverage under a known data-generating process
+
+The heuristic label invites the obvious question: how close to nominal
+do these intervals get when the truth is known? The package ships a
+Monte Carlo study (`inst/simulations/coverage.R`) for the envelope
+model under a data-generating process with a known linear frontier
+$b_{\min}(y) = 2 + 0.5y$ and exponential inefficiency, where the true
+score $\theta = b_{\min}(y)/b$ is the estimand. Two hundred replicates
+per sample size, `B = 100`, nominal level 95 per cent; the table
+reports the precomputed results shipped with the package.
+
+```{r, echo = FALSE}
+cov <- read.csv(system.file("simulations", "coverage-results.csv",
+                            package = "pgt"))
+knitr::kable(
+  cov[, c("L", "reps", "coverage_all", "coverage_frontier",
+          "coverage_interior", "coverage_group_means")],
+  digits = 3,
+  col.names = c("L", "replicates", "all DMUs", "frontier (theta > 0.9)",
+                "interior", "group means")
+)
+```
+
+Empirical coverage sits near the nominal 95 per cent for both sample
+sizes, for frontier and interior units alike, and errs on the
+conservative side at the larger sample. One simulation under one
+data-generating process is evidence, not proof: the DEA rate remains
+borrowed for the materials-balance programmes, which is why the
+intervals keep their heuristic label.
 
 ## References
 
