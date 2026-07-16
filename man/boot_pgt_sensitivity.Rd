@@ -28,13 +28,28 @@ sizes spanning \eqn{L^{0.5}} to \eqn{L^{0.9}}.}
 }
 \value{
 A data frame with one row per \code{m}: the size, the median
-  per-DMU interval width, and the mean rescaled standard error.
+  per-DMU interval width, the median over strictly positive widths,
+  and the mean rescaled standard error, with attributes
+  \code{"kappa_used"} and (when estimable) \code{"kappa_hat"}.
 }
 \description{
 Re-runs [boot_pgt()] over a grid of subsample sizes \code{m} and
 reports how the median interval width responds. Stable widths across
 the grid support the choice of \code{m}; a strong trend warns that the
 intervals are driven by the resampling size rather than the data.
+}
+\details{
+When at least three grid points have positive widths, the attribute
+\code{"kappa_hat"} reports the convergence-rate exponent implied by
+the log-spread regression of Politis, Romano and Wolf (1999): the
+rescaled width scales as \eqn{m^{\kappa - \kappa_0}} for true rate
+\eqn{\kappa_0} and working rate \eqn{\kappa}, so
+\eqn{\hat\kappa_0 = \kappa - } slope of \eqn{\log} width on
+\eqn{\log m}. Agreement between \code{kappa_hat} and the working
+\code{kappa} (attribute \code{"kappa_used"}) supports the borrowed
+DEA rate; disagreement suggests supplying \code{kappa_hat} to
+[boot_pgt()]. The same \code{seed} is reset before every grid point,
+so replicate draws are comparable across \code{m}.
 }
 \examples{
 data(steeldemo)

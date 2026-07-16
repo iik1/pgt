@@ -76,3 +76,24 @@ test_that("summary.pgt_ml tolerates NA transitions", {
   expect_output(print(s), "Distribution")
   expect_output(print(ml), "transitions with NA index")
 })
+
+test_that("technology = 'wd' gives the weak-disposability GML, nested in free disposal", {
+  tech <- two_period_panel(seed = 5)
+  ml_wd <- pgt_ml(tech, technology = "wd")
+  r <- ml_wd$results
+  expect_equal(r$gml, r$ec * r$bpc, tolerance = 1e-9)
+  expect_true(all(is.finite(r$gml)))
+  # Under CRS the free-disposal technology contains the
+  # weak-disposability set (take lambda = z), so directional distances
+  # are weakly larger there, observation by observation. Under VRS the
+  # sets are not nested (the Kuosmanen split lets active intensity sum
+  # below one), so the comparison is only made under CRS.
+  X <- tech$x; y <- tech$y; b <- tech$b[, 1]
+  gl <- seq_len(tech$L)
+  d_wd <- vapply(gl, function(k)
+    pgt:::.ddf_ml_wd(k, gl, X, y, b, vrs = FALSE), numeric(1))
+  d_free <- vapply(gl, function(k)
+    pgt:::.ddf_ml(k, gl, X, y, b, use_inputs = TRUE, vrs = FALSE),
+    numeric(1))
+  expect_true(all(d_wd <= d_free + 1e-8))
+})

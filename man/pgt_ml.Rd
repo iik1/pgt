@@ -6,7 +6,7 @@
 \usage{
 pgt_ml(
   tech,
-  technology = c("wgd", "envelope"),
+  technology = c("wgd", "envelope", "wd"),
   returns = c("vrs", "crs"),
   pollutant = 1L
 )
@@ -16,8 +16,10 @@ pgt_ml(
 and \code{id} identifying the same DMU across periods.}
 
 \item{technology}{Reference technology: \code{"wgd"} keeps the input
-constraints (default); \code{"envelope"} frees the inputs, so the
-frontier becomes the \eqn{(y, b)} envelope.}
+constraints and the lower emission envelope (default);
+\code{"envelope"} frees the inputs, so the frontier becomes the
+\eqn{(y, b)} envelope; \code{"wd"} imposes weak disposability of
+the bad output, the technology of Oh (2010). See Details.}
 
 \item{returns}{Returns to scale: \code{"vrs"} (default) or
 \code{"crs"}.}
@@ -59,13 +61,28 @@ the distance to period \eqn{t}'s own frontier. \eqn{GML > 1} is
 productivity growth; \eqn{EC} is catch-up to the frontier and
 \eqn{BPC} is frontier movement.
 
-This estimator is experimental: the global Malmquist-Luenberger index
-under the materials-balance technology is not yet settled in the
-literature. The bad-output contraction respects the weak-G-
-disposability frontier of the pgt technology, but the index does not
-re-impose the per-DMU materials-balance cap on the projected point;
-when the cap does not bind, the index coincides with the standard
-weak-disposability GML.
+Three reference technologies are available. \code{"wd"} imposes weak
+disposability of the bad output (the Kuosmanen 2005 VRS form, with
+the intensity weights split into an active and an abatement part):
+this is the technology under which Chung, Fare and Grosskopf (1997)
+and Oh (2010) define the (global) Malmquist-Luenberger index, so
+\code{technology = "wd"} is the faithful Oh (2010) comparator.
+\code{"wgd"} (the default) and \code{"envelope"} instead treat the
+bad output as reducible down to the peer emission envelope with no
+proportional output sacrifice, the same lower-envelope treatment as
+the corresponding [pgt()] programs, with (\code{"wgd"}) and without
+(\code{"envelope"}) the input constraints. These technologies nest
+the weak-disposability set, so their distances, and hence measured
+inefficiencies, are weakly larger than under \code{"wd"}.
+
+This estimator is experimental: the global Malmquist-Luenberger
+index under a materials-balance technology is not yet settled in the
+literature. Under \code{"wgd"} and \code{"envelope"} the index does
+not re-impose the per-DMU materials-balance cap on the projected
+point, and the bad output is freely disposable toward the envelope
+rather than weakly disposable, so these variants are exploratory
+companions to the \code{"wd"} index, not implementations of Oh
+(2010).
 }
 \examples{
 # Two-period panel: period 2's frontier emits less for the same output.
@@ -81,6 +98,13 @@ ml <- pgt_ml(tech)
 summary(ml)
 }
 \references{
+Chambers, R. G., Chung, Y., & Fare, R. (1996). Benefit and distance
+functions. \emph{Journal of Economic Theory}, 70(2), 407--419.
+
+Chung, Y. H., Fare, R., & Grosskopf, S. (1997). Productivity and
+undesirable outputs: A directional distance function approach.
+\emph{Journal of Environmental Management}, 51(3), 229--240.
+
 Oh, D.-h. (2010). A global Malmquist-Luenberger productivity index.
 \emph{Journal of Productivity Analysis}, 34(3), 183--197.
 

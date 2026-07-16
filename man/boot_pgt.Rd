@@ -26,8 +26,10 @@ boot_pgt(
 
 \item{B}{Number of subsampling replicates.}
 
-\item{m}{Subsample size. Defaults to \code{round(L^0.7)}, a
-conventional choice between \eqn{\sqrt{L}} and \eqn{L}.}
+\item{m}{Subsample size. Defaults to \code{round(L^0.7)}, a point in
+the interior of the admissible range; Simar and Wilson (2011) show
+that sensitivity to \code{m} is the central practical issue, so
+check the default with [boot_pgt_sensitivity()].}
 
 \item{level}{Confidence level for the intervals.}
 
@@ -51,9 +53,10 @@ RNG state is restored on exit.}
 \value{
 An object of class \code{"pgt_boot"}: a list with
   \code{per_dmu} (a data frame of point estimate, lower and upper
-  bound, and rescaled subsampling standard error per DMU),
-  \code{group_means} (the same for group means, when a group is
-  present), and the call settings.
+  bound, rescaled subsampling standard error, and \code{n_ok}, the
+  number of feasible replicates, per DMU), \code{group_means} (the
+  same for group means, when a group is present), and the call
+  settings.
 }
 \description{
 Constructs subsampling confidence intervals for the environmental
@@ -72,11 +75,34 @@ approximated by the recentred, rate-scaled subsample distribution
 \deqn{[\hat\theta - (m/L)^\kappa q_{1-\alpha/2}(\theta^*_m -
   \hat\theta),\; \hat\theta - (m/L)^\kappa q_{\alpha/2}(\theta^*_m -
   \hat\theta)].}
-Because a subsample's frontier can only lie inside the full-sample
-frontier, the subsample deviations are non-negative and the interval
-extends downward from the point estimate, matching the direction of
-the frontier bias. The reported \code{se} is the subsample standard
-deviation rescaled by \eqn{(m/L)^\kappa}.
+Each DMU is evaluated against the subsample frontier alone: the
+evaluated unit is not added to the reference set, so frontier units
+carry genuine resampling variation instead of a degenerate
+zero-width interval. Replicates in which a DMU's program is
+infeasible are dropped as \code{NA} and counted: \code{per_dmu$n_ok}
+reports the number of feasible replicates behind each interval, and
+a warning is issued when it falls below half of \code{B}. Because a
+subsample frontier lies weakly inside the full-sample frontier, the
+deviations are non-negative and the interval extends downward from
+the point estimate, matching the direction of the frontier bias; the
+point estimate itself typically lies at or above its own upper
+endpoint, since the interval targets the true score, which the
+estimate overestimates. The reported \code{se} is the subsample
+standard deviation rescaled by \eqn{(m/L)^\kappa}.
+
+With \code{peers = "group"} the subsample is stratified: each group
+contributes in proportion to its size, with a floor of two units, so
+groups smaller than the floor are included whole and effectively not
+resampled.
+
+Group-mean intervals are a descriptive companion, not a supported
+inference: the replicate statistic averages all group members
+against a common subsample frontier, so replicate variation reflects
+frontier movement only, and the per-DMU rate exponent is reused
+although means of frontier estimators converge at their own rates
+(see Kneip, Simar and Wilson 2015 for the aggregate theory). Read
+them as a stability band around the group mean, not as a confidence
+interval with nominal coverage.
 
 The intervals remain heuristic. Subsampling theory for data
 envelopment analysis backs the radial and directional-distance
@@ -84,7 +110,8 @@ technologies, not the materials-balance-constrained programs
 implemented here, so \code{kappa} borrows the DEA convergence rate
 as an approximation. Use the subsample-size sensitivity of
 [boot_pgt_sensitivity()] to check that the intervals are stable in
-\code{m} before relying on them.
+\code{m} (its implied \code{kappa_hat} makes the borrowed rate
+checkable) before relying on them.
 }
 \examples{
 data(steeldemo)
@@ -104,9 +131,20 @@ Kneip, A., Simar, L., & Wilson, P. W. (2008). Asymptotics and
 consistent bootstraps for DEA estimators in nonparametric frontier
 models. \emph{Econometric Theory}, 24(6), 1663--1697.
 
+Kneip, A., Simar, L., & Wilson, P. W. (2015). When bias kills the
+variance: Central limit theorems for DEA and FDH efficiency scores.
+\emph{Econometric Theory}, 31(2), 394--422.
+
 Politis, D. N., & Romano, J. P. (1994). Large sample confidence
 regions based on subsamples under minimal assumptions. \emph{The
 Annals of Statistics}, 22(4), 2031--2050.
+
+Politis, D. N., Romano, J. P., & Wolf, M. (1999).
+\emph{Subsampling}. Springer, New York.
+
+Simar, L., & Wilson, P. W. (2011). Inference by the m out of n
+bootstrap in nonparametric frontier models. \emph{Journal of
+Productivity Analysis}, 36(1), 33--53.
 }
 \seealso{
 [pgt()], [boot_pgt_sensitivity()]

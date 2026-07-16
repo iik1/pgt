@@ -96,3 +96,24 @@ test_that("group-mode subsampling responds to m", {
                             m_grid = c(6, 12, 25, 38), B = 40, seed = 1)
   expect_true(length(unique(round(s$median_width, 6))) > 1)
 })
+
+test_that("interior DMUs receive strictly positive interval widths", {
+  # Without forced self-inclusion, frontier movement across subsamples
+  # must show up as positive width for units off the frontier.
+  tech <- make_random_tech(L = 30, N = 2, seed = 8)
+  bt <- suppressWarnings(boot_pgt(tech, model = "wgd", B = 60, seed = 2))
+  pd <- bt$per_dmu
+  interior <- !is.na(pd$estimate) & pd$estimate < 0.9
+  w <- pd$upper - pd$lower
+  expect_true(any(interior))
+  expect_gt(stats::median(w[interior], na.rm = TRUE), 0)
+  expect_true(all(pd$n_ok >= 0 & pd$n_ok <= 60))
+})
+
+test_that("boot_pgt warns on panel technologies", {
+  x <- matrix(runif(8, 5, 10), 8, 1)
+  tech <- pgt_tech(x, y = runif(8, 1, 2), b = runif(8, 1, 2),
+                   period = rep(1:2, each = 4), id = rep(1:4, 2))
+  expect_warning(boot_pgt(tech, model = "envelope", B = 5, seed = 1),
+                 "period")
+})

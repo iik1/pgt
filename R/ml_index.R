@@ -25,19 +25,38 @@
 #' productivity growth; \eqn{EC} is catch-up to the frontier and
 #' \eqn{BPC} is frontier movement.
 #'
-#' This estimator is experimental: the global Malmquist-Luenberger index
-#' under the materials-balance technology is not yet settled in the
-#' literature. The bad-output contraction respects the weak-G-
-#' disposability frontier of the pgt technology, but the index does not
-#' re-impose the per-DMU materials-balance cap on the projected point;
-#' when the cap does not bind, the index coincides with the standard
-#' weak-disposability GML.
+#' Three reference technologies are available. \code{"wd"} imposes weak
+#' disposability of the bad output (the Kuosmanen 2005 VRS form, with
+#' the intensity weights split into an active and an abatement part):
+#' this is the technology under which Chung, Fare and Grosskopf (1997)
+#' and Oh (2010) define the (global) Malmquist-Luenberger index, so
+#' \code{technology = "wd"} is the faithful Oh (2010) comparator.
+#' \code{"wgd"} (the default) and \code{"envelope"} instead treat the
+#' bad output as reducible down to the peer emission envelope with no
+#' proportional output sacrifice, the same lower-envelope treatment as
+#' the corresponding [pgt()] programs, with (\code{"wgd"}) and without
+#' (\code{"envelope"}) the input constraints. Under constant returns
+#' the free-disposal technologies contain the weak-disposability set,
+#' so their distances are weakly larger than under \code{"wd"}; under
+#' variable returns the sets are not nested in general, because the
+#' Kuosmanen form lets the active intensity weights sum below one.
+#'
+#' This estimator is experimental: the global Malmquist-Luenberger
+#' index under a materials-balance technology is not yet settled in the
+#' literature. Under \code{"wgd"} and \code{"envelope"} the index does
+#' not re-impose the per-DMU materials-balance cap on the projected
+#' point, and the bad output is freely disposable toward the envelope
+#' rather than weakly disposable, so these variants are exploratory
+#' companions to the \code{"wd"} index, not implementations of Oh
+#' (2010).
 #'
 #' @param tech A [pgt_tech()] object with a non-\code{NULL} \code{period}
 #'   and \code{id} identifying the same DMU across periods.
 #' @param technology Reference technology: \code{"wgd"} keeps the input
-#'   constraints (default); \code{"envelope"} frees the inputs, so the
-#'   frontier becomes the \eqn{(y, b)} envelope.
+#'   constraints and the lower emission envelope (default);
+#'   \code{"envelope"} frees the inputs, so the frontier becomes the
+#'   \eqn{(y, b)} envelope; \code{"wd"} imposes weak disposability of
+#'   the bad output, the technology of Oh (2010). See Details.
 #' @param returns Returns to scale: \code{"vrs"} (default) or
 #'   \code{"crs"}.
 #' @param pollutant For a multi-pollutant technology, the pollutant to
@@ -50,6 +69,13 @@
 #'   formed only for DMUs present in both adjacent periods.
 #'
 #' @references
+#' Chambers, R. G., Chung, Y., & Fare, R. (1996). Benefit and distance
+#' functions. \emph{Journal of Economic Theory}, 70(2), 407--419.
+#'
+#' Chung, Y. H., Fare, R., & Grosskopf, S. (1997). Productivity and
+#' undesirable outputs: A directional distance function approach.
+#' \emph{Journal of Environmental Management}, 51(3), 229--240.
+#'
 #' Oh, D.-h. (2010). A global Malmquist-Luenberger productivity index.
 #' \emph{Journal of Productivity Analysis}, 34(3), 183--197.
 #'
@@ -71,7 +97,7 @@
 #' ml <- pgt_ml(tech)
 #' summary(ml)
 #' @export
-pgt_ml <- function(tech, technology = c("wgd", "envelope"),
+pgt_ml <- function(tech, technology = c("wgd", "envelope", "wd"),
                    returns = c("vrs", "crs"), pollutant = 1L) {
   stopifnot(inherits(tech, "pgt_tech"))
   technology <- match.arg(technology)
@@ -88,13 +114,17 @@ pgt_ml <- function(tech, technology = c("wgd", "envelope"),
   global <- seq_len(tech$L)
   by_period <- split(global, tech$period)
 
+  dd <- function(k, ref) {
+    if (technology == "wd") {
+      .ddf_ml_wd(k, ref, tech$x, tech$y, b_p, vrs)
+    } else {
+      .ddf_ml(k, ref, tech$x, tech$y, b_p, use_inputs, vrs)
+    }
+  }
   # global and contemporaneous directional distances for every row
-  dg <- vapply(global, function(k) {
-    .ddf_ml(k, global, tech$x, tech$y, b_p, use_inputs, vrs)
-  }, numeric(1))
+  dg <- vapply(global, function(k) dd(k, global), numeric(1))
   dc <- vapply(global, function(k) {
-    .ddf_ml(k, by_period[[as.character(tech$period[k])]],
-            tech$x, tech$y, b_p, use_inputs, vrs)
+    dd(k, by_period[[as.character(tech$period[k])]])
   }, numeric(1))
   n_failed <- sum(is.na(dg)) + sum(is.na(dc))
   if (n_failed > 0) {
@@ -159,6 +189,44 @@ pgt_ml <- function(tech, technology = c("wgd", "envelope"),
     lpSolveAPI::add.constraint(lp, r, "=", 1)
   }
   lpSolveAPI::set.bounds(lp, lower = c(rep(0, L), -Inf))
+  if (lpSolveAPI::solve.lpExtPtr(lp) != 0) return(NA_real_)
+  lpSolveAPI::get.variables(lp)[ib]
+}
+
+# Weak-disposability directional distance (Kuosmanen 2005 VRS form):
+# the technology under which Chung, Fare and Grosskopf (1997) and Oh
+# (2010) define the (global) Malmquist-Luenberger index. Intensity
+# weights split into an active part z (scales goods and bads together)
+# and an abatement part w (scales inputs only); direction g = (y_k, b_k).
+#
+#   max beta
+#   s.t. sum_ref z y          >= y_k (1 + beta)
+#        sum_ref z b           = b_k (1 - beta)   [weak disposability]
+#        sum_ref (z + w) x_n  <= x_kn  (n = 1..N)
+#        sum_ref (z + w)       = 1               [VRS]
+#        z, w >= 0, beta free
+.ddf_ml_wd <- function(k, ref, X, y, b, vrs) {
+  L <- length(ref)
+  N <- ncol(X)
+  nc <- 2L * L + 1L
+  ib <- nc
+  lp <- lpSolveAPI::make.lp(nrow = 0, ncol = nc)
+  invisible(lpSolveAPI::lp.control(lp, sense = "max"))
+  o <- numeric(nc); o[ib] <- 1; lpSolveAPI::set.objfn(lp, o)
+  r <- numeric(nc); r[seq_len(L)] <- y[ref]; r[ib] <- -y[k]
+  lpSolveAPI::add.constraint(lp, r, ">=", y[k])
+  r <- numeric(nc); r[seq_len(L)] <- b[ref]; r[ib] <- b[k]
+  lpSolveAPI::add.constraint(lp, r, "=", b[k])
+  for (n in seq_len(N)) {
+    r <- numeric(nc); r[seq_len(L)] <- X[ref, n]
+    r[(L + 1):(2L * L)] <- X[ref, n]
+    lpSolveAPI::add.constraint(lp, r, "<=", X[k, n])
+  }
+  if (vrs) {
+    r <- numeric(nc); r[seq_len(2L * L)] <- 1
+    lpSolveAPI::add.constraint(lp, r, "=", 1)
+  }
+  lpSolveAPI::set.bounds(lp, lower = c(rep(0, 2L * L), -Inf))
   if (lpSolveAPI::solve.lpExtPtr(lp) != 0) return(NA_real_)
   lpSolveAPI::get.variables(lp)[ib]
 }
