@@ -51,3 +51,27 @@ test_that("compare_models print and as.data.frame work", {
   expect_output(print(cmp), "model comparison")
   expect_s3_class(as.data.frame(cmp), "data.frame")
 })
+
+test_that("compare_models accepts documented aliases and rejects duplicates", {
+  tech <- make_random_tech(L = 15, N = 2, seed = 31)
+  cmp <- compare_models(tech, models = c("wgd_rodseth", "wd"))
+  expect_true("wgd" %in% cmp$models)
+  expect_error(compare_models(tech, models = c("ddf", "wd")), "fdmo")
+  expect_warning(
+    cmp2 <- compare_models(tech, models = c("wgd", "wd", "wgd")),
+    "duplicate"
+  )
+  expect_equal(cmp2$models, c("wgd", "wd"))
+  expect_true(all(is.finite(cmp2$spearman)))
+})
+
+test_that("print.pgt_compare never reports a self-comparison", {
+  # Perfectly correlated rankings put the matrix minimum on the
+  # diagonal; the disagreement line must still name two distinct models.
+  x <- matrix(c(10, 10, 10, 10), 4, 1)
+  tech <- pgt_tech(x, y = c(5, 5, 5, 5), b = c(2, 3, 4, 5))
+  cmp <- compare_models(tech, models = c("wgd", "wd"))
+  out <- paste(capture.output(print(cmp)), collapse = "\n")
+  expect_false(grepl("wgd vs wgd", out))
+  expect_false(grepl("wd vs wd", out))
+})

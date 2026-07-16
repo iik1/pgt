@@ -34,9 +34,11 @@
 #'     \item{\code{spearman}}{Matrix of pairwise Spearman rank
 #'       correlations.}
 #'     \item{\code{agreement}}{Data frame with, per model, the number of
-#'       DMUs solved, the median score, and the share of DMUs it places
-#'       in the bottom efficiency quartile that the weak-G-disposability
-#'       model also places there (top-of-agenda overlap).}
+#'       DMUs solved, the median score, and \code{bottom_q_overlap}: the
+#'       share of the DMUs this model places in its own bottom
+#'       efficiency quartile that the reference model (the first entry
+#'       of \code{models}) also places in its bottom quartile
+#'       (top-of-agenda overlap).}
 #'     \item{\code{models}, \code{returns}, \code{peers}}{Call settings.}
 #'   }
 #'
@@ -70,6 +72,18 @@ compare_models <- function(tech,
   stopifnot(inherits(tech, "pgt_tech"))
   returns <- match.arg(returns)
   peers <- match.arg(peers)
+  # accept the same aliases pgt() documents
+  models[models == "wgd_rodseth"] <- "wgd"
+  models[models == "ddf"] <- "fdmo"
+  if (anyDuplicated(models)) {
+    warning("duplicate entries in 'models' ignored.", call. = FALSE)
+    models <- unique(models)
+  }
+  if ("fdmo" %in% models) {
+    stop("the directional model \"fdmo\" is excluded from ",
+         "compare_models(): its score is a gross inefficiency, not an ",
+         "efficiency b*/b.", call. = FALSE)
+  }
   valid <- c("wgd", "envelope", "byprod", "mb_cost", "wd")
   bad <- setdiff(models, valid)
   if (length(bad)) {
@@ -142,8 +156,11 @@ print.pgt_compare <- function(x, ...) {
   print(x$agreement, row.names = FALSE, digits = 4)
   cat("\nSpearman rank correlation:\n")
   print(round(x$spearman, 3))
-  worst <- which(x$spearman == min(x$spearman, na.rm = TRUE), arr.ind = TRUE)
-  if (nrow(worst)) {
+  # exclude the diagonal: a model cannot disagree with itself
+  spx <- x$spearman
+  diag(spx) <- NA_real_
+  if (any(is.finite(spx))) {
+    worst <- which(spx == min(spx, na.rm = TRUE), arr.ind = TRUE)
     w <- worst[1, ]
     cat(sprintf("\n  largest ranking disagreement: %s vs %s (rho = %.3f)\n",
                 x$models[w[1]], x$models[w[2]],

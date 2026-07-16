@@ -1,6 +1,6 @@
 # Subsampling inference for pgt efficiency scores.
 
-test_that("boot_pgt returns per-DMU intervals bracketing the point estimate", {
+test_that("boot_pgt intervals extend downward from the point estimate", {
   tech <- make_random_tech(L = 30, N = 3, seed = 2)
   bt <- boot_pgt(tech, model = "wgd", B = 80, seed = 1)
   expect_s3_class(bt, "pgt_boot")
@@ -9,13 +9,37 @@ test_that("boot_pgt returns per-DMU intervals bracketing the point estimate", {
   # Point estimate matches a plain pgt fit.
   point <- suppressWarnings(pgt(tech, model = "wgd"))$results$efficiency
   expect_equal(pd$estimate, point, tolerance = 1e-9)
-  # Valid intervals: ordered bounds, non-negative width and SE. The
-  # subsampling distribution reflects reference-set resampling and, given
-  # the boundary bias of DEA scores, need not be centred on the point
-  # estimate.
+  # Recentred, rate-scaled subsampling intervals: a subsample frontier
+  # can only lie inside the full-sample frontier, so the interval covers
+  # values at or below the (upward-biased) point estimate.
   expect_true(all(pd$lower <= pd$upper + 1e-9, na.rm = TRUE))
+  expect_true(all(pd$upper <= pd$estimate + 1e-6, na.rm = TRUE))
   expect_true(all(pd$se >= 0, na.rm = TRUE))
-  expect_true(all(pd$lower > 0 & pd$upper <= 1 + 1e-6, na.rm = TRUE))
+  expect_true(all(pd$lower >= 0 & pd$upper <= 1 + 1e-6, na.rm = TRUE))
+})
+
+test_that("boot_pgt rescales by the convergence rate through kappa", {
+  tech <- make_random_tech(L = 25, N = 2, seed = 5)
+  # (m/L)^kappa shrinks with kappa, so a near-zero exponent gives wider
+  # intervals and larger rescaled standard errors than a large one.
+  bt_wide <- boot_pgt(tech, model = "wgd", B = 40, seed = 1, kappa = 1e-6)
+  bt_narrow <- boot_pgt(tech, model = "wgd", B = 40, seed = 1, kappa = 1)
+  w_wide <- bt_wide$per_dmu$upper - bt_wide$per_dmu$lower
+  w_narrow <- bt_narrow$per_dmu$upper - bt_narrow$per_dmu$lower
+  expect_true(median(w_wide, na.rm = TRUE) >
+                median(w_narrow, na.rm = TRUE))
+  expect_true(mean(bt_wide$per_dmu$se, na.rm = TRUE) >
+                mean(bt_narrow$per_dmu$se, na.rm = TRUE))
+})
+
+test_that("boot_pgt restores the caller's RNG state", {
+  tech <- make_random_tech(L = 15, N = 2, seed = 3)
+  set.seed(123)
+  r_direct <- rnorm(3)
+  set.seed(123)
+  invisible(boot_pgt(tech, model = "envelope", B = 5, seed = 99))
+  r_after <- rnorm(3)
+  expect_identical(r_direct, r_after)
 })
 
 test_that("boot_pgt is reproducible under a seed and produces group means", {

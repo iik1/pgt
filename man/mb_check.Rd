@@ -22,8 +22,12 @@ A data frame of class \code{"pgt_mb"} with one row per DMU
   (if present), \code{pollutant} (when several), \code{potential}
   (\eqn{u'x_l}), \code{retained} (\eqn{v y_l}), \code{b}, \code{gap}
   (\eqn{u'x_l - v y_l - b_l}), \code{rel_gap} (\code{gap / potential})
-  and \code{violated}. The number of violations is attached as
-  attribute \code{"n_violations"}.
+  and \code{violated}. When the technology records an abatement
+  output, also \code{a} and \code{closure} (\eqn{gap - a_l}): the
+  equality residual \eqn{u'x_l - v y_l - b_l - a_l}, zero when the
+  account closes exactly, which \code{model = "fdmo"} requires. The
+  number of violations is attached as attribute
+  \code{"n_violations"}.
 }
 \description{
 Pre-estimation feasibility audit of the materials-balance condition

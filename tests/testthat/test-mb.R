@@ -27,3 +27,25 @@ test_that("clean technologies pass", {
   expect_equal(attr(mb, "n_violations"), 0L)
   expect_true(all(mb$gap >= 0))
 })
+
+test_that("printing a subset of the audit reports the subset's counts", {
+  x <- matrix(c(10, 5), 2, 1)
+  tech <- pgt_tech(x, y = c(1, 1), b = c(8, 6))
+  mb <- mb_check(tech)
+  sub <- mb[!mb$violated, , drop = FALSE]
+  expect_output(print(sub), "violations: 0")
+})
+
+test_that("mb_check reports the equality closure when abatement is observed", {
+  data(pigfarms, package = "pgt", envir = environment())
+  tech <- pgt_tech(
+    x = pigfarms[, c("uncontrolled", "labor", "capital")],
+    y = pigfarms$meat, b = pigfarms$controlled,
+    u = c(1, 0, 0), a = pigfarms$abatement, id = pigfarms$farm
+  )
+  mb <- mb_check(tech)
+  expect_true(all(c("a", "closure") %in% names(mb)))
+  # the pig-farm accounts close exactly: uncontrolled = controlled + a
+  expect_equal(mb$closure, rep(0, nrow(mb)), tolerance = 1e-9)
+  expect_output(print(mb), "equality closure")
+})

@@ -10,8 +10,15 @@
 # numerical example (Tables 2-3) through these kernels.
 #
 # Material flow coefficients are DMU-specific (one row of the L x N x P
-# array per DMU) and a single pollutant p is estimated per solve; the
-# per-DMU pollutant potential enters through mb_rhs = u_i'x_i - v_i y_i.
+# array per DMU). The objective acts on a single pollutant p per solve;
+# its per-DMU potential enters through mb_rhs = u_i'x_i - v_i y_i. In the
+# weak-G-disposability model the caps of the remaining pollutants
+# constrain the peer mix as well (one row per extra pollutant).
+#
+# The kernels rebuild the LP per DMU. For a fixed peer set the constraint
+# matrices are DMU-invariant (only RHS values and single coefficients
+# change), so a set.rhs-based reuse of one LP object is a possible future
+# optimisation; DMU-invariant vectors are already hoisted via .solve_ctx().
 
 # Pollutant potential u_i'x_i and materials-balance cap u_i'x_i - v_i y_i
 # for pollutant p (one value per DMU).
@@ -29,17 +36,22 @@
 #        sum_l lambda_l x_nl         <= x_ni   (n = 1..N, optional)
 #        sum_l lambda_l b_l  -  bq   <= 0
 #        bq                          <= u_i'x_i - v_i y_i    [materials balance]
+#        sum_l lambda_l b_ql         <= u_qi'x_i - v_qi y_i  [per extra pollutant q]
 #        sum_l lambda_l               = 1                    [VRS only]
 #        lambda >= 0, bq >= 0
 #
 # The materials-balance row keeps the projected bad output consistent
-# with the evaluated DMU's own pollutant potential. A DMU violating
-# u_i'x_i - v_i y_i >= b_i loses self-reference feasibility, so its LP
-# solves only if some peer mix meets every row within the cap;
-# infeasibility (status != 0) is therefore confined to violating DMUs,
-# but most violators still solve.
+# with the evaluated DMU's own pollutant potential. With several
+# pollutants the peer mix's emission of every other pollutant q must
+# respect that pollutant's cap for the evaluated DMU as well (the
+# envelope and cap rows for q collapse to one row because q carries no
+# objective term). A DMU violating any pollutant's identity loses
+# self-reference feasibility, so its LP solves only if some peer mix
+# meets every row within the caps; infeasibility (status != 0) is
+# therefore confined to violating DMUs, but most violators still solve.
 .lp_wgd_one <- function(i, X, y, b, mb_rhs, peers, vrs = TRUE,
-                        input_constraints = TRUE) {
+                        input_constraints = TRUE,
+                        b_other = NULL, cap_other = NULL) {
   L <- length(peers)
   N <- ncol(X)
 
@@ -55,6 +67,12 @@
   }
   lpSolveAPI::add.constraint(lp, c(b[peers], -1), "<=", 0)
   lpSolveAPI::add.constraint(lp, c(rep(0, L), 1), "<=", mb_rhs[i])
+  if (!is.null(b_other)) {
+    for (q in seq_len(ncol(b_other))) {
+      lpSolveAPI::add.constraint(lp, c(b_other[peers, q], 0), "<=",
+                                 cap_other[i, q])
+    }
+  }
   if (vrs) {
     lpSolveAPI::add.constraint(lp, c(rep(1, L), 0), "=", 1)
   }
@@ -244,8 +262,15 @@
   psi <- if (st2 == 0) lpSolveAPI::get.variables(lp2)[L + 1] else NA_real_
   mu <- if (st2 == 0) lpSolveAPI::get.variables(lp2)[seq_len(L)] else NULL
 
-  e1 <- if (is.na(phi) || phi <= 0) NA_real_ else 1 / phi
+  # A single failed sub-LP invalidates the whole intersection measure:
+  # return every score as NA so status != 0 always means "scores NA".
   status <- if (st1 == 0 && st2 == 0) 0L else max(st1, st2)
+  if (status != 0L) {
+    return(list(status = status, output_eff = NA_real_,
+                emission_eff = NA_real_, fgl = NA_real_,
+                b_star = NA_real_, lambda = NULL, mu = NULL))
+  }
+  e1 <- if (phi <= 0) NA_real_ else 1 / phi
   list(status = status, output_eff = e1, emission_eff = psi,
        fgl = (e1 + psi) / 2, b_star = psi * b[i],
        lambda = lam, mu = mu)
@@ -309,8 +334,14 @@
   pot_star <- if (st2 == 0) lpSolveAPI::get.objective(lp2) else NA_real_
   lam <- if (st2 == 0) lpSolveAPI::get.variables(lp2)[seq_len(L)] else NULL
 
-  ee <- pot_star / pot_i
+  # As in .lp_byprod_one: one failed sub-LP invalidates the EE = TE x EAE
+  # decomposition, so status != 0 always means every score is NA.
   status <- if (st1 == 0 && st2 == 0) 0L else max(st1, st2)
+  if (status != 0L) {
+    return(list(status = status, mbe = NA_real_, te = NA_real_,
+                eae = NA_real_, b_star = NA_real_, lambda = NULL))
+  }
+  ee <- pot_star / pot_i
   list(status = status, mbe = ee, te = te, eae = ee / te,
        b_star = pot_star - v_i * y[i], lambda = lam)
 }
@@ -369,32 +400,66 @@
        dual_output = NA_real_, mb_rhs = NA_real_)
 }
 
+# DMU-invariant quantities of a per-DMU solve loop, computed once per
+# fit and passed to every .lp_solve_one() call (they would otherwise be
+# recomputed L times per fit and L x B times in boot_pgt()).
+.solve_ctx <- function(tech, model, p) {
+  ctx <- list(b_p = tech$b[, p])
+  if (model %in% c("wgd", "fdmo")) {
+    ctx$mb_cap <- .mb_cap(tech, p)
+  }
+  if (model == "wgd" && tech$P > 1L) {
+    q <- setdiff(seq_len(tech$P), p)
+    ctx$b_other <- tech$b[, q, drop = FALSE]
+    ctx$cap_other <- vapply(q, function(pp) .mb_cap(tech, pp),
+                            numeric(tech$L))
+    if (!is.matrix(ctx$cap_other)) {
+      ctx$cap_other <- matrix(ctx$cap_other, ncol = length(q))
+    }
+  }
+  if (model == "byprod") {
+    ctx$pol <- .polluting_inputs(tech, p)
+  }
+  ctx
+}
+
 # Dispatch a single-DMU solve for the requested model and pollutant.
 .lp_solve_one <- function(model, i, tech, peers, vrs, p = 1L,
-                          input_constraints = TRUE) {
-  b_p <- tech$b[, p]
+                          input_constraints = TRUE, ctx = NULL) {
+  if (is.null(ctx)) ctx <- .solve_ctx(tech, model, p)
   switch(
     model,
-    wgd = .lp_wgd_one(i, tech$x, tech$y, b_p, .mb_cap(tech, p),
+    wgd = .lp_wgd_one(i, tech$x, tech$y, ctx$b_p, ctx$mb_cap,
                       peers, vrs = vrs,
-                      input_constraints = input_constraints),
-    envelope = .lp_envelope_one(i, tech$y, b_p, peers, vrs = vrs),
+                      input_constraints = input_constraints,
+                      b_other = ctx$b_other, cap_other = ctx$cap_other),
+    envelope = .lp_envelope_one(i, tech$y, ctx$b_p, peers, vrs = vrs),
     fdmo = {
       if (is.null(tech$a)) {
         stop("model = \"fdmo\" requires an abatement output 'a' in ",
              "pgt_tech().", call. = FALSE)
       }
       .lp_fdmo_one(i, tech$x, tech$y, tech$a[, p], tech$v[, p],
-                   .mb_potential(tech, p) - tech$v[, p] * tech$y, b_p,
+                   ctx$mb_cap, ctx$b_p,
                    peers, vrs = vrs, input_constraints = input_constraints)
     },
-    byprod = .lp_byprod_one(i, tech$x, tech$y, b_p,
-                            .polluting_inputs(tech, p), peers, vrs = vrs),
+    byprod = .lp_byprod_one(i, tech$x, tech$y, ctx$b_p,
+                            ctx$pol, peers, vrs = vrs),
     mb_cost = .lp_mbcost_one(i, tech$x, tech$y, tech$u[i, , p],
                              tech$v[i, p], peers, vrs = vrs),
-    wd = .lp_wd_one(i, tech$x, tech$y, b_p, peers, vrs = vrs),
+    wd = .lp_wd_one(i, tech$x, tech$y, ctx$b_p, peers, vrs = vrs),
     stop("unknown model '", model, "'", call. = FALSE)
   )
+}
+
+# Headline environmental-efficiency score of one solution under `model`:
+# the single definition shared by pgt(), boot_pgt() and compare_models().
+.headline_score <- function(model, sol, b_i) {
+  if (!is.null(sol$status) && sol$status != 0) return(NA_real_)
+  switch(model,
+    byprod = sol$emission_eff,
+    mb_cost = sol$mbe,
+    sol$b_star / b_i)
 }
 
 # Emission-generating input columns for the by-production T2

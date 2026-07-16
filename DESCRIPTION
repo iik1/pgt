@@ -1,7 +1,7 @@
 Package: pgt
 Type: Package
 Title: Data Envelopment Analysis for Pollution-Generating Technologies
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: c(
     person("Erik", "Enstad", email = "erik.enstad@nhh.no",
            role = c("aut", "cre"),
@@ -33,7 +33,6 @@ Suggests:
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
-    Benchmarking,
     frontier
 Config/testthat/edition: 3
 VignetteBuilder: knitr

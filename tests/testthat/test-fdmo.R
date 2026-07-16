@@ -83,3 +83,18 @@ test_that("fdmo is a frontier at the good-output maximum", {
   fit2 <- pgt(pigfarms_fdmo_tech(), model = "ddf")
   expect_equal(fit$results$gross, fit2$results$gross)
 })
+
+test_that("fdmo warns when material accounts do not close exactly", {
+  data(pigfarms, package = "pgt", envir = environment())
+  v <- 7 / 6
+  u_feed <- (pigfarms$uncontrolled + v * pigfarms$meat) / pigfarms$feed
+  U <- cbind(feed = u_feed, piglet = 0, labor = 0, capital = 0)
+  b_open <- pigfarms$controlled + c(1, rep(0, nrow(pigfarms) - 1L))
+  tech <- pgt_tech(
+    x = pigfarms[, c("feed", "piglet", "labor", "capital")],
+    y = pigfarms$meat, b = b_open, u = U, v = v,
+    a = pigfarms$abatement, id = pigfarms$farm
+  )
+  w <- capture_warnings(pgt(tech, model = "fdmo"))
+  expect_true(any(grepl("close the materials-balance identity", w)))
+})

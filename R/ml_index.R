@@ -86,22 +86,28 @@ pgt_ml <- function(tech, technology = c("wgd", "envelope"),
   b_p <- tech$b[, p]
   periods <- levels(tech$period)
   global <- seq_len(tech$L)
+  by_period <- split(global, tech$period)
 
   # global and contemporaneous directional distances for every row
   dg <- vapply(global, function(k) {
     .ddf_ml(k, global, tech$x, tech$y, b_p, use_inputs, vrs)
   }, numeric(1))
   dc <- vapply(global, function(k) {
-    ref <- which(tech$period == tech$period[k])
-    .ddf_ml(k, ref, tech$x, tech$y, b_p, use_inputs, vrs)
+    .ddf_ml(k, by_period[[as.character(tech$period[k])]],
+            tech$x, tech$y, b_p, use_inputs, vrs)
   }, numeric(1))
+  n_failed <- sum(is.na(dg)) + sum(is.na(dc))
+  if (n_failed > 0) {
+    warning(sprintf(paste0(
+      "%d distance LPs failed; the transitions of the affected ",
+      "observations are NA."), n_failed), call. = FALSE)
+  }
 
   rows <- list()
-  ord <- match(tech$period, periods)
   for (j in seq_len(length(periods) - 1L)) {
     from <- periods[j]; to <- periods[j + 1L]
-    it <- which(tech$period == from)
-    it1 <- which(tech$period == to)
+    it <- by_period[[from]]
+    it1 <- by_period[[to]]
     common <- intersect(tech$id[it], tech$id[it1])
     for (idv in common) {
       k <- it[match(idv, tech$id[it])]
@@ -157,17 +163,27 @@ pgt_ml <- function(tech, technology = c("wgd", "envelope"),
   lpSolveAPI::get.variables(lp)[ib]
 }
 
+# Header line shared by print.pgt_ml and print.summary.pgt_ml.
+.print_ml_header <- function(x) {
+  cat(sprintf("pgt global Malmquist-Luenberger index (technology = %s, returns = %s)\n",
+              x$technology, x$returns))
+}
+
 #' @export
 print.pgt_ml <- function(x, ...) {
   r <- x$results
-  cat(sprintf("pgt global Malmquist-Luenberger index (technology = %s, returns = %s)\n",
-              x$technology, x$returns))
+  .print_ml_header(x)
   cat(sprintf("  transitions: %d   DMUs: %d\n",
               nrow(r), length(unique(r$id))))
   if (nrow(r)) {
+    n_na <- sum(is.na(r$gml))
+    if (n_na > 0) {
+      cat(sprintf("  transitions with NA index (failed LPs): %d\n", n_na))
+    }
     cat(sprintf("  GML median %.4f   EC median %.4f   BPC median %.4f\n",
-                stats::median(r$gml), stats::median(r$ec),
-                stats::median(r$bpc)))
+                stats::median(r$gml, na.rm = TRUE),
+                stats::median(r$ec, na.rm = TRUE),
+                stats::median(r$bpc, na.rm = TRUE)))
   }
   invisible(x)
 }
@@ -177,17 +193,17 @@ summary.pgt_ml <- function(object, ...) {
   r <- object$results
   qs <- c(0, 0.25, 0.5, 0.75, 1)
   tab <- rbind(
-    GML = stats::quantile(r$gml, qs),
-    EC = stats::quantile(r$ec, qs),
-    BPC = stats::quantile(r$bpc, qs)
+    GML = stats::quantile(r$gml, qs, na.rm = TRUE),
+    EC = stats::quantile(r$ec, qs, na.rm = TRUE),
+    BPC = stats::quantile(r$bpc, qs, na.rm = TRUE)
   )
   by_period <- NULL
   if (nrow(r)) {
     by_period <- do.call(rbind, lapply(split(r, r$to), function(d) {
       data.frame(to = d$to[1], n = nrow(d),
-                 gml = exp(mean(log(d$gml))),
-                 ec = exp(mean(log(d$ec))),
-                 bpc = exp(mean(log(d$bpc))))
+                 gml = exp(mean(log(d$gml), na.rm = TRUE)),
+                 ec = exp(mean(log(d$ec), na.rm = TRUE)),
+                 bpc = exp(mean(log(d$bpc), na.rm = TRUE)))
     }))
     rownames(by_period) <- NULL
   }
@@ -198,8 +214,7 @@ summary.pgt_ml <- function(object, ...) {
 
 #' @export
 print.summary.pgt_ml <- function(x, ...) {
-  cat(sprintf("pgt global Malmquist-Luenberger index (technology = %s, returns = %s)\n",
-              x$technology, x$returns))
+  .print_ml_header(x)
   cat("\nDistribution (GML > 1 is productivity growth):\n")
   print(round(x$quantiles, 4))
   if (!is.null(x$by_period)) {

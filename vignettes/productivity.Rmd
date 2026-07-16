@@ -88,25 +88,30 @@ boundary estimators.
 
 ```{r}
 data(steeldemo)
+steel60 <- steeldemo[1:60, ]
 tech <- pgt_tech(
-  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
-  y = steeldemo$production, b = steeldemo$emissions, v = 0.01467,
-  group = steeldemo$route, id = steeldemo$plant
+  x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  y = steel60$production, b = steel60$emissions, v = 0.01467,
+  group = steel60$route, id = steel60$plant
 )
-bt <- boot_pgt(tech, model = "wgd", B = 100, seed = 1)
+bt <- boot_pgt(tech, model = "wgd", B = 40, seed = 1)
 head(bt$per_dmu)
 ```
 
-The intervals are heuristic: resampling theory for data envelopment
+The intervals follow the subsampling recipe: the subsample scores are
+recentred at the point estimate and rescaled by the relative
+convergence rate $(m/L)^\kappa$, so the interval extends downward from
+the estimate, matching the direction of the frontier bias (a smaller
+reference sample can only move the estimated frontier inward). The
+intervals remain heuristic: resampling theory for data envelopment
 analysis covers the radial and directional technologies, not the
-materials-balance programs here, so their coverage is not backed by a
-convergence-rate result. Because efficiency scores are biased toward the
-frontier, the resampling distribution is not centred on the point
-estimate. Before relying on the intervals, check that their width is
-stable in the subsample size.
+materials-balance programs here, so $\kappa$ borrows the DEA rate as an
+approximation. Before relying on the intervals, check that their width
+is stable in the subsample size.
 
 ```{r}
-boot_pgt_sensitivity(tech, model = "wgd", B = 50, seed = 1)
+boot_pgt_sensitivity(tech, model = "wgd", B = 25,
+                     m_grid = c(15, 25, 40), seed = 1)
 ```
 
 A width that changes little across the grid supports the chosen

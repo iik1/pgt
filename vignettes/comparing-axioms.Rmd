@@ -81,9 +81,10 @@ cmp
 The Spearman matrix shows how closely the models rank the plants. A high
 correlation means the choice of axiom moves the scores but preserves the
 ordering; a low correlation warns that the ranking itself depends on the
-axiom. The `bottom_q_overlap` column reports the share of the reference
-model's worst-quartile plants that each model also places in its worst
-quartile, the plants a regulator would target first.
+axiom. The `bottom_q_overlap` column reports, for each model, the share
+of its own worst-quartile plants that the reference model (the first
+model listed) also places in its worst quartile, the plants a regulator
+would target first.
 
 ```{r, fig.alt = "Efficiency score profiles across four models"}
 plot(cmp)

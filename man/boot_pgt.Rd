@@ -10,6 +10,7 @@ boot_pgt(
   B = 200,
   m = NULL,
   level = 0.95,
+  kappa = NULL,
   returns = c("vrs", "crs"),
   peers = c("all", "group"),
   pollutant = 1L,
@@ -28,19 +29,28 @@ boot_pgt(
 \item{m}{Subsample size. Defaults to \code{round(L^0.7)}, a
 conventional choice between \eqn{\sqrt{L}} and \eqn{L}.}
 
-\item{level}{Confidence level for the percentile intervals.}
+\item{level}{Confidence level for the intervals.}
+
+\item{kappa}{Convergence-rate exponent used to rescale the subsample
+distribution. Defaults to the DEA rate for the model's effective
+dimension (Kneip, Simar and Wilson 2008): \eqn{2/(N+3)} under VRS
+and \eqn{2/(N+2)} under CRS for the input-constrained models, and
+\eqn{2/3} (VRS) or \eqn{1} (CRS) for the input-free
+\code{"envelope"} model, whose frontier lives in the \eqn{(y, b)}
+plane. A heuristic; supply your own exponent to override.}
 
 \item{returns, peers, pollutant}{Passed to the underlying model, as in
 [pgt()].}
 
-\item{seed}{Optional integer seed for reproducibility.}
+\item{seed}{Optional integer seed for reproducibility. The caller's
+RNG state is restored on exit.}
 }
 \value{
 An object of class \code{"pgt_boot"}: a list with
   \code{per_dmu} (a data frame of point estimate, lower and upper
-  bound, and bootstrap standard error per DMU), \code{group_means}
-  (the same for group means, when a group is present), and the call
-  settings.
+  bound, and rescaled subsampling standard error per DMU),
+  \code{group_means} (the same for group means, when a group is
+  present), and the call settings.
 }
 \description{
 Constructs subsampling confidence intervals for the environmental
@@ -52,23 +62,37 @@ of nonparametric frontiers (Kneip, Simar and Wilson 2008; Simar and
 Wilson 2011).
 }
 \details{
-The intervals are heuristic. Bootstrap and subsampling theory for
-data envelopment analysis has been developed for the radial and
-directional-distance technologies, not for the materials-balance-
-constrained programs implemented here, so the coverage of these
-intervals is not backed by a convergence-rate result. Use the
-subsample-size sensitivity of [boot_pgt_sensitivity()] to check that
-the intervals are stable in \code{m} before relying on them.
+The intervals follow the subsampling recipe of Politis and Romano
+(1994): the law of \eqn{L^\kappa(\hat\theta - \theta)} is
+approximated by the recentred, rate-scaled subsample distribution
+\eqn{m^\kappa(\theta^*_m - \hat\theta)}, giving
+\deqn{[\hat\theta - (m/L)^\kappa q_{1-\alpha/2}(\theta^*_m -
+  \hat\theta),\; \hat\theta - (m/L)^\kappa q_{\alpha/2}(\theta^*_m -
+  \hat\theta)].}
+Because a subsample's frontier can only lie inside the full-sample
+frontier, the subsample deviations are non-negative and the interval
+extends downward from the point estimate, matching the direction of
+the frontier bias. The reported \code{se} is the subsample standard
+deviation rescaled by \eqn{(m/L)^\kappa}.
+
+The intervals remain heuristic. Subsampling theory for data
+envelopment analysis backs the radial and directional-distance
+technologies, not the materials-balance-constrained programs
+implemented here, so \code{kappa} borrows the DEA convergence rate
+as an approximation. Use the subsample-size sensitivity of
+[boot_pgt_sensitivity()] to check that the intervals are stable in
+\code{m} before relying on them.
 }
 \examples{
 data(steeldemo)
+steel60 <- steeldemo[1:60, ]
 tech <- pgt_tech(
-  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
-  y = steeldemo$production, b = steeldemo$emissions, v = 0.01467,
-  group = steeldemo$route, id = steeldemo$plant
+  x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  y = steel60$production, b = steel60$emissions, v = 0.01467,
+  group = steel60$route, id = steel60$plant
 )
 \donttest{
-bt <- boot_pgt(tech, model = "wgd", B = 100, seed = 1)
+bt <- boot_pgt(tech, model = "wgd", B = 40, seed = 1)
 head(bt$per_dmu)
 }
 }
@@ -76,6 +100,10 @@ head(bt$per_dmu)
 Kneip, A., Simar, L., & Wilson, P. W. (2008). Asymptotics and
 consistent bootstraps for DEA estimators in nonparametric frontier
 models. \emph{Econometric Theory}, 24(6), 1663--1697.
+
+Politis, D. N., & Romano, J. P. (1994). Large sample confidence
+regions based on subsamples under minimal assumptions. \emph{The
+Annals of Statistics}, 22(4), 2031--2050.
 }
 \seealso{
 [pgt()], [boot_pgt_sensitivity()]

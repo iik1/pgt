@@ -74,3 +74,27 @@ test_that("wd frontier point scores 1 on its own emission", {
   expect_equal(r$efficiency[1], 1, tolerance = 1e-7)   # lowest emission
   expect_true(r$efficiency[3] < 1)                     # highest emission
 })
+
+test_that("mb_cost warns when the implied minimal emission is negative", {
+  # The peer's low material inflow undercuts DMU 1's retained content
+  # v * y, so pot_star - v * y < 0.
+  x <- matrix(c(2, 0.5), 2, 1)
+  tech <- pgt_tech(x, y = c(1, 2), b = c(0.1, 0.1), v = 0.9)
+  expect_warning(fit <- pgt(tech, model = "mb_cost"),
+                 "negative implied minimal emission")
+  expect_true(fit$results$b_star[1] < 0)
+})
+
+test_that("a failed sub-LP yields all-NA scores under nonzero status", {
+  # T2 of the by-production model is infeasible for DMU 2 against peer 1
+  # alone (peer's polluting input is below DMU 2's), while T1 solves;
+  # the whole intersection measure must then be NA.
+  X <- matrix(c(1, 5), 2, 1)
+  sol <- pgt:::.lp_byprod_one(2, X, y = c(1, 1), b = c(1, 1), pol = 1L,
+                              peers = 1L, vrs = TRUE)
+  expect_true(sol$status != 0)
+  expect_true(is.na(sol$output_eff))
+  expect_true(is.na(sol$emission_eff))
+  expect_true(is.na(sol$fgl))
+  expect_true(is.na(sol$b_star))
+})

@@ -49,3 +49,32 @@ test_that("pgt_tech print works", {
   expect_output(print(tech), "Pollution-generating technology")
   expect_output(print(tech), "groups:")
 })
+
+test_that("ambiguous v (length equals both L and P) is rejected", {
+  x <- matrix(c(10, 12), 2, 1)
+  B <- cbind(p1 = c(4, 5), p2 = c(1, 2))
+  expect_error(pgt_tech(x, y = c(1, 1), b = B, v = c(0.1, 0.2)),
+               "ambiguous 'v'")
+})
+
+test_that("duplicated (id, period) pairs are rejected", {
+  x <- matrix(c(10, 12, 11, 13), 4, 1)
+  expect_error(
+    pgt_tech(x, y = c(1, 1, 1, 1), b = c(2, 2, 2, 2),
+             period = c(1, 1, 2, 2), id = c("a", "a", "a", "b")),
+    "id, period"
+  )
+  # the same ids across different periods stay valid panel data
+  tech <- pgt_tech(x, y = c(1, 1, 1, 1), b = c(2, 2, 2, 2),
+                   period = c(1, 1, 2, 2), id = c("a", "b", "a", "b"))
+  expect_s3_class(tech, "pgt_tech")
+})
+
+test_that("x_abate is flagged as recorded but unused", {
+  tech <- make_random_tech(L = 10, N = 3, seed = 11)
+  tech_ab <- pgt_tech(x = tech$x, y = tech$y, b = tech$b[, 1],
+                      u = tech$u[1, , 1], v = tech$v[1, 1],
+                      group = tech$group, x_abate = 1L)
+  expect_warning(pgt(tech_ab, model = "envelope"), "x_abate")
+  expect_warning(pgt_decompose(tech_ab, type = "envelope"), "x_abate")
+})

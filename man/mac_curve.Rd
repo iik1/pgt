@@ -7,7 +7,8 @@
 mac_curve(fit, price = NULL)
 }
 \arguments{
-\item{fit}{A [pgt()] fit.}
+\item{fit}{A [pgt()] fit with \code{model = "wgd"} or
+\code{"envelope"}, the models that report output duals.}
 
 \item{price}{Optional scalar price of the good output. If supplied,
 \code{mac} is in money per unit of bad output.}
@@ -39,6 +40,12 @@ The number of excluded DMUs and the summed abatement potential of
 the solved-but-excluded ones (which is NOT part of the curve) are
 attached as attributes \code{"n_excluded"} and
 \code{"excluded_abatement"} and reported by \code{print}.
+
+A DMU that projects onto a vertex of the piecewise-linear frontier
+has a range of optimal duals, and the solver reports the dual of
+whichever optimal basis it terminates in, so the MAC of such a DMU
+is one point of an interval and can differ across solver versions or
+platforms. Frontier-interior projections have unique duals.
 }
 \examples{
 data(steeldemo)

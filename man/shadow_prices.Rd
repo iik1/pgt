@@ -7,7 +7,8 @@
 shadow_prices(fit)
 }
 \arguments{
-\item{fit}{A [pgt()] fit.}
+\item{fit}{A [pgt()] fit with \code{model = "wgd"} or
+\code{"envelope"}, the models that report output duals.}
 }
 \value{
 A data frame with one row per DMU: \code{id}, \code{group}

@@ -90,17 +90,22 @@ pgt_decompose <- function(tech, type = c("envelope", "rodseth"),
   L <- tech$L
   p <- .pollutant_index(tech, pollutant)
   b_p <- tech$b[, p]
-  mb_rhs <- .mb_cap(tech, p)
   group_sets <- .peer_sets(tech, "group")
   all_peers <- seq_len(L)
+  if (length(tech$x_abate)) {
+    warning("'x_abate' is recorded in pgt_tech() but the estimators do ",
+            "not yet treat pollution-control inputs separately; all ",
+            "inputs enter the constraints identically.", call. = FALSE)
+  }
 
   if (type == "envelope") {
+    ctx <- .solve_ctx(tech, "envelope", p)
     b_group <- b_all <- rep(NA_real_, L)
     for (i in seq_len(L)) {
-      b_group[i] <- .lp_envelope_one(i, tech$y, b_p,
-                                     group_sets[[i]], vrs = vrs)$b_star
-      b_all[i] <- .lp_envelope_one(i, tech$y, b_p,
-                                   all_peers, vrs = vrs)$b_star
+      b_group[i] <- .lp_solve_one("envelope", i, tech, group_sets[[i]],
+                                  vrs, p = p, ctx = ctx)$b_star
+      b_all[i] <- .lp_solve_one("envelope", i, tech, all_peers,
+                                vrs, p = p, ctx = ctx)$b_star
     }
     results <- data.frame(
       id = tech$id,
@@ -115,21 +120,24 @@ pgt_decompose <- function(tech, type = c("envelope", "rodseth"),
       stringsAsFactors = FALSE
     )
   } else {
+    ctx <- .solve_ctx(tech, "wgd", p)
     b1 <- b2 <- b3 <- rep(NA_real_, L)
     for (i in seq_len(L)) {
-      b1[i] <- .lp_wgd_one(i, tech$x, tech$y, b_p, mb_rhs,
-                           group_sets[[i]], vrs = vrs)$b_star
-      b2[i] <- .lp_wgd_one(i, tech$x, tech$y, b_p, mb_rhs,
-                           all_peers, vrs = vrs)$b_star
-      b3[i] <- .lp_wgd_one(i, tech$x, tech$y, b_p, mb_rhs,
-                           all_peers, vrs = vrs,
-                           input_constraints = FALSE)$b_star
+      b1[i] <- .lp_solve_one("wgd", i, tech, group_sets[[i]],
+                             vrs, p = p, ctx = ctx)$b_star
+      b2[i] <- .lp_solve_one("wgd", i, tech, all_peers,
+                             vrs, p = p, ctx = ctx)$b_star
+      b3[i] <- .lp_solve_one("wgd", i, tech, all_peers,
+                             vrs, p = p, input_constraints = FALSE,
+                             ctx = ctx)$b_star
     }
     n_na <- sum(is.na(b1) | is.na(b2) | is.na(b3))
     if (n_na > 0) {
       warning(sprintf(paste0(
-        "%d of %d DMUs have infeasible stage LPs (scores NA); ",
-        "run mb_check()."), n_na, L), call. = FALSE)
+        "%d of %d DMUs have infeasible or failed stage LPs; the ",
+        "affected components are NA. This flags DMUs violating a ",
+        "materials-balance identity; run mb_check()."), n_na, L),
+        call. = FALSE)
     }
     results <- data.frame(
       id = tech$id,

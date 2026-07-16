@@ -55,7 +55,9 @@
 #' @param x_abate Optional marker of the pollution-control input columns
 #'   of \code{x} (Rodseth 2025, Eq. 7): a character vector of column
 #'   names or an integer vector of column positions. The remaining
-#'   columns are production inputs.
+#'   columns are production inputs. Currently recorded and reported
+#'   only: the estimators do not yet treat pollution-control inputs
+#'   separately, and [pgt()] warns when the marker is set.
 #' @param polluting Optional marker of the emission-generating input
 #'   columns of \code{x} (the residual-generating sub-technology of the
 #'   by-production model; Murty, Russell and Levkoff 2012): a character
@@ -210,6 +212,16 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
   id <- as.character(id)
   if (length(id) != L) {
     stop("'id' must have one value per DMU.", call. = FALSE)
+  }
+  if (!is.null(period)) {
+    key <- paste(id, as.character(period), sep = "\r")
+    if (anyDuplicated(key)) {
+      dup <- unique(id[duplicated(key)])
+      stop("the pair (id, period) must identify each observation ",
+           "uniquely; duplicated id(s): ",
+           paste(utils::head(dup, 5L), collapse = ", "), ".",
+           call. = FALSE)
+    }
   }
 
   structure(
@@ -371,6 +383,11 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
     } else if (P == 1L && length(v) == L) {
       v <- matrix(v, L, 1L)
     } else if (P > 1L && length(v) == P) {
+      if (L == P) {
+        stop("ambiguous 'v': its length equals both the number of DMUs ",
+             "and the number of pollutants; supply an L x P matrix or ",
+             "a named list.", call. = FALSE)
+      }
       v <- matrix(v, L, P, byrow = TRUE)
     } else {
       stop("'v' must be a scalar, a length-L vector (single pollutant), ",

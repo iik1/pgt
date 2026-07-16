@@ -10,6 +10,7 @@ boot_pgt_sensitivity(
   B = 100,
   m_grid = NULL,
   level = 0.95,
+  kappa = NULL,
   returns = "vrs",
   peers = "all",
   pollutant = 1L,
@@ -19,14 +20,15 @@ boot_pgt_sensitivity(
 \arguments{
 \item{tech}{A [pgt_tech()] object.}
 
-\item{model, B, level, returns, peers, pollutant, seed}{As in [boot_pgt()].}
+\item{model, B, level, kappa, returns, peers, pollutant, seed}{As in
+[boot_pgt()].}
 
 \item{m_grid}{Integer vector of subsample sizes. Defaults to five
 sizes spanning \eqn{L^{0.5}} to \eqn{L^{0.9}}.}
 }
 \value{
 A data frame with one row per \code{m}: the size, the median
-  per-DMU interval width, and the mean bootstrap standard error.
+  per-DMU interval width, and the mean rescaled standard error.
 }
 \description{
 Re-runs [boot_pgt()] over a grid of subsample sizes \code{m} and
@@ -36,13 +38,15 @@ intervals are driven by the resampling size rather than the data.
 }
 \examples{
 data(steeldemo)
+steel60 <- steeldemo[1:60, ]
 tech <- pgt_tech(
-  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
-  y = steeldemo$production, b = steeldemo$emissions, v = 0.01467,
-  id = steeldemo$plant
+  x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  y = steel60$production, b = steel60$emissions, v = 0.01467,
+  id = steel60$plant
 )
 \donttest{
-boot_pgt_sensitivity(tech, model = "wgd", B = 50, seed = 1)
+boot_pgt_sensitivity(tech, model = "wgd", B = 25,
+                     m_grid = c(15, 25, 40), seed = 1)
 }
 }
 \seealso{

@@ -78,3 +78,17 @@ test_that("mac_curve validates price", {
   expect_error(mac_curve(fit, price = -1))
   expect_error(mac_curve(fit, price = c(1, 2)))
 })
+
+test_that("mac_curve and shadow_prices reject models without output duals", {
+  tech <- make_random_tech(L = 12, N = 2, seed = 37)
+  fit <- pgt(tech, model = "mb_cost")
+  expect_error(mac_curve(fit), "output duals")
+  expect_error(shadow_prices(fit), "output duals")
+})
+
+test_that("the pollutant line is printed for every model and by summary", {
+  tech <- make_random_tech(L = 12, N = 2, seed = 41)
+  env <- pgt(tech, model = "envelope")
+  expect_output(print(env), "pollutant")
+  expect_output(print(summary(env)), "pollutant")
+})

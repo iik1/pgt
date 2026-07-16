@@ -47,7 +47,9 @@ pollution control explicitly; see [pgt()].}
 \item{x_abate}{Optional marker of the pollution-control input columns
 of \code{x} (Rodseth 2025, Eq. 7): a character vector of column
 names or an integer vector of column positions. The remaining
-columns are production inputs.}
+columns are production inputs. Currently recorded and reported
+only: the estimators do not yet treat pollution-control inputs
+separately, and [pgt()] warns when the marker is set.}
 
 \item{polluting}{Optional marker of the emission-generating input
 columns of \code{x} (the residual-generating sub-technology of the

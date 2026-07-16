@@ -21,7 +21,8 @@
 #' not money). To monetise the output dual, combine it with an output
 #' price via [mac_curve()].
 #'
-#' @param fit A [pgt()] fit.
+#' @param fit A [pgt()] fit with \code{model = "wgd"} or
+#'   \code{"envelope"}, the models that report output duals.
 #'
 #' @return A data frame with one row per DMU: \code{id}, \code{group}
 #'   (if present), \code{b}, \code{b_star}, \code{dual_output} and
@@ -43,6 +44,11 @@
 #' @export
 shadow_prices <- function(fit) {
   stopifnot(inherits(fit, "pgt"))
+  if (!fit$model %in% c("wgd", "envelope")) {
+    stop("shadow_prices() requires a fit with output duals ",
+         "(model = \"wgd\" or \"envelope\"); got model = \"",
+         fit$model, "\".", call. = FALSE)
+  }
   keep <- intersect(c("id", "group", "b", "b_star",
                       "dual_output", "mb_headroom"),
                     names(fit$results))
@@ -72,7 +78,14 @@ shadow_prices <- function(fit) {
 #' attached as attributes \code{"n_excluded"} and
 #' \code{"excluded_abatement"} and reported by \code{print}.
 #'
-#' @param fit A [pgt()] fit.
+#' A DMU that projects onto a vertex of the piecewise-linear frontier
+#' has a range of optimal duals, and the solver reports the dual of
+#' whichever optimal basis it terminates in, so the MAC of such a DMU
+#' is one point of an interval and can differ across solver versions or
+#' platforms. Frontier-interior projections have unique duals.
+#'
+#' @param fit A [pgt()] fit with \code{model = "wgd"} or
+#'   \code{"envelope"}, the models that report output duals.
 #' @param price Optional scalar price of the good output. If supplied,
 #'   \code{mac} is in money per unit of bad output.
 #'
@@ -97,6 +110,11 @@ shadow_prices <- function(fit) {
 #' @export
 mac_curve <- function(fit, price = NULL) {
   stopifnot(inherits(fit, "pgt"))
+  if (!fit$model %in% c("wgd", "envelope")) {
+    stop("mac_curve() requires a fit with output duals ",
+         "(model = \"wgd\" or \"envelope\"); got model = \"",
+         fit$model, "\".", call. = FALSE)
+  }
   if (!is.null(price)) {
     stopifnot(is.numeric(price), length(price) == 1L, price > 0)
   }
@@ -118,9 +136,7 @@ mac_curve <- function(fit, price = NULL) {
     abatement = pmax(d$b - d$b_star, 0),
     stringsAsFactors = FALSE
   )
-  if (!is.null(d$group)) {
-    out <- cbind(out[1], group = d$group, out[-1])
-  }
+  out <- .insert_group(out, d$group)
   out <- out[order(out$mac), , drop = FALSE]
   out$cum_abatement <- cumsum(out$abatement)
   rownames(out) <- NULL

@@ -38,9 +38,11 @@ An object of class \code{"pgt_compare"}: a list with
     \item{\code{spearman}}{Matrix of pairwise Spearman rank
       correlations.}
     \item{\code{agreement}}{Data frame with, per model, the number of
-      DMUs solved, the median score, and the share of DMUs it places
-      in the bottom efficiency quartile that the weak-G-disposability
-      model also places there (top-of-agenda overlap).}
+      DMUs solved, the median score, and \code{bottom_q_overlap}: the
+      share of the DMUs this model places in its own bottom
+      efficiency quartile that the reference model (the first entry
+      of \code{models}) also places in its bottom quartile
+      (top-of-agenda overlap).}
     \item{\code{models}, \code{returns}, \code{peers}}{Call settings.}
   }
 }

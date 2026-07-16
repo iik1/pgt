@@ -1,3 +1,67 @@
+# pgt 0.4.1
+
+Fixes from a whole-package review.
+
+## Inference
+
+* `boot_pgt()` now builds proper subsampling intervals (Politis and
+  Romano 1994): the subsample distribution is recentred at the point
+  estimate and rescaled by the relative convergence rate `(m/L)^kappa`,
+  so intervals extend downward from the estimate, matching the
+  direction of the frontier bias. Previous versions built percentile
+  intervals from the raw subsample distribution, which lies entirely at
+  or above the point estimate. The reported `se` is rescaled the same
+  way. A new `kappa` argument controls the rate exponent, defaulting to
+  the DEA rate for the model's effective dimension.
+* `boot_pgt()` restores the caller's RNG state on exit instead of
+  permanently reseeding the session.
+
+## Model correctness
+
+* Multi-pollutant `pgt(model = "wgd")` now enforces every pollutant's
+  materials-balance cap on the peer mix, as documented; earlier
+  versions constrained only the selected pollutant.
+* `pgt(model = "fdmo")` warns when material accounts do not close
+  exactly (`u'x - v y != b + a`): the model imposes the identity as an
+  equality, so open accounts either make the LP infeasible or shift the
+  closure gap into the scores. `mb_check()` reports the equality
+  residual in a new `closure` column when abatement is observed.
+* A failed sub-LP in `pgt(model = "byprod")` or `"mb_cost"` now sets
+  every score of that DMU to `NA`, so `status != 0` always means the
+  scores are `NA`, matching the warning text and `boot_pgt()`.
+* `pgt(model = "mb_cost")` warns when the implied minimal emission
+  `b_star` is negative (possible under DMU-specific coefficients).
+* `pgt()` and `pgt_decompose()` warn that `x_abate` is recorded but not
+  yet used by any estimator.
+* `pgt_tech()` rejects an ambiguous `v` whose length equals both the
+  number of DMUs and the number of pollutants, and rejects duplicated
+  `(id, period)` pairs, which `pgt_ml()` silently mismatched before.
+
+## Interface
+
+* `compare_models()` accepts the documented aliases `wgd_rodseth` and
+  `ddf`, ignores duplicated entries with a warning, and no longer
+  reports a model's self-correlation as the largest ranking
+  disagreement.
+* `mac_curve()` and `shadow_prices()` now error clearly for models
+  without output duals (`fdmo`, `byprod`, `mb_cost`, `wd`); earlier
+  versions returned an empty curve reporting zero exclusions.
+* `print()` on a subset of an `mb_check()` audit reports counts for the
+  printed rows, not the full table.
+* `summary()` of a `pgt_ml` fit no longer errors when transitions
+  contain `NA`; failed distance LPs are counted and warned about.
+* The pollutant line is printed for every model (previously omitted for
+  `envelope`) and by `summary()` as well.
+* `pgt(pollutant = <character vector>)` gives a clear error instead of
+  an internal condition-length failure.
+
+## Housekeeping
+
+* DMU-invariant quantities are computed once per fit instead of once
+  per DMU (and once per LP solve in `boot_pgt()`).
+* `Benchmarking` dropped from `Suggests` (never used).
+* Example and vignette runtimes reduced.
+
 # pgt 0.4.0
 
 Panel productivity measurement and inference.

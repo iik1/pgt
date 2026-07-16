@@ -28,8 +28,10 @@ group (requires \code{group} in [pgt_tech()]).}
 
 \item{pollutant}{For a multi-pollutant technology, the pollutant to
 estimate: a column name or index of \code{b}. Defaults to the first
-pollutant. Every pollutant's materials-balance cap is respected;
-this selects which bad output the objective acts on.}
+pollutant. This selects which bad output the objective acts on. For
+\code{model = "wgd"} the materials-balance caps of every pollutant
+constrain the projection; the other models use only the selected
+pollutant's data.}
 }
 \value{
 An object of class \code{"pgt"}: a list with
@@ -72,11 +74,16 @@ cross-comparison (see [compare_models()]).
     (2025), Eq. 6 in reduced form: minimise the bad output subject to
     output and input feasibility, the peer emission envelope, and the
     evaluated DMU's own materials-balance cap
-    \eqn{b \le u'x_l - v y_l}. DMUs whose data violate the
-    materials-balance identity lose the self-reference guarantee:
-    their LP may be infeasible (returning \code{NA}), and every
-    infeasible LP belongs to such a DMU. Audit with [mb_check()]
-    first. \code{model = "wgd_rodseth"} is an alias.}
+    \eqn{b \le u'x_l - v y_l}. With several pollutants the caps of
+    the remaining pollutants constrain the peer mix as well, so the
+    projection respects every pollutant's materials balance. DMUs
+    whose data violate a materials-balance identity lose the
+    self-reference guarantee: their LP may be infeasible (returning
+    \code{NA}), and every infeasible LP belongs to such a DMU. A DMU
+    violating another pollutant's identity can also score above 1,
+    since its MB-consistent projection may emit more of the selected
+    pollutant than the DMU reports. Audit with [mb_check()] first.
+    \code{model = "wgd_rodseth"} is an alias.}
   \item{\code{"envelope"}}{Rodseth's Eq. 6 with inputs free: the
     program reduces to the convex lower envelope of the \eqn{(y, b)}
     scatter (the weak-G slack equality is absorbed by the input
@@ -89,8 +96,12 @@ cross-comparison (see [compare_models()]).
     the contraction of the bad output (\eqn{\theta_b}) along the
     materials-balance frontier; gross inefficiency is
     \eqn{\theta_y + \theta_b}, with 0 for a frontier DMU. Requires an
-    abatement output \code{a} in [pgt_tech()]. \code{model = "ddf"}
-    is an alias.}
+    abatement output \code{a} in [pgt_tech()]. The model imposes the
+    materials-balance identity as an exact equality
+    \eqn{u'x_l - v y_l = b_l + a_l}: accounts that do not close
+    exactly either make the LP infeasible or shift the closure gap
+    into the scores, and \code{pgt()} warns when it detects open
+    accounts. \code{model = "ddf"} is an alias.}
   \item{\code{"mb_cost"}}{The materials-balance cost model of Coelli,
     Lauwers and Van Huylenbroeck (2007): environmental efficiency is
     the ratio of minimal to observed aggregate material inflow

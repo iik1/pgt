@@ -66,3 +66,13 @@ test_that("pgt_ml requires a period", {
                    id = steeldemo$plant)
   expect_error(pgt_ml(tech), "period")
 })
+
+test_that("summary.pgt_ml tolerates NA transitions", {
+  ml <- pgt_ml(two_period_panel())
+  ml$results$gml[1] <- NA_real_
+  s <- summary(ml)
+  expect_s3_class(s, "summary.pgt_ml")
+  expect_true(all(is.finite(s$quantiles["EC", ])))
+  expect_output(print(s), "Distribution")
+  expect_output(print(ml), "transitions with NA index")
+})

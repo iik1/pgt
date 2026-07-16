@@ -17,11 +17,16 @@
 #'     (2025), Eq. 6 in reduced form: minimise the bad output subject to
 #'     output and input feasibility, the peer emission envelope, and the
 #'     evaluated DMU's own materials-balance cap
-#'     \eqn{b \le u'x_l - v y_l}. DMUs whose data violate the
-#'     materials-balance identity lose the self-reference guarantee:
-#'     their LP may be infeasible (returning \code{NA}), and every
-#'     infeasible LP belongs to such a DMU. Audit with [mb_check()]
-#'     first. \code{model = "wgd_rodseth"} is an alias.}
+#'     \eqn{b \le u'x_l - v y_l}. With several pollutants the caps of
+#'     the remaining pollutants constrain the peer mix as well, so the
+#'     projection respects every pollutant's materials balance. DMUs
+#'     whose data violate a materials-balance identity lose the
+#'     self-reference guarantee: their LP may be infeasible (returning
+#'     \code{NA}), and every infeasible LP belongs to such a DMU. A DMU
+#'     violating another pollutant's identity can also score above 1,
+#'     since its MB-consistent projection may emit more of the selected
+#'     pollutant than the DMU reports. Audit with [mb_check()] first.
+#'     \code{model = "wgd_rodseth"} is an alias.}
 #'   \item{\code{"envelope"}}{Rodseth's Eq. 6 with inputs free: the
 #'     program reduces to the convex lower envelope of the \eqn{(y, b)}
 #'     scatter (the weak-G slack equality is absorbed by the input
@@ -34,8 +39,12 @@
 #'     the contraction of the bad output (\eqn{\theta_b}) along the
 #'     materials-balance frontier; gross inefficiency is
 #'     \eqn{\theta_y + \theta_b}, with 0 for a frontier DMU. Requires an
-#'     abatement output \code{a} in [pgt_tech()]. \code{model = "ddf"}
-#'     is an alias.}
+#'     abatement output \code{a} in [pgt_tech()]. The model imposes the
+#'     materials-balance identity as an exact equality
+#'     \eqn{u'x_l - v y_l = b_l + a_l}: accounts that do not close
+#'     exactly either make the LP infeasible or shift the closure gap
+#'     into the scores, and \code{pgt()} warns when it detects open
+#'     accounts. \code{model = "ddf"} is an alias.}
 #'   \item{\code{"mb_cost"}}{The materials-balance cost model of Coelli,
 #'     Lauwers and Van Huylenbroeck (2007): environmental efficiency is
 #'     the ratio of minimal to observed aggregate material inflow
@@ -65,8 +74,10 @@
 #'   group (requires \code{group} in [pgt_tech()]).
 #' @param pollutant For a multi-pollutant technology, the pollutant to
 #'   estimate: a column name or index of \code{b}. Defaults to the first
-#'   pollutant. Every pollutant's materials-balance cap is respected;
-#'   this selects which bad output the objective acts on.
+#'   pollutant. This selects which bad output the objective acts on. For
+#'   \code{model = "wgd"} the materials-balance caps of every pollutant
+#'   constrain the projection; the other models use only the selected
+#'   pollutant's data.
 #'
 #' @return An object of class \code{"pgt"}: a list with
 #'   \describe{
@@ -123,101 +134,106 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "envelope",
   vrs <- returns == "vrs"
   p <- .pollutant_index(tech, pollutant)
 
+  if (length(tech$x_abate)) {
+    warning("'x_abate' is recorded in pgt_tech() but the estimators do ",
+            "not yet treat pollution-control inputs separately; all ",
+            "inputs enter the constraints identically.", call. = FALSE)
+  }
+  if (model == "fdmo") {
+    if (is.null(tech$a)) {
+      stop("model = \"fdmo\" requires an abatement output 'a' in ",
+           "pgt_tech().", call. = FALSE)
+    }
+    closure <- .mb_cap(tech, p) - tech$b[, p] - tech$a[, p]
+    rel <- abs(closure) / pmax(.mb_potential(tech, p),
+                               .Machine$double.eps)
+    n_open <- sum(rel > 1e-6)
+    if (n_open > 0) {
+      warning(sprintf(paste0(
+        "%d of %d DMUs do not close the materials-balance identity ",
+        "exactly (u'x - v y != b + a; largest relative gap %.2g). ",
+        "model = \"fdmo\" imposes the identity as an equality, so open ",
+        "accounts either make the LP infeasible or shift the closure ",
+        "gap into the scores."), n_open, tech$L, max(rel)), call. = FALSE)
+    }
+  }
+
   peer_sets <- .peer_sets(tech, peers)
   L <- tech$L
+  ctx <- .solve_ctx(tech, model, p)
   weights <- vector("list", L)
   names(weights) <- make.unique(tech$id)
   status <- rep(NA_integer_, L)
+  sols <- vector("list", L)
 
-  if (model == "fdmo") {
-    gross <- good_eff <- bad_eff <- rep(NA_real_, L)
-    for (i in seq_len(L)) {
-      ps <- peer_sets[[i]]
-      sol <- .lp_solve_one(model, i, tech, ps, vrs, p = p)
-      status[i] <- sol$status
-      gross[i] <- sol$gross
-      good_eff[i] <- sol$theta_y
-      bad_eff[i] <- sol$theta_b
-      if (!is.null(sol$lambda)) {
-        weights[[i]] <- .named_weights(sol$lambda, tech, ps)
-      }
+  for (i in seq_len(L)) {
+    ps <- peer_sets[[i]]
+    sol <- .lp_solve_one(model, i, tech, ps, vrs, p = p, ctx = ctx)
+    sols[[i]] <- sol
+    status[i] <- sol$status
+    w <- if (model == "byprod") sol$mu else sol$lambda
+    if (!is.null(w)) {
+      weights[[i]] <- .named_weights(w, tech, ps)
     }
-    results <- data.frame(
-      id = tech$id, y = tech$y, b = tech$b[, p],
-      gross = gross, good_eff = good_eff, bad_eff = bad_eff,
-      maximal_y = tech$y + good_eff, status = status,
-      stringsAsFactors = FALSE
-    )
-  } else if (model == "byprod") {
-    b_star <- output_eff <- emission_eff <- fgl <- rep(NA_real_, L)
-    for (i in seq_len(L)) {
-      ps <- peer_sets[[i]]
-      sol <- .lp_solve_one(model, i, tech, ps, vrs, p = p)
-      status[i] <- sol$status
-      b_star[i] <- sol$b_star
-      output_eff[i] <- sol$output_eff
-      emission_eff[i] <- sol$emission_eff
-      fgl[i] <- sol$fgl
-      if (!is.null(sol$mu)) {
-        weights[[i]] <- .named_weights(sol$mu, tech, ps)
-      }
-    }
-    results <- data.frame(
-      id = tech$id, y = tech$y, b = tech$b[, p],
-      b_star = b_star, efficiency = emission_eff,
-      output_eff = output_eff, fgl = fgl, status = status,
-      stringsAsFactors = FALSE
-    )
-  } else if (model == "mb_cost") {
-    b_star <- mbe <- te <- eae <- rep(NA_real_, L)
-    for (i in seq_len(L)) {
-      ps <- peer_sets[[i]]
-      sol <- .lp_solve_one(model, i, tech, ps, vrs, p = p)
-      status[i] <- sol$status
-      b_star[i] <- sol$b_star
-      mbe[i] <- sol$mbe
-      te[i] <- sol$te
-      eae[i] <- sol$eae
-      if (!is.null(sol$lambda)) {
-        weights[[i]] <- .named_weights(sol$lambda, tech, ps)
-      }
-    }
-    results <- data.frame(
-      id = tech$id, y = tech$y, b = tech$b[, p],
-      b_star = b_star, efficiency = mbe, te = te, eae = eae,
-      status = status, stringsAsFactors = FALSE
-    )
-  } else {
-    b_star <- dual_output <- mb_headroom <- rep(NA_real_, L)
-    for (i in seq_len(L)) {
-      ps <- peer_sets[[i]]
-      sol <- .lp_solve_one(model, i, tech, ps, vrs, p = p)
-      status[i] <- sol$status
-      b_star[i] <- sol$b_star
-      dual_output[i] <- sol$dual_output
-      mb_headroom[i] <- sol$mb_rhs - sol$b_star
-      if (!is.null(sol$lambda)) {
-        weights[[i]] <- .named_weights(sol$lambda, tech, ps)
-      }
-    }
-    results <- data.frame(
-      id = tech$id, y = tech$y, b = tech$b[, p],
-      b_star = b_star, efficiency = b_star / tech$b[, p],
-      dual_output = dual_output, mb_headroom = mb_headroom,
-      status = status, stringsAsFactors = FALSE
-    )
   }
+  num <- function(field) {
+    vapply(sols, function(s) {
+      val <- s[[field]]
+      if (is.null(val)) NA_real_ else as.numeric(val)
+    }, numeric(1))
+  }
+  b_p <- ctx$b_p
+
+  results <- switch(model,
+    fdmo = data.frame(
+      id = tech$id, y = tech$y, b = b_p,
+      gross = num("gross"), good_eff = num("theta_y"),
+      bad_eff = num("theta_b"), maximal_y = tech$y + num("theta_y"),
+      status = status, stringsAsFactors = FALSE
+    ),
+    byprod = data.frame(
+      id = tech$id, y = tech$y, b = b_p,
+      b_star = num("b_star"), efficiency = num("emission_eff"),
+      output_eff = num("output_eff"), fgl = num("fgl"), status = status,
+      stringsAsFactors = FALSE
+    ),
+    mb_cost = data.frame(
+      id = tech$id, y = tech$y, b = b_p,
+      b_star = num("b_star"), efficiency = num("mbe"), te = num("te"),
+      eae = num("eae"), status = status, stringsAsFactors = FALSE
+    ),
+    data.frame(
+      id = tech$id, y = tech$y, b = b_p,
+      b_star = num("b_star"), efficiency = num("b_star") / b_p,
+      dual_output = num("dual_output"),
+      mb_headroom = num("mb_rhs") - num("b_star"),
+      status = status, stringsAsFactors = FALSE
+    )
+  )
 
   n_failed <- sum(status != 0)
   if (n_failed > 0) {
-    warning(sprintf(paste0(
-      "%d of %d LPs infeasible or failed; their scores are NA. ",
-      "For model = \"wgd\" this typically flags materials-balance ",
-      "violations; run mb_check()."), n_failed, L), call. = FALSE)
+    hint <- switch(model,
+      wgd = paste0(" For model = \"wgd\" this flags DMUs violating a ",
+                   "materials-balance identity; run mb_check()."),
+      fdmo = paste0(" For model = \"fdmo\" this flags DMUs whose ",
+                    "accounts do not close exactly; run mb_check()."),
+      "")
+    warning(sprintf(
+      "%d of %d LPs infeasible or failed; their scores are NA.%s",
+      n_failed, L, hint), call. = FALSE)
   }
-  if (!is.null(tech$group)) {
-    results <- cbind(results[1], group = tech$group, results[-1])
+  if (model == "mb_cost") {
+    n_neg <- sum(results$b_star < 0, na.rm = TRUE)
+    if (n_neg > 0) {
+      warning(sprintf(paste0(
+        "%d of %d DMUs have a negative implied minimal emission b_star ",
+        "(minimised material inflow below the DMU's retained content, ",
+        "possible under DMU-specific coefficients); interpret b_star ",
+        "with care."), n_neg, L), call. = FALSE)
+    }
   }
+  results <- .insert_group(results, tech$group)
 
   structure(
     list(results = results, weights = weights, model = model,
@@ -230,6 +246,10 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "envelope",
 # Resolve a pollutant selector (name or index) to a column position.
 .pollutant_index <- function(tech, pollutant) {
   if (is.character(pollutant)) {
+    if (length(pollutant) != 1L) {
+      stop("'pollutant' must be a single column name or integer index.",
+           call. = FALSE)
+    }
     p <- match(pollutant, tech$pollutants)
     if (is.na(p)) {
       stop("pollutant '", pollutant, "' not found; available: ",
@@ -259,17 +279,29 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "envelope",
   w
 }
 
+# Insert the group column directly after the id column (shared by the
+# result frames of pgt(), boot_pgt(), mac_curve() and mb_check()).
+.insert_group <- function(d, group) {
+  if (is.null(group)) return(d)
+  cbind(d[1], group = group, d[-1])
+}
+
 # TRUE for the directional model, whose score columns differ.
 .is_directional <- function(x) identical(x$model, "fdmo")
+
+# Header lines shared by print.pgt and print.summary.pgt.
+.print_pgt_header <- function(x) {
+  cat(sprintf("pgt fit: model = %s, returns = %s, peers = %s\n",
+              x$model, x$returns, x$peers))
+  if (length(x$pollutant)) {
+    cat(sprintf("  pollutant: %s\n", x$pollutant))
+  }
+}
 
 #' @export
 print.pgt <- function(x, ...) {
   r <- x$results
-  cat(sprintf("pgt fit: model = %s, returns = %s, peers = %s\n",
-              x$model, x$returns, x$peers))
-  if (x$model != "envelope" && length(x$pollutant)) {
-    cat(sprintf("  pollutant: %s\n", x$pollutant))
-  }
+  .print_pgt_header(x)
   if (.is_directional(x)) {
     cat(sprintf("  DMUs: %d   solved: %d   gross inefficiency: median %.3f\n",
                 nrow(r), sum(r$status == 0),
@@ -320,8 +352,7 @@ summary.pgt <- function(object, ...) {
 
 #' @export
 print.summary.pgt <- function(x, ...) {
-  cat(sprintf("pgt fit: model = %s, returns = %s, peers = %s\n",
-              x$model, x$returns, x$peers))
+  .print_pgt_header(x)
   cat(sprintf("  DMUs: %d   failed LPs: %d\n", x$n, x$n_failed))
   cat(sprintf("\n%s:\n",
               if (x$directional) "Gross inefficiency (theta_y + theta_b)"

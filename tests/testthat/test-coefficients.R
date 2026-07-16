@@ -121,3 +121,39 @@ test_that("fractional pollutant index is rejected", {
   expect_error(pgt(tech, pollutant = 1.9), "integer index")
   expect_silent(pgt(tech, model = "envelope", pollutant = 2))  # integer double ok
 })
+
+test_that("wgd enforces every pollutant's cap on the peer mix", {
+  # Peer B is attractive on pollutant 1 (b1 = 2) but breaches DMU A's
+  # pollutant-2 cap (cap2 = 0.3 * 10 = 3 < b2_B = 8), so enforcing all
+  # caps must raise A's minimal b1 above the single-pollutant solution.
+  x <- matrix(c(10, 10, 10), 3, 1)
+  y <- c(1, 1, 1)
+  b1 <- c(5, 2, 4)
+  b2 <- c(1, 8, 1)
+  tech2 <- pgt_tech(x, y, b = cbind(p1 = b1, p2 = b2),
+                    u = list(p1 = 1, p2 = 0.3), v = c(0, 0))
+  tech1 <- pgt_tech(x, y, b = b1)
+  fit2 <- pgt(tech2, model = "wgd", pollutant = "p1")
+  fit1 <- pgt(tech1, model = "wgd")
+  expect_gt(fit2$results$b_star[1], fit1$results$b_star[1])
+  # DMU A satisfies both identities, so its LP stays feasible.
+  expect_equal(fit2$results$status[1], 0L)
+  # DMUs satisfying every identity keep scores in (0, 1] ...
+  expect_true(all(fit2$results$efficiency[c(1, 3)] > 0 &
+                    fit2$results$efficiency[c(1, 3)] <= 1 + 1e-9))
+  # ... while B, which violates its pollutant-2 identity (flagged by
+  # mb_check), is projected to an MB-consistent point emitting more b1
+  # than it reports, so its score exceeds 1 (documented behaviour).
+  mb <- mb_check(tech2)
+  expect_true(any(mb$violated[mb$id == "2"]))
+  expect_gt(fit2$results$efficiency[2], 1)
+})
+
+test_that("a character pollutant selector must have length one", {
+  x <- matrix(c(10, 12, 14), 3, 1)
+  B <- cbind(co2 = c(20, 24, 28), so2 = c(3, 2, 4))
+  tech <- pgt_tech(x, y = c(4, 5, 6), b = B,
+                   u = list(co2 = 1, so2 = 1))
+  expect_error(pgt(tech, model = "envelope", pollutant = c("co2", "so2")),
+               "single column name")
+})

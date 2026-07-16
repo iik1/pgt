@@ -24,8 +24,12 @@
 #'   (if present), \code{pollutant} (when several), \code{potential}
 #'   (\eqn{u'x_l}), \code{retained} (\eqn{v y_l}), \code{b}, \code{gap}
 #'   (\eqn{u'x_l - v y_l - b_l}), \code{rel_gap} (\code{gap / potential})
-#'   and \code{violated}. The number of violations is attached as
-#'   attribute \code{"n_violations"}.
+#'   and \code{violated}. When the technology records an abatement
+#'   output, also \code{a} and \code{closure} (\eqn{gap - a_l}): the
+#'   equality residual \eqn{u'x_l - v y_l - b_l - a_l}, zero when the
+#'   account closes exactly, which \code{model = "fdmo"} requires. The
+#'   number of violations is attached as attribute
+#'   \code{"n_violations"}.
 #'
 #' @seealso [pgt_tech()], [pgt()]
 #' @examples
@@ -54,13 +58,15 @@ mb_check <- function(tech, tol = 1e-8) {
       b = tech$b[, p], gap = gap, rel_gap = rel_gap,
       violated = rel_gap < -tol, stringsAsFactors = FALSE
     )
-    if (!is.null(tech$group)) {
-      d <- cbind(d[1], group = tech$group, d[-1])
+    if (!is.null(tech$a)) {
+      d$a <- tech$a[, p]
+      d$closure <- gap - tech$a[, p]
     }
+    d <- .insert_group(d, tech$group)
     if (P > 1L) {
-      d <- cbind(d[if (is.null(tech$group)) 1 else 1:2],
-                 pollutant = tech$pollutants[p],
-                 d[-(if (is.null(tech$group)) 1 else 1:2)])
+      lead <- if (is.null(tech$group)) "id" else c("id", "group")
+      d <- cbind(d[lead], pollutant = tech$pollutants[p],
+                 d[setdiff(names(d), lead)])
     }
     d
   })
@@ -76,17 +82,28 @@ mb_check <- function(tech, tol = 1e-8) {
 
 #' @export
 print.pgt_mb <- function(x, ...) {
-  nv <- attr(x, "n_violations")
+  # counts are recomputed from the printed rows, so a subset of the
+  # audit prints counts that describe the subset, not the full table
   L <- nrow(x)
   cat("Materials-balance audit (u'x - v y >= b)\n")
-  cat(sprintf("  accounts: %d   violations: %d (%.1f%%)   tolerance: %g\n",
-              L, nv, 100 * nv / L, attr(x, "tol")))
+  if (L == 0) {
+    cat("  no accounts\n")
+    return(invisible(x))
+  }
+  nv <- sum(x$violated)
+  tol <- attr(x, "tol")
+  cat(sprintf("  accounts: %d   violations: %d (%.1f%%)   tolerance: %s\n",
+              L, nv, 100 * nv / L,
+              if (is.null(tol)) "unknown" else format(tol)))
   cat(sprintf("  closure gap (gap / potential): min %.4f, median %.4f, max %.4f\n",
               min(x$rel_gap), stats::median(x$rel_gap), max(x$rel_gap)))
-  ne <- attr(x, "n_exact")
-  if (!is.null(ne)) {
-    cat(sprintf("  accounts with gap < 0 (exact): %d; any infeasible weak-G LPs are confined to these\n",
-                ne))
+  ne <- sum(x$gap < 0)
+  cat(sprintf("  accounts with gap < 0 (exact): %d; any infeasible weak-G LPs are confined to these\n",
+              ne))
+  if (!is.null(x$closure)) {
+    cat(sprintf("  equality closure (gap - a): largest |closure| / potential = %.2g (model = \"fdmo\" requires exact closure)\n",
+                max(abs(x$closure) / pmax(x$potential,
+                                          .Machine$double.eps))))
   }
   if (nv > 0) {
     cat("\n  worst violations:\n")
