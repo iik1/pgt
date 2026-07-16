@@ -1,0 +1,51 @@
+test_that("pgt_tech validates inputs", {
+  x <- matrix(1:6, 3, 2)
+  y <- c(1, 2, 3)
+  b <- c(1, 1, 1)
+
+  expect_s3_class(pgt_tech(x, y, b), "pgt_tech")
+  expect_error(pgt_tech(x, y, c(1, 1)), "one value per DMU")
+  expect_error(pgt_tech({x2 <- x; x2[1] <- NA; x2}, y, b), "missing")
+  expect_error(pgt_tech(-x, y, b), "non-negative")
+  expect_error(pgt_tech(x, c(0, 2, 3), b), "strictly positive")
+  expect_error(pgt_tech(x, y, c(0, 1, 1)), "strictly positive")
+  expect_error(pgt_tech(x, y, b, u = c(1, 2, 3)), "one coefficient")
+  expect_error(pgt_tech(x, y, b, u = c(-1, 1)), "non-negative")
+  expect_error(pgt_tech(x, y, b, v = -1), "non-negative")
+  expect_error(pgt_tech(x, y, b, group = c("A", "B")), "per DMU")
+})
+
+test_that("pgt_tech rejects factors, non-finite values and bad v", {
+  x <- matrix(1:6, 3, 2)
+  y <- c(1, 2, 3)
+  b <- c(1, 1, 1)
+
+  expect_error(pgt_tech(x, factor(c("10", "20", "30")), b), "factor")
+  expect_error(pgt_tech(x, y, factor(c("1", "1", "2"))), "factor")
+  expect_error(pgt_tech(x, c(1, 2, Inf), b), "finite")
+  expect_error(pgt_tech({x2 <- x; x2[1] <- Inf; x2}, y, b), "finite")
+  expect_error(pgt_tech(x, y, b, v = "0.5"), "numeric")
+  expect_error(pgt_tech(x, y, b, v = Inf), "non-negative")
+  expect_error(pgt_tech(x, y, b, u = factor(c(1, 1))), "numeric")
+})
+
+test_that("pgt_tech defaults are sensible", {
+  x <- matrix(1:6, 3, 2, dimnames = list(c("p1", "p2", "p3"), NULL))
+  tech <- pgt_tech(x, c(1, 2, 3), c(1, 1, 1))
+  expect_equal(dim(tech$u), c(3L, 2L, 1L))
+  expect_true(all(tech$u == 1))
+  expect_equal(dim(tech$b), c(3L, 1L))
+  expect_equal(dim(tech$v), c(3L, 1L))
+  expect_equal(tech$P, 1L)
+  expect_equal(tech$id, c("p1", "p2", "p3"))
+  expect_equal(colnames(tech$x), c("input1", "input2"))
+  expect_null(tech$group)
+  expect_equal(tech$L, 3L)
+  expect_equal(tech$N, 2L)
+})
+
+test_that("pgt_tech print works", {
+  tech <- make_random_tech()
+  expect_output(print(tech), "Pollution-generating technology")
+  expect_output(print(tech), "groups:")
+})

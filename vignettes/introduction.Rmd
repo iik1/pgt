@@ -1,0 +1,156 @@
+---
+title: "Introduction to pgt"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to pgt}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6,
+                      fig.height = 4)
+```
+
+```{r setup}
+library(pgt)
+```
+
+## The materials-balance principle
+
+A pollution-generating technology turns material inputs into a good
+output and an unavoidable bad output. The pollutant content of the
+inputs has to end up somewhere: embodied in the product, removed by
+abatement, or emitted. `pgt` builds efficiency models on that accounting
+identity,
+$$u'x_l - v y_l \ge b_l,$$
+where $x_l$ are the material inputs of unit $l$, $u$ their pollutant
+flow coefficients (for example tonnes of CO2 potential per unit of
+input), $y_l$ the good output, $v$ the pollutant retained in the
+product, and $b_l$ the emissions. The gap $u'x_l - v y_l - b_l$ is the
+pollutant that leaves the process other than through the measured
+emission.
+
+Existing R packages handle undesirable outputs by transforming the data
+(the Seiford-Zhu translation in `deaR`) or by imposing weak
+disposability and directional distances (`nonparaeff`, `Benchmarking`).
+Neither enforces the materials balance as a constraint. `pgt` does, and
+puts the competing axiom systems behind one interface.
+
+## Building a technology
+
+The constructor bundles the data with the flow coefficients. The shipped
+`steeldemo` data is a synthetic panel of steel plants on two production
+routes, with emissions in CO2 units.
+
+```{r}
+data(steeldemo)
+tech <- pgt_tech(
+  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  y = steeldemo$production,
+  b = steeldemo$emissions,
+  v = 0.01467,
+  group = steeldemo$route,
+  id = steeldemo$plant
+)
+tech
+```
+
+The inputs already sit in pollutant-potential units, so the default
+$u = 1$ applies to each; `v = 0.01467` is the carbon retained per unit of
+crude steel.
+
+## Auditing the identity before estimation
+
+The weak-G-disposability model gives every DMU a self-reference only when
+its own materials balance holds. `mb_check()` reports the closure gap per
+DMU and flags the accounts where more pollutant leaves than enters.
+
+```{r}
+mb <- mb_check(tech)
+head(as.data.frame(mb))
+attr(mb, "n_violations")
+```
+
+An infeasible weak-G-disposability program always belongs to a DMU with a
+strictly negative gap, so this audit locates any estimation problem in
+advance.
+
+## Estimating environmental efficiency
+
+The weak-G-disposability model minimises the bad output subject to output
+and input feasibility, the peer emission envelope, and the DMU's own
+materials-balance cap. The score is $b^*_l / b_l \in (0, 1]$.
+
+```{r}
+fit <- pgt(tech, model = "wgd")
+summary(fit)
+```
+
+The envelope model frees the inputs and reduces the program to the
+convex lower envelope of the $(y, b)$ scatter. Its self-reference is
+always feasible.
+
+```{r}
+fit_env <- pgt(tech, model = "envelope")
+summary(fit_env)
+```
+
+## Shadow prices and abatement cost
+
+The output-constraint dual measures the marginal emission content of the
+good output along the frontier. `mac_curve()` turns it into a marginal
+abatement cost curve: reducing the bad output by one unit costs
+$1 / \eta_l$ units of the good output, or $p / \eta_l$ at output price
+$p$.
+
+```{r}
+head(shadow_prices(fit))
+mac <- mac_curve(fit, price = 550)
+plot(mac)
+```
+
+## Decomposing across production routes
+
+With a technology group, `pgt_decompose()` splits environmental
+efficiency into a within-group and a technology-gap component. The
+envelope decomposition is an exact identity, Total $=$ WR $\times$ TGR,
+where WR is within-route reallocation and TGR the technology-gap ratio of
+Battese, Rao and O'Donnell (2004).
+
+```{r}
+dec <- pgt_decompose(tech, type = "envelope")
+summary(dec)
+```
+
+## A worked example on real data
+
+The `frontier` package ships a balanced panel of Philippine rice farms
+with a physical fertiliser input (`NPK`, kilograms of active ingredient)
+and a physical output (`PROD`, tonnes of paddy). Treating the nitrogen
+carried by the fertiliser as the pollutant potential gives a nitrogen
+materials balance. The nitrogen fraction below is illustrative
+(urea-equivalent, about 0.46 of the active ingredient).
+
+```{r, eval = requireNamespace("frontier", quietly = TRUE)}
+data("riceProdPhil", package = "frontier")
+d8 <- riceProdPhil[riceProdPhil$YEARDUM == 8, ]
+uN <- 0.46
+rice <- pgt_tech(
+  x = as.matrix(d8[, c("AREA", "LABOR", "NPK", "OTHER")]),
+  y = d8$PROD,
+  b = uN * d8$NPK,
+  u = c(AREA = 0, LABOR = 0, NPK = uN, OTHER = 0),
+  v = 0,
+  id = as.character(d8$FMERCODE)
+)
+rice_fit <- pgt(rice, model = "wgd")
+summary(rice_fit)
+```
+
+Here environmental efficiency is the scope to cut fertiliser nitrogen
+while holding rice output at its observed level. The other vignettes
+cover model validation (`vignette("replication", "pgt")`), the
+cross-axiom comparison (`vignette("comparing-axioms", "pgt")`) and
+productivity measurement with inference
+(`vignette("productivity", "pgt")`).

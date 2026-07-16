@@ -1,0 +1,6 @@
+.Rproj.user/
+*.Rproj
+pgt_*.tar.gz
+.Rhistory
+.RData
+docs/

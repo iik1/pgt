@@ -1,0 +1,95 @@
+---
+title: "Comparing axiom systems"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparing axiom systems}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6,
+                      fig.height = 4)
+```
+
+```{r setup}
+library(pgt)
+```
+
+## Which axiom system for bad outputs?
+
+How to model a technology that produces both a good and a bad output is
+an open question in the productivity literature. The 2021 symposium in
+the *Journal of Productivity Analysis* set the weak-disposability school
+against the by-production school, with the materials-balance view running
+through both. The choice of axiom changes the efficiency scores, so a
+result that holds under one system need not hold under another. `pgt`
+implements the competing systems on one data object and reports how far
+their conclusions agree.
+
+The models split into two families. The materials-balance models enforce
+$u'x_l - v y_l \ge b_l$:
+
+- `wgd`: weak-G-disposability (Rodseth 2025).
+- `mb_cost`: the materials-balance cost model (Coelli et al. 2007),
+  reporting the technical and environmental-allocative components of
+  $EE = TE \times EAE$.
+
+The reference models come from the competing systems:
+
+- `byprod`: the by-production intersection technology (Murty, Russell and
+  Levkoff 2012), reporting output efficiency, emission efficiency and
+  their graph average.
+- `wd`: weak disposability (Kuosmanen 2005), which imposes no materials
+  balance.
+
+## Fitting each model
+
+```{r}
+data(steeldemo)
+tech <- pgt_tech(
+  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  y = steeldemo$production,
+  b = steeldemo$emissions,
+  v = 0.01467,
+  group = steeldemo$route,
+  id = steeldemo$plant
+)
+
+fits <- lapply(c("wgd", "byprod", "mb_cost", "wd"), function(m) {
+  pgt(tech, model = m)
+})
+names(fits) <- c("wgd", "byprod", "mb_cost", "wd")
+sapply(fits, function(f) round(median(f$results$efficiency, na.rm = TRUE), 3))
+```
+
+The by-production and materials-balance measures need not agree, because
+they reduce a different quantity: `byprod` contracts the observed
+emission over the emission-causing inputs, while `mb_cost` minimises the
+total material inflow.
+
+## The comparison harness
+
+`compare_models()` fits the efficiency-scored models and reports rank
+agreement and the overlap of their worst-performer sets.
+
+```{r}
+cmp <- compare_models(tech, models = c("wgd", "byprod", "mb_cost", "wd"))
+cmp
+```
+
+The Spearman matrix shows how closely the models rank the plants. A high
+correlation means the choice of axiom moves the scores but preserves the
+ordering; a low correlation warns that the ranking itself depends on the
+axiom. The `bottom_q_overlap` column reports the share of the reference
+model's worst-quartile plants that each model also places in its worst
+quartile, the plants a regulator would target first.
+
+```{r, fig.alt = "Efficiency score profiles across four models"}
+plot(cmp)
+```
+
+Reading the plot: plants are ordered along the horizontal axis by their
+weak-G-disposability score, and each line is one model. Where the lines
+track together the axiom choice is immaterial; where they cross, a plant's
+relative standing depends on which system is used.

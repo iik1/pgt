@@ -1,0 +1,143 @@
+---
+title: "Replicating published results"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Replicating published results}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+```{r setup}
+library(pgt)
+```
+
+The estimators are validated against the numerical examples printed in
+their source papers. These replications run as unit tests on every check;
+this vignette reproduces them in the open.
+
+## Rodseth (2025), Table 2: minimal controlled emissions
+
+The `pigfarms` data is Table 1 of Rodseth (2025): five pig-finishing
+farms with feed and piglets as material inputs, meat as the good output,
+and controlled, uncontrolled and abatement emission columns for
+nitrogen. The uncontrolled emission equals controlled plus abatement,
+so the uncontrolled column is the pollutant carrier ($u = 1$,
+$v = 0$).
+
+```{r}
+data(pigfarms)
+pigfarms
+```
+
+```{r}
+tech <- pgt_tech(
+  x = pigfarms[, c("uncontrolled", "labor", "capital")],
+  y = pigfarms$meat,
+  b = pigfarms$controlled,
+  u = c(1, 0, 0),
+  a = pigfarms$abatement,
+  id = pigfarms$farm
+)
+fit <- pgt(tech, model = "wgd")
+data.frame(farm = fit$results$id, b_star = fit$results$b_star)
+```
+
+The minimal controlled emissions are $(16, 16, 16, 20, 16)$, which match
+the paper's Table 2.
+
+## Rodseth (2025), Table 3: the directional representation
+
+The factorially determined multi-output model (Eq. 13, abatement fixed at
+each farm's own level) jointly expands the good output and contracts the
+bad output. Its good-output coefficient $v = 7/6$ follows from farms A
+and B, which share inputs: their meat differs by 3 and their uncontrolled
+emissions by 3.5. Each farm's feed coefficient closes its account to the
+uncontrolled column.
+
+```{r}
+v <- 7 / 6
+u_feed <- (pigfarms$uncontrolled + v * pigfarms$meat) / pigfarms$feed
+tech3 <- pgt_tech(
+  x = pigfarms[, c("feed", "piglet", "labor", "capital")],
+  y = pigfarms$meat,
+  b = pigfarms$controlled,
+  u = cbind(u_feed, 0, 0, 0),
+  v = v,
+  a = pigfarms$abatement,
+  id = pigfarms$farm
+)
+fdmo <- pgt(tech3, model = "fdmo")
+r3 <- fdmo$results
+data.frame(
+  farm = r3$id,
+  good_eff = round(r3$good_eff, 3),
+  bad_eff = round(r3$bad_eff, 3),
+  gross = round(r3$gross, 3),
+  maximal_y = round(r3$maximal_y, 3)
+)
+```
+
+Farms A, B and D are on the frontier (gross inefficiency 0). Farm C
+expands its good output by 3 and cuts its bad output by 3.5, a gross
+inefficiency of 6.5; these figures reproduce Table 3 exactly. Farm E's
+good-output
+expansion rounds to the paper's 0.8; its bad-output figure is
+$v$ times the good-output figure, the ratio the materials balance forces
+whenever uncontrolled emission equals controlled plus abatement.
+
+## Murty, Russell and Levkoff (2012): the by-production example
+
+Their Example 1 is a constant-returns technology with one input, one good
+output $y$ and one bad output $z$, solved analytically in the paper.
+
+```{r}
+mrl <- pgt_tech(
+  x = matrix(c(1, 1, 1, 2, 2), ncol = 1, dimnames = list(NULL, "x")),
+  y = c(2, 3 / 2, 2 / 3, 3, 2),
+  b = c(4, 1, 2, 5, 3),
+  u = 1, polluting = "x",
+  id = paste0("DMU", 1:5)
+)
+bp <- pgt(mrl, model = "byprod", returns = "crs")
+rb <- bp$results
+data.frame(id = rb$id, output_eff = round(rb$output_eff, 4),
+           emission_eff = round(rb$efficiency, 4), fgl = round(rb$fgl, 4))
+```
+
+For DMU3 the output efficiency is $1/3$, the emission efficiency $1/2$
+and the graph measure $5/12$; for DMU2 they are $3/4$, $1$ and $7/8$.
+These match the analytic scores in the paper.
+
+## Coelli, Lauwers and Van Huylenbroeck (2007): material-flow coefficients
+
+Coelli et al. (2007) measure environmental efficiency against a
+materials-balance cost model and report the phosphorus contents used
+(their footnote 16): feed 0.0124, piglet 0.0117 and meat 0.0117 kg P per
+kg. The cost model decomposes environmental efficiency as
+$EE = TE \times EAE$.
+
+```{r}
+farms <- data.frame(
+  feed = c(200, 210, 190, 205),
+  piglet = c(20, 22, 18, 21),
+  meat = c(100, 100, 95, 102)
+)
+tech_c <- pgt_tech(
+  x = as.matrix(farms[, c("feed", "piglet")]),
+  y = farms$meat,
+  b = 0.0124 * farms$feed + 0.0117 * farms$piglet - 0.0117 * farms$meat,
+  u = c(feed = 0.0124, piglet = 0.0117),
+  v = 0.0117
+)
+mbc <- pgt(tech_c, model = "mb_cost", returns = "crs")
+rc <- mbc$results
+data.frame(id = rc$id, EE = round(rc$efficiency, 4),
+           TE = round(rc$te, 4), EAE = round(rc$eae, 4))
+all.equal(rc$efficiency, rc$te * rc$eae)
+```
+
+The identity $EE = TE \times EAE$ holds to machine precision.

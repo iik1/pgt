@@ -1,0 +1,39 @@
+url: https://iik1.github.io/pgt/
+
+template:
+  bootstrap: 5
+
+reference:
+  - title: Technology and audit
+    contents:
+      - pgt_tech
+      - mb_check
+  - title: Estimation
+    contents:
+      - pgt
+      - pgt_decompose
+  - title: Shadow prices and abatement cost
+    contents:
+      - shadow_prices
+      - mac_curve
+  - title: Comparing axiom systems
+    contents:
+      - compare_models
+  - title: Productivity and inference
+    contents:
+      - pgt_ml
+      - boot_pgt
+      - boot_pgt_sensitivity
+  - title: Data
+    contents:
+      - pigfarms
+      - steeldemo
+
+articles:
+  - title: Vignettes
+    navbar: ~
+    contents:
+      - introduction
+      - replication
+      - comparing-axioms
+      - productivity

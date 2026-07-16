@@ -1,0 +1,114 @@
+---
+title: "Productivity change and inference"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Productivity change and inference}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 6,
+                      fig.height = 4)
+```
+
+```{r setup}
+library(pgt)
+```
+
+## Productivity change with a bad output
+
+The Malmquist-Luenberger index measures productivity change when part of
+the output is undesirable, by scoring each unit on a directional distance
+that expands the good output and contracts the bad output together. The
+adjacent-period version can be infeasible across periods; the global
+index of Oh (2010) pools every period into one reference technology,
+which removes the infeasibility and makes the index circular. `pgt_ml()`
+computes it under the pollution-generating technology and splits it into
+efficiency change and best-practice change,
+$GML = EC \times BPC$, with $GML > 1$ signalling growth.
+
+This estimator is experimental: the global Malmquist-Luenberger index
+under a materials-balance technology is not yet settled in the
+literature. When the materials-balance cap does not bind, the index
+coincides with the standard weak-disposability version.
+
+### A constructed panel
+
+The panel below has a frontier that improves between the two periods:
+the same output is produced with 15 percent less emission.
+
+```{r}
+set.seed(1)
+n <- 15
+d1 <- data.frame(id = 1:n, y = runif(n, 5, 10), x = runif(n, 8, 12),
+                 b = runif(n, 2, 6))
+d2 <- data.frame(id = 1:n, y = d1$y * 1.03, x = d1$x, b = d1$b * 0.85)
+d <- rbind(cbind(d1, period = 1), cbind(d2, period = 2))
+panel <- pgt_tech(x = d[, "x", drop = FALSE], y = d$y, b = d$b,
+                  period = d$period, id = d$id)
+ml <- pgt_ml(panel)
+summary(ml)
+```
+
+The median index exceeds 1, and best-practice change carries it: the
+frontier moved out while each unit kept its position relative to the
+frontier, so efficiency change stays near 1.
+
+### A real rice panel
+
+The Philippine rice panel in the `frontier` package spans eight years.
+Treating fertiliser nitrogen as the pollutant potential gives a
+nitrogen-based productivity index.
+
+```{r, eval = requireNamespace("frontier", quietly = TRUE)}
+data("riceProdPhil", package = "frontier")
+r <- riceProdPhil
+uN <- 0.46
+rice_panel <- pgt_tech(
+  x = as.matrix(r[, c("AREA", "LABOR", "NPK", "OTHER")]),
+  y = r$PROD,
+  b = uN * r$NPK,
+  u = c(AREA = 0, LABOR = 0, NPK = uN, OTHER = 0),
+  v = 0,
+  period = r$YEARDUM,
+  id = as.character(r$FMERCODE)
+)
+rice_ml <- pgt_ml(rice_panel)
+summary(rice_ml)
+```
+
+## Subsampling inference
+
+Efficiency scores are point estimates from a finite sample of DMUs.
+`boot_pgt()` gauges their sampling variability by re-solving each unit
+against random subsamples of the reference set (m out of n, without
+replacement), the resampling scheme with the firmest footing for
+boundary estimators.
+
+```{r}
+data(steeldemo)
+tech <- pgt_tech(
+  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  y = steeldemo$production, b = steeldemo$emissions, v = 0.01467,
+  group = steeldemo$route, id = steeldemo$plant
+)
+bt <- boot_pgt(tech, model = "wgd", B = 100, seed = 1)
+head(bt$per_dmu)
+```
+
+The intervals are heuristic: resampling theory for data envelopment
+analysis covers the radial and directional technologies, not the
+materials-balance programs here, so their coverage is not backed by a
+convergence-rate result. Because efficiency scores are biased toward the
+frontier, the resampling distribution is not centred on the point
+estimate. Before relying on the intervals, check that their width is
+stable in the subsample size.
+
+```{r}
+boot_pgt_sensitivity(tech, model = "wgd", B = 50, seed = 1)
+```
+
+A width that changes little across the grid supports the chosen
+subsample size; a strong trend means the size, not the data, is driving
+the interval.
