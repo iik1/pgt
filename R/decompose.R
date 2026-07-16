@@ -29,7 +29,12 @@
 #'     gap), and stage 3 additionally drops the input constraints
 #'     (input-mix / allocative component). Each stage is a strict
 #'     relaxation of the previous one, so every component lies in
-#'     \eqn{(0, 1]} where feasible. When an early stage is infeasible
+#'     \eqn{(0, 1]} where feasible for DMUs satisfying every
+#'     pollutant's materials-balance identity; as in [pgt()], a DMU
+#'     violating another pollutant's identity can have \code{te} and
+#'     \code{total} above 1, since its MB-consistent projection may
+#'     emit more of the selected pollutant than the DMU reports. When
+#'     an early stage is infeasible
 #'     (materials-balance violators, see [mb_check()]) its component is
 #'     \code{NA} while later-stage ratios and \code{total} can remain
 #'     defined, matching the reference implementation; the

@@ -32,12 +32,15 @@ conventional choice between \eqn{\sqrt{L}} and \eqn{L}.}
 \item{level}{Confidence level for the intervals.}
 
 \item{kappa}{Convergence-rate exponent used to rescale the subsample
-distribution. Defaults to the DEA rate for the model's effective
-dimension (Kneip, Simar and Wilson 2008): \eqn{2/(N+3)} under VRS
-and \eqn{2/(N+2)} under CRS for the input-constrained models, and
-\eqn{2/3} (VRS) or \eqn{1} (CRS) for the input-free
-\code{"envelope"} model, whose frontier lives in the \eqn{(y, b)}
-plane. A heuristic; supply your own exponent to override.}
+distribution. Defaults to the DEA rate \eqn{2/(d+1)} under VRS and
+\eqn{2/d} under CRS (Kneip, Simar and Wilson 2008) for the model's
+effective frontier dimension \eqn{d}: \eqn{N+2} for \code{"wgd"}
+and \code{"wd"} (inputs, good and bad output), \eqn{N+1} for
+\code{"mb_cost"} and \code{"byprod"} (whose programs live in the
+\eqn{(x, y)} and sub-technology spaces), and \eqn{2} for the
+input-free \code{"envelope"} model, whose frontier lives in the
+\eqn{(y, b)} plane. A heuristic; supply your own exponent to
+override.}
 
 \item{returns, peers, pollutant}{Passed to the underlying model, as in
 [pgt()].}

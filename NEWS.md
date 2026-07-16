@@ -39,10 +39,11 @@ Fixes from a whole-package review.
 
 ## Interface
 
-* `compare_models()` accepts the documented aliases `wgd_rodseth` and
-  `ddf`, ignores duplicated entries with a warning, and no longer
-  reports a model's self-correlation as the largest ranking
-  disagreement.
+* `compare_models()` recognises the documented aliases: `wgd_rodseth`
+  is accepted, and `ddf` now yields the clear directional-model
+  rejection instead of a misleading unknown-model error. Duplicated
+  entries are ignored with a warning, and the largest-disagreement line
+  no longer reports a model's self-correlation.
 * `mac_curve()` and `shadow_prices()` now error clearly for models
   without output duals (`fdmo`, `byprod`, `mb_cost`, `wd`); earlier
   versions returned an empty curve reporting zero exclusions.

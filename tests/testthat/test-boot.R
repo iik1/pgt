@@ -15,7 +15,20 @@ test_that("boot_pgt intervals extend downward from the point estimate", {
   expect_true(all(pd$lower <= pd$upper + 1e-9, na.rm = TRUE))
   expect_true(all(pd$upper <= pd$estimate + 1e-6, na.rm = TRUE))
   expect_true(all(pd$se >= 0, na.rm = TRUE))
-  expect_true(all(pd$lower >= 0 & pd$upper <= 1 + 1e-6, na.rm = TRUE))
+})
+
+test_that("intervals stay ordered when the rescaled deviation exceeds the estimate", {
+  # One dominant low-emission peer that rarely enters a size-2
+  # subsample: the raw upper endpoint point - rate * q_a(dev) goes
+  # negative for the dominated DMUs, so both endpoints must be
+  # truncated to [0, 1] together to preserve lower <= upper.
+  L <- 200
+  x <- matrix(1, L, 1)
+  tech <- pgt_tech(x, y = rep(1, L), b = c(0.1, rep(100, L - 1)))
+  bt <- boot_pgt(tech, model = "envelope", B = 100, m = 2, seed = 1)
+  pd <- bt$per_dmu
+  expect_true(all(pd$lower <= pd$upper + 1e-9, na.rm = TRUE))
+  expect_true(all(pd$lower >= 0 & pd$upper >= 0, na.rm = TRUE))
 })
 
 test_that("boot_pgt rescales by the convergence rate through kappa", {

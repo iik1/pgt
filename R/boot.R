@@ -38,12 +38,15 @@
 #'   conventional choice between \eqn{\sqrt{L}} and \eqn{L}.
 #' @param level Confidence level for the intervals.
 #' @param kappa Convergence-rate exponent used to rescale the subsample
-#'   distribution. Defaults to the DEA rate for the model's effective
-#'   dimension (Kneip, Simar and Wilson 2008): \eqn{2/(N+3)} under VRS
-#'   and \eqn{2/(N+2)} under CRS for the input-constrained models, and
-#'   \eqn{2/3} (VRS) or \eqn{1} (CRS) for the input-free
-#'   \code{"envelope"} model, whose frontier lives in the \eqn{(y, b)}
-#'   plane. A heuristic; supply your own exponent to override.
+#'   distribution. Defaults to the DEA rate \eqn{2/(d+1)} under VRS and
+#'   \eqn{2/d} under CRS (Kneip, Simar and Wilson 2008) for the model's
+#'   effective frontier dimension \eqn{d}: \eqn{N+2} for \code{"wgd"}
+#'   and \code{"wd"} (inputs, good and bad output), \eqn{N+1} for
+#'   \code{"mb_cost"} and \code{"byprod"} (whose programs live in the
+#'   \eqn{(x, y)} and sub-technology spaces), and \eqn{2} for the
+#'   input-free \code{"envelope"} model, whose frontier lives in the
+#'   \eqn{(y, b)} plane. A heuristic; supply your own exponent to
+#'   override.
 #' @param returns,peers,pollutant Passed to the underlying model, as in
 #'   [pgt()].
 #' @param seed Optional integer seed for reproducibility. The caller's
@@ -95,7 +98,15 @@ boot_pgt <- function(tech, model = c("wgd", "envelope", "byprod",
     stop("'m' must lie in 2..L.", call. = FALSE)
   }
   if (is.null(kappa)) {
-    dims <- if (model == "envelope") 2L else tech$N + 2L
+    # effective frontier dimension: wgd/wd use (x, y, b); the mb_cost
+    # and byprod programs never involve b jointly with (x, y), so their
+    # frontiers live in N + 1 dimensions; the input-free envelope lives
+    # in the (y, b) plane
+    dims <- switch(model,
+      envelope = 2L,
+      mb_cost = tech$N + 1L,
+      byprod = tech$N + 1L,
+      tech$N + 2L)
     kappa <- if (vrs) 2 / (dims + 1) else 2 / dims
   }
   stopifnot(is.numeric(kappa), length(kappa) == 1L, kappa > 0)
@@ -141,19 +152,22 @@ boot_pgt <- function(tech, model = c("wgd", "envelope", "byprod",
   }
 
   # Politis-Romano subsampling: recentre the subsample scores at the
-  # point estimate and rescale by the relative convergence rate.
+  # point estimate and rescale by the relative convergence rate. Both
+  # endpoints are truncated to [0, 1] AFTER the quantile flip so the
+  # truncation preserves lower <= upper.
   rate <- (m / L)^kappa
   a <- (1 - level) / 2
+  clamp01 <- function(z) pmin(pmax(z, 0), 1)
   dev <- boot - point
   per_dmu <- data.frame(
     id = tech$id,
     estimate = point,
-    lower = pmax(point - rate *
-                   apply(dev, 1, stats::quantile, probs = 1 - a,
-                         na.rm = TRUE), 0),
-    upper = pmin(point - rate *
-                   apply(dev, 1, stats::quantile, probs = a,
-                         na.rm = TRUE), 1),
+    lower = clamp01(point - rate *
+                      apply(dev, 1, stats::quantile, probs = 1 - a,
+                            na.rm = TRUE)),
+    upper = clamp01(point - rate *
+                      apply(dev, 1, stats::quantile, probs = a,
+                            na.rm = TRUE)),
     se = rate * apply(boot, 1, stats::sd, na.rm = TRUE),
     stringsAsFactors = FALSE
   )
@@ -172,12 +186,12 @@ boot_pgt <- function(tech, model = c("wgd", "envelope", "byprod",
     group_means <- data.frame(
       group = glev,
       estimate = est_g,
-      lower = pmax(est_g - rate *
-                     apply(gm_dev, 2, stats::quantile, probs = 1 - a,
-                           na.rm = TRUE), 0),
-      upper = pmin(est_g - rate *
-                     apply(gm_dev, 2, stats::quantile, probs = a,
-                           na.rm = TRUE), 1),
+      lower = clamp01(est_g - rate *
+                        apply(gm_dev, 2, stats::quantile, probs = 1 - a,
+                              na.rm = TRUE)),
+      upper = clamp01(est_g - rate *
+                        apply(gm_dev, 2, stats::quantile, probs = a,
+                              na.rm = TRUE)),
       se = rate * apply(gm_boot, 2, stats::sd, na.rm = TRUE),
       stringsAsFactors = FALSE
     )
