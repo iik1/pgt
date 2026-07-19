@@ -8,7 +8,7 @@
 #' function puts the competing systems side by side so the sensitivity of
 #' conclusions to that choice is visible.
 #'
-#' Each model reports its headline environmental-efficiency score,
+#' Each model reports its principal environmental-efficiency score,
 #' normalised so that 1 is efficient: \eqn{b^*/b} for \code{"wgd"},
 #' \code{"envelope"}, \code{"byprod"} and \code{"wd"}, and the
 #' material-inflow ratio \eqn{EE = u'x^*/u'x} for \code{"mb_cost"}. The
@@ -167,7 +167,7 @@ print.pgt_compare <- function(x, ...) {
   cat(sprintf("pgt model comparison: %d models, returns = %s, peers = %s\n",
               length(x$models), x$returns, x$peers))
   cat(sprintf("  models: %s\n", paste(x$models, collapse = ", ")))
-  cat("\nHeadline environmental efficiency by model (b*/b; EE for mb_cost):\n")
+  cat("\nPrincipal environmental efficiency by model (b*/b; EE for mb_cost):\n")
   print(x$agreement, row.names = FALSE, digits = 4)
   cat("\nSpearman rank correlation:\n")
   print(round(x$spearman, 3))

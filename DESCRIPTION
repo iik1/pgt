@@ -1,7 +1,7 @@
 Package: pgt
 Type: Package
 Title: Data Envelopment Analysis for Pollution-Generating Technologies
-Version: 0.5.0
+Version: 0.5.1
 Authors@R: c(
     person("Erik", "Enstad", email = "erik.enstad@nhh.no",
            role = c("aut", "cre"),

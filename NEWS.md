@@ -1,3 +1,10 @@
+# pgt 0.5.1
+
+* Terminology: the score reported in the `efficiency` column is called
+  the principal environmental-efficiency score throughout the
+  documentation and printed output; the internal helper was renamed
+  accordingly.
+
 # pgt 0.5.0
 
 Revisions from a full peer review of the package as a software
@@ -48,7 +55,8 @@ submission.
 * Two new vignettes: `models` states every estimating programme in
   full, and `multiple-pollutants` demonstrates multi-pollutant
   technologies, DMU-specific coefficients and the staged decomposition.
-* `compare_models()` documents that the headline scores are different
+* `compare_models()` documents that the models' principal scores are
+  different
   quantities (EE for mb_cost) and that only rank-based statistics are
   strictly comparable; `mac_curve()` documents which margin the curve
   prices; foundational and origin literature is cited (Ayres and

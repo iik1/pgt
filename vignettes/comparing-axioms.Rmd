@@ -20,7 +20,7 @@ library(pgt)
 
 How to model a technology that produces both a good and a bad output is
 an open question in the productivity literature. The 2021 symposium in
-the *Journal of Productivity Analysis*, anchored by Førsund (2021) and
+the *Journal of Productivity Analysis*, opened by Førsund (2021) and
 continued in the comments of Murty and Russell (2021), Ang and Dakpo
 (2021) and Färe and Grosskopf (2021), with Førsund's (2021) rejoinder,
 set the weak-disposability school against the by-production school, with
@@ -74,7 +74,7 @@ they reduce a different quantity: `byprod` contracts the observed
 emission over the emission-causing inputs, while `mb_cost` minimises the
 total material inflow.
 
-The headline scores are all normalised so that 1 is efficient, but they
+The principal scores are all normalised so that 1 is efficient, but they
 are not the same quantity: `wgd`, `byprod` and `wd` report the emission
 ratio $b^*/b$, while `mb_cost` reports the material-inflow ratio $EE$.
 Only the rank-based statistics, the Spearman matrix and the quartile

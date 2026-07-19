@@ -111,7 +111,7 @@ EE = \frac{\min\{u_{pi}'\chi :\ \sum_l \lambda_l x_{nl} \le \chi_n\
 \forall n,\ \sum_l \lambda_l y_l \ge y_i,\ \sum_l \lambda_l = 1\}}
 {u_{pi}'x_i},
 $$
-with environmental-allocative efficiency $EAE = EE / TE$. The headline
+with environmental-allocative efficiency $EAE = EE / TE$. The principal
 score is $EE$, a material-inflow ratio rather than an emission ratio;
 the implied minimal controlled emission $u_{pi}'\chi^* - v_{pi} y_i$ is
 reported as `b_star` and can be negative under DMU-specific
@@ -135,7 +135,7 @@ E_2 = \min\{\psi :\ \textstyle\sum_l \mu_l b_l \le \psi b_i,\ \sum_l
 \mu_l x_{nl} \ge x_{ni}\ \forall n \in \mathcal{P},\ \sum_l \mu_l =
 1\}.
 $$
-$E_2$ is the headline environmental efficiency; `fgl` is the arithmetic
+$E_2$ is the principal environmental efficiency; `fgl` is the arithmetic
 mean $(E_1 + E_2)/2$, in the spirit of the Färe-Grosskopf-Lovell graph
 measure. If either sub-programme fails, every score of that unit is
 `NA`.

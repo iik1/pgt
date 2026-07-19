@@ -230,7 +230,7 @@
 # The arithmetic mean of the two sub-efficiencies (in the spirit of the
 # Fare-Grosskopf-Lovell graph measure) is
 # E_FGL = (E1 + E2) / 2. E2 = b*/b is the environmental efficiency,
-# reported as the headline; E1 and E_FGL are returned alongside.
+# reported as the principal score; E1 and E_FGL are returned alongside.
 .lp_byprod_one <- function(i, X, y, b, pol, peers, vrs = TRUE) {
   L <- length(peers)
   N <- ncol(X)
@@ -453,9 +453,9 @@
   )
 }
 
-# Headline environmental-efficiency score of one solution under `model`:
+# Principal environmental-efficiency score of one solution under `model`:
 # the single definition shared by pgt(), boot_pgt() and compare_models().
-.headline_score <- function(model, sol, b_i) {
+.model_score <- function(model, sol, b_i) {
   if (!is.null(sol$status) && sol$status != 0) return(NA_real_)
   switch(model,
     byprod = sol$emission_eff,

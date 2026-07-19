@@ -142,7 +142,7 @@ boot_pgt <- function(tech, model = c("wgd", "envelope", "byprod",
   }
   if (is.null(kappa)) {
     # effective frontier dimension: wgd/wd use (x, y, b); mb_cost lives
-    # in (x, y); byprod's headline score comes from the T2 sub-LP over
+    # in (x, y); byprod's principal score comes from the T2 sub-LP over
     # the polluting inputs and b; the input-free envelope lives in the
     # (y, b) plane
     dims <- switch(model,
@@ -276,15 +276,15 @@ boot_pgt <- function(tech, model = c("wgd", "envelope", "byprod",
 }
 
 # Environmental efficiency of every DMU under `model`, evaluated against
-# the supplied per-DMU peer sets. The headline-score definition is
-# shared with pgt() through .headline_score().
+# the supplied per-DMU peer sets. The principal-score definition is
+# shared with pgt() through .model_score().
 .model_efficiency <- function(tech, model, vrs, p, peer_sets, ctx = NULL) {
   if (is.null(ctx)) ctx <- .solve_ctx(tech, model, p)
   b_i <- ctx$b_p
   vapply(seq_len(tech$L), function(i) {
     sol <- .lp_solve_one(model, i, tech, peer_sets[[i]], vrs, p = p,
                          ctx = ctx)
-    .headline_score(model, sol, b_i[i])
+    .model_score(model, sol, b_i[i])
   }, numeric(1))
 }
 

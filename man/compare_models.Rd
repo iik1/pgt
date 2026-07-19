@@ -58,7 +58,7 @@ function puts the competing systems side by side so the sensitivity of
 conclusions to that choice is visible.
 }
 \details{
-Each model reports its headline environmental-efficiency score,
+Each model reports its principal environmental-efficiency score,
 normalised so that 1 is efficient: \eqn{b^*/b} for \code{"wgd"},
 \code{"envelope"}, \code{"byprod"} and \code{"wd"}, and the
 material-inflow ratio \eqn{EE = u'x^*/u'x} for \code{"mb_cost"}. The

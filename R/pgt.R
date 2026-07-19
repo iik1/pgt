@@ -61,7 +61,8 @@
 #'     original Murty-Russell-Levkoff intersection technology without
 #'     integrated abatement; Hampf (2014) develops the
 #'     abatement-integrated extension. Returns emission efficiency
-#'     (\eqn{b^*/b}, the headline), output efficiency (\code{output_eff})
+#'     (\eqn{b^*/b}, reported as \code{efficiency}), output
+#'     efficiency (\code{output_eff})
 #'     and \code{fgl}, the arithmetic mean of the two sub-efficiencies,
 #'     in the spirit of the Fare-Grosskopf-Lovell graph measure. Set the
 #'     emission-causing inputs with \code{polluting} in [pgt_tech()].}
