@@ -21,11 +21,14 @@ test_that("fit methods run and return the right shapes", {
 
 test_that("shadow_prices returns the diagnostics", {
   tech <- make_random_tech(L = 25, seed = 23)
-  fit <- pgt(tech, model = "wgd")
+  fit <- pgt(tech, model = "wgd_anchored")
   sp <- shadow_prices(fit)
   expect_equal(nrow(sp), tech$L)
   expect_true(all(c("id", "group", "dual_output", "mb_headroom") %in%
                     names(sp)))
+  sp_wgd <- shadow_prices(pgt(tech, model = "wgd"))
+  expect_true("dual_output" %in% names(sp_wgd))
+  expect_false("mb_headroom" %in% names(sp_wgd))
 
   env <- pgt(tech, model = "envelope")
   expect_true(all(is.na(shadow_prices(env)$mb_headroom)))
@@ -35,7 +38,7 @@ test_that("empty MAC curves print and refuse to plot gracefully", {
   # both DMUs infeasible: the curve is empty, everything excluded
   x <- matrix(c(10, 10), 2, 1)
   tech <- pgt_tech(x, y = c(10, 10), b = c(6, 5.5), v = 0.5)
-  suppressWarnings(fit <- pgt(tech, model = "wgd"))
+  suppressWarnings(fit <- pgt(tech, model = "wgd_anchored"))
   mac <- mac_curve(fit)
   expect_equal(nrow(mac), 0L)
   expect_equal(attr(mac, "n_excluded"), 2L)
@@ -46,7 +49,7 @@ test_that("empty MAC curves print and refuse to plot gracefully", {
 test_that("plot.pgt refuses an all-NA fit", {
   x <- matrix(c(10, 10), 2, 1)
   tech <- pgt_tech(x, y = c(10, 10), b = c(6, 5.5), v = 0.5)
-  suppressWarnings(fit <- pgt(tech, model = "wgd"))
+  suppressWarnings(fit <- pgt(tech, model = "wgd_anchored"))
   expect_error(plot(fit), "all scores are NA")
 })
 

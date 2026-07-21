@@ -96,7 +96,8 @@ compare_models <- function(tech,
          "compare_models(): its score is a gross inefficiency, not an ",
          "efficiency b*/b.", call. = FALSE)
   }
-  valid <- c("wgd", "envelope", "byprod", "mb_cost", "wd")
+  valid <- c("wgd", "wgd_anchored", "envelope", "byprod", "mb_cost",
+             "wd")
   bad <- setdiff(models, valid)
   if (length(bad)) {
     stop("compare_models() compares efficiency-scored models; drop: ",

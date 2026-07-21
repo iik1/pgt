@@ -57,13 +57,14 @@
 #' @export
 shadow_prices <- function(fit) {
   stopifnot(inherits(fit, "pgt"))
-  if (!fit$model %in% c("wgd", "envelope")) {
+  if (!fit$model %in% c("wgd", "wgd_anchored", "envelope")) {
     stop("shadow_prices() requires a fit with output duals ",
-         "(model = \"wgd\" or \"envelope\"); got model = \"",
-         fit$model, "\".", call. = FALSE)
+         "(model = \"wgd\", \"wgd_anchored\" or \"envelope\"); got ",
+         "model = \"", fit$model, "\".", call. = FALSE)
   }
-  keep <- intersect(c("id", "group", "b", "b_star",
-                      "dual_output", "mb_headroom"),
+  keep <- intersect(c("id", "group", "b", "b_star", "dual_output",
+                      grep("^dual_", names(fit$results), value = TRUE),
+                      "mb_headroom"),
                     names(fit$results))
   fit$results[keep]
 }
@@ -142,10 +143,15 @@ shadow_prices <- function(fit) {
 #' @export
 mac_curve <- function(fit, price = NULL) {
   stopifnot(inherits(fit, "pgt"))
-  if (!fit$model %in% c("wgd", "envelope")) {
+  if (!fit$model %in% c("wgd", "wgd_anchored", "envelope")) {
     stop("mac_curve() requires a fit with output duals ",
-         "(model = \"wgd\" or \"envelope\"); got model = \"",
-         fit$model, "\".", call. = FALSE)
+         "(model = \"wgd\", \"wgd_anchored\" or \"envelope\"); got ",
+         "model = \"", fit$model, "\".", call. = FALSE)
+  }
+  if (is.null(fit$results$dual_output)) {
+    stop("mac_curve() is defined for a single intended output; this ",
+         "fit has several (per-output duals are in shadow_prices()).",
+         call. = FALSE)
   }
   if (!is.null(price)) {
     stopifnot(is.numeric(price), length(price) == 1L, price > 0)

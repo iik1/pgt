@@ -111,6 +111,11 @@ pgt_ml <- function(tech, technology = c("wgd", "envelope", "wd"),
   if (is.null(tech$period)) {
     stop("pgt_ml() requires a 'period' in pgt_tech().", call. = FALSE)
   }
+  if (tech$M > 1L) {
+    stop("pgt_ml() is defined for a single intended output; the\n",
+         "direction g = (y, b) has no multi-output form here.",
+         call. = FALSE)
+  }
   use_inputs <- technology == "wgd"
 
   b_p <- tech$b[, p]
@@ -118,11 +123,12 @@ pgt_ml <- function(tech, technology = c("wgd", "envelope", "wd"),
   global <- seq_len(tech$L)
   by_period <- split(global, tech$period)
 
+  y1 <- tech$y[, 1L]
   dd <- function(k, ref) {
     if (technology == "wd") {
-      .ddf_ml_wd(k, ref, tech$x, tech$y, b_p, vrs)
+      .ddf_ml_wd(k, ref, tech$x, y1, b_p, vrs)
     } else {
-      .ddf_ml(k, ref, tech$x, tech$y, b_p, use_inputs, vrs)
+      .ddf_ml(k, ref, tech$x, y1, b_p, use_inputs, vrs)
     }
   }
   # global and contemporaneous directional distances for every row

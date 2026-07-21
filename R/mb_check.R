@@ -51,7 +51,7 @@ mb_check <- function(tech, tol = 1e-8) {
   P <- tech$P
   parts <- lapply(seq_len(P), function(p) {
     potential <- .mb_potential(tech, p)
-    retained <- tech$v[, p] * tech$y
+    retained <- .retained(tech, p)
     gap <- potential - retained - tech$b[, p]
     rel_gap <- gap / pmax(potential, .Machine$double.eps)
     d <- data.frame(

@@ -134,11 +134,10 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
     stop("'x' must be numeric.", call. = FALSE)
   }
   storage.mode(x) <- "double"
-  if (is.factor(y) || !is.numeric(y)) {
-    stop("'y' must be numeric (not a factor).", call. = FALSE)
-  }
-  y <- as.numeric(y)
-  L <- length(y)
+  y <- .canon_good(y)
+  L <- nrow(y)
+  M <- ncol(y)
+  outputs <- colnames(y)
   N <- ncol(x)
 
   if (nrow(x) != L) {
@@ -172,7 +171,7 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
   }
 
   u <- .canon_u(u, L, N, P, pollutants, colnames(x))
-  v <- .canon_v(v, L, P, pollutants)
+  v <- .canon_v(v, L, M, P, outputs, pollutants)
 
   if (!is.null(a)) {
     a <- .canon_bad(a, L, "a", pollutants = pollutants)
@@ -229,7 +228,8 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
   structure(
     list(x = x, y = y, b = b, u = u, v = v, a = a, x_abate = x_abate,
          polluting = polluting, group = group, period = period,
-         id = id, L = L, N = N, P = P, pollutants = pollutants),
+         id = id, L = L, N = N, M = M, P = P, outputs = outputs,
+         pollutants = pollutants),
     class = "pgt_tech"
   )
 }
@@ -347,10 +347,75 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
   out
 }
 
-# Canonicalise the good-output coefficient specification to an
-# L x P matrix.
-.canon_v <- function(v, L, P, pollutants) {
-  if (is.list(v)) {
+# Canonicalise the good-output specification to an L x M matrix with
+# output column names.
+.canon_good <- function(y) {
+  if (is.data.frame(y)) y <- as.matrix(y)
+  if (is.matrix(y)) {
+    if (!is.numeric(y)) {
+      stop("'y' must be numeric.", call. = FALSE)
+    }
+    storage.mode(y) <- "double"
+    cn <- colnames(y)
+    if (is.null(cn) || any(is.na(cn) | cn == "")) {
+      colnames(y) <- if (ncol(y) == 1L) "y" else
+        paste0("y", seq_len(ncol(y)))
+    }
+  } else {
+    if (is.factor(y) || !is.numeric(y)) {
+      stop("'y' must be numeric (not a factor).", call. = FALSE)
+    }
+    y <- matrix(as.numeric(y), ncol = 1L, dimnames = list(NULL, "y"))
+  }
+  rownames(y) <- NULL
+  y
+}
+
+# Canonicalise one pollutant's good-output coefficients to an
+# L x M matrix.
+.canon_v_one <- function(spec, L, M, output_names, label) {
+  if (is.null(spec)) {
+    spec <- matrix(0, L, M)
+  } else if (is.matrix(spec)) {
+    if (!is.numeric(spec) || nrow(spec) != L || ncol(spec) != M) {
+      stop("matrix 'v'", label, " must be L x M (one row per DMU, one ",
+           "column per good output).", call. = FALSE)
+    }
+    storage.mode(spec) <- "double"
+  } else {
+    if (is.factor(spec) || !is.numeric(spec)) {
+      stop("'v'", label, " must be numeric.", call. = FALSE)
+    }
+    spec <- as.numeric(spec)
+    if (length(spec) == 1L) {
+      spec <- matrix(spec, L, M)
+    } else if (M == 1L && length(spec) == L) {
+      spec <- matrix(spec, L, 1L)
+    } else if (M > 1L && length(spec) == M) {
+      if (L == M) {
+        stop("ambiguous 'v'", label, ": its length equals both the ",
+             "number of DMUs and the number of good outputs; supply an ",
+             "L x M matrix.", call. = FALSE)
+      }
+      spec <- matrix(spec, L, M, byrow = TRUE)
+    } else {
+      stop("'v'", label, " must be a scalar, a length-M vector (one ",
+           "coefficient per good output), a length-L vector (single ",
+           "output), or an L x M matrix.", call. = FALSE)
+    }
+  }
+  spec
+}
+
+# Canonicalise the full good-output coefficient specification to an
+# L x M x P array (DMU x output x pollutant).
+.canon_v <- function(v, L, M, P, outputs, pollutants) {
+  if (is.array(v) && length(dim(v)) == 3L) {
+    if (!all(dim(v) == c(L, M, P))) {
+      stop("array 'v' must be L x M x P.", call. = FALSE)
+    }
+    v <- lapply(seq_len(P), function(p) matrix(v[, , p], L, M))
+  } else if (is.list(v)) {
     if (length(v) != P) {
       stop("list 'v' must have one element per pollutant (", P, ").",
            call. = FALSE)
@@ -362,46 +427,50 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
       }
       v <- v[pollutants]
     }
-    cols <- lapply(v, function(el) {
-      if (!is.numeric(el) || !(length(el) %in% c(1L, L))) {
-        stop("each element of list 'v' must be a scalar or a length-L ",
-             "vector.", call. = FALSE)
-      }
-      rep_len(as.numeric(el), L)
-    })
-    v <- do.call(cbind, cols)
-  } else if (is.matrix(v)) {
-    if (!is.numeric(v) || nrow(v) != L || ncol(v) != P) {
-      stop("matrix 'v' must be L x P.", call. = FALSE)
-    }
-    storage.mode(v) <- "double"
-  } else {
-    if (is.factor(v) || !is.numeric(v)) {
-      stop("'v' must be numeric.", call. = FALSE)
-    }
-    v <- as.numeric(v)
-    if (length(v) == 1L) {
-      v <- matrix(v, L, P)
-    } else if (P == 1L && length(v) == L) {
-      v <- matrix(v, L, 1L)
-    } else if (P > 1L && length(v) == P) {
-      if (L == P) {
-        stop("ambiguous 'v': its length equals both the number of DMUs ",
-             "and the number of pollutants; supply an L x P matrix or ",
-             "a named list.", call. = FALSE)
-      }
-      v <- matrix(v, L, P, byrow = TRUE)
+  } else if (is.matrix(v) && M == 1L && P > 1L && nrow(v) == L &&
+             ncol(v) == P) {
+    # historical L x P shape for a single good output
+    v <- lapply(seq_len(P), function(p) matrix(v[, p], L, 1L))
+  } else if (!is.matrix(v) && is.numeric(v) && M == 1L && P > 1L &&
+             length(v) == P && P != L) {
+    # historical length-P vector for a single good output
+    v <- lapply(as.numeric(v), function(el) matrix(el, L, 1L))
+  } else if (!is.matrix(v) && is.numeric(v) && M == 1L && P > 1L &&
+             length(v) == P && P == L) {
+    stop("ambiguous 'v': its length equals both the number of DMUs ",
+         "and the number of pollutants; supply an L x P matrix or ",
+         "a named list.", call. = FALSE)
+  } else if (P > 1L) {
+    if (is.matrix(v) && nrow(v) == M && ncol(v) == P) {
+      # per-output-per-pollutant coefficients shared by all DMUs
+      v <- lapply(seq_len(P), function(p)
+        matrix(v[, p], L, M, byrow = TRUE))
+    } else if (!is.matrix(v) && is.numeric(v) && length(v) == 1L) {
+      v <- rep(list(matrix(as.numeric(v), L, M)), P)
     } else {
-      stop("'v' must be a scalar, a length-L vector (single pollutant), ",
-           "a length-P vector, an L x P matrix, or a list.",
-           call. = FALSE)
+      stop("with several pollutants, supply 'v' as a named list with ",
+           "one element per column of 'b' (each a scalar, length-M ",
+           "vector, or L x M matrix), an M x P matrix, or an ",
+           "L x M x P array.", call. = FALSE)
     }
+  } else {
+    v <- list(v)
   }
-  if (any(!is.finite(v)) || any(v < 0)) {
+  out <- array(NA_real_, dim = c(L, M, P),
+               dimnames = list(NULL, outputs, pollutants))
+  for (p in seq_len(P)) {
+    label <- if (P > 1L) paste0("[['", pollutants[p], "']]") else ""
+    out[, , p] <- .canon_v_one(v[[p]], L, M, outputs, label)
+  }
+  if (any(!is.finite(out)) || any(out < 0)) {
     stop("'v' must be non-negative and finite.", call. = FALSE)
   }
-  dimnames(v) <- list(NULL, pollutants)
-  v
+  out
+}
+
+# Pollutant p's retained content v_p'y per DMU (one value per DMU).
+.retained <- function(tech, p = 1L) {
+  rowSums(matrix(tech$v[, , p], tech$L, tech$M) * tech$y)
 }
 
 # Canonicalise an input-column marker (pollution-control or
@@ -445,8 +514,8 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
 #' @export
 print.pgt_tech <- function(x, ...) {
   cat("Pollution-generating technology\n")
-  cat(sprintf("  DMUs: %d   inputs: %d   good outputs: 1   bad outputs: %d\n",
-              x$L, x$N, x$P))
+  cat(sprintf("  DMUs: %d   inputs: %d   good outputs: %d   bad outputs: %d\n",
+              x$L, x$N, x$M, x$P))
   cat(sprintf("  inputs: %s\n", paste(colnames(x$x), collapse = ", ")))
   if (length(x$x_abate)) {
     cat(sprintf("  pollution-control inputs: %s\n",
@@ -454,17 +523,19 @@ print.pgt_tech <- function(x, ...) {
   }
   for (p in seq_len(x$P)) {
     tag <- if (x$P > 1L) paste0(" [", x$pollutants[p], "]") else ""
-    if (.u_is_uniform(x, p) && diff(range(x$v[, p])) == 0) {
-      cat(sprintf("  material flow coefficients%s: u = [%s], v = %g\n",
+    vm <- matrix(x$v[, , p], x$L, x$M)
+    v_uniform <- all(apply(vm, 2L, function(col) diff(range(col)) == 0))
+    if (.u_is_uniform(x, p) && v_uniform) {
+      cat(sprintf("  material flow coefficients%s: u = [%s], v = [%s]\n",
                   tag,
                   paste(format(x$u[1L, , p], digits = 4), collapse = ", "),
-                  x$v[1L, p]))
+                  paste(format(vm[1L, ], digits = 4), collapse = ", ")))
     } else {
       cat(sprintf(
         "  material flow coefficients%s: DMU-specific (u in [%s], v in [%s])\n",
         tag,
         paste(format(range(x$u[, , p]), digits = 4), collapse = ", "),
-        paste(format(range(x$v[, p]), digits = 4), collapse = ", ")))
+        paste(format(range(vm), digits = 4), collapse = ", ")))
     }
   }
   if (!is.null(x$a)) {

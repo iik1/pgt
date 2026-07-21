@@ -159,8 +159,9 @@
 #' fit <- pgt(tech, model = "wgd")
 #' summary(fit)
 #' @export
-pgt <- function(tech, model = c("wgd", "wgd_rodseth", "envelope",
-                                "fdmo", "ddf", "byprod", "mb_cost", "wd"),
+pgt <- function(tech, model = c("wgd", "wgd_rodseth", "wgd_anchored",
+                                "envelope", "fdmo", "ddf", "byprod",
+                                "mb_cost", "wd"),
                 returns = c("vrs", "crs"), peers = c("all", "group"),
                 pollutant = 1L) {
   stopifnot(inherits(tech, "pgt_tech"))
@@ -172,12 +173,12 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "envelope",
   vrs <- returns == "vrs"
   p <- .pollutant_index(tech, pollutant)
 
-  if (length(tech$x_abate)) {
-    warning("'x_abate' is recorded in pgt_tech() but the estimators do ",
-            "not yet treat pollution-control inputs separately; all ",
-            "inputs enter the constraints identically.", call. = FALSE)
-  }
   if (model == "fdmo") {
+    if (tech$M > 1L) {
+      stop("model = \"fdmo\" is defined for a single intended output; ",
+           "the direction of Rodseth (2025, Eq. 13) has no ",
+           "multi-output form.", call. = FALSE)
+    }
     if (is.null(tech$a)) {
       stop("model = \"fdmo\" requires an abatement output 'a' in ",
            "pgt_tech().", call. = FALSE)
@@ -220,40 +221,97 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "envelope",
       if (is.null(val)) NA_real_ else as.numeric(val)
     }, numeric(1))
   }
+  num_m <- function(field, m) {
+    vapply(sols, function(s) {
+      val <- s[[field]]
+      if (is.null(val) || length(val) < m) NA_real_ else
+        as.numeric(val[m])
+    }, numeric(1))
+  }
   b_p <- ctx$b_p
 
+  # one intended-output column when M = 1, one per named output else;
+  # duals follow the same naming
+  y_cols <- if (tech$M == 1L) {
+    stats::setNames(data.frame(tech$y[, 1L]), "y")
+  } else {
+    stats::setNames(as.data.frame(tech$y), tech$outputs)
+  }
+  dual_cols <- function() {
+    if (tech$M == 1L) {
+      stats::setNames(data.frame(num_m("dual_output", 1L)),
+                      "dual_output")
+    } else {
+      stats::setNames(
+        as.data.frame(lapply(seq_len(tech$M), function(m)
+          num_m("dual_output", m))),
+        paste0("dual_", tech$outputs))
+    }
+  }
+
   results <- switch(model,
-    fdmo = data.frame(
-      id = tech$id, y = tech$y, b = b_p,
-      gross = num("gross"), good_eff = num("theta_y"),
-      bad_eff = num("theta_b"), maximal_y = tech$y + num("theta_y"),
-      status = status, stringsAsFactors = FALSE
+    fdmo = cbind(
+      data.frame(id = tech$id, stringsAsFactors = FALSE), y_cols,
+      data.frame(
+        b = b_p, gross = num("gross"), good_eff = num("theta_y"),
+        bad_eff = num("theta_b"),
+        maximal_y = tech$y[, 1L] + num("theta_y"),
+        status = status, stringsAsFactors = FALSE
+      )
     ),
-    byprod = data.frame(
-      id = tech$id, y = tech$y, b = b_p,
-      b_star = num("b_star"), efficiency = num("emission_eff"),
-      output_eff = num("output_eff"), fgl = num("fgl"), status = status,
-      stringsAsFactors = FALSE
+    byprod = cbind(
+      data.frame(id = tech$id, stringsAsFactors = FALSE), y_cols,
+      data.frame(
+        b = b_p, b_star = num("b_star"),
+        efficiency = num("emission_eff"),
+        output_eff = num("output_eff"), fgl = num("fgl"),
+        status = status, stringsAsFactors = FALSE
+      )
     ),
-    mb_cost = data.frame(
-      id = tech$id, y = tech$y, b = b_p,
-      b_star = num("b_star"), efficiency = num("mbe"), te = num("te"),
-      eae = num("eae"), status = status, stringsAsFactors = FALSE
+    mb_cost = cbind(
+      data.frame(id = tech$id, stringsAsFactors = FALSE), y_cols,
+      data.frame(
+        b = b_p, b_star = num("b_star"), efficiency = num("mbe"),
+        te = num("te"), eae = num("eae"), status = status,
+        stringsAsFactors = FALSE
+      )
     ),
-    data.frame(
-      id = tech$id, y = tech$y, b = b_p,
-      b_star = num("b_star"), efficiency = num("b_star") / b_p,
-      dual_output = num("dual_output"),
-      mb_headroom = num("mb_rhs") - num("b_star"),
-      status = status, stringsAsFactors = FALSE
+    wgd = {
+      out <- cbind(
+        data.frame(id = tech$id, stringsAsFactors = FALSE), y_cols,
+        data.frame(
+          b = b_p, b_star = num("b_star"),
+          efficiency = num("b_star") / b_p, stringsAsFactors = FALSE
+        ),
+        dual_cols()
+      )
+      if (!is.null(tech$a)) {
+        out$z_star <- num("z_star")
+        out$a_star <- num("a_star")
+      }
+      out$status <- status
+      out
+    },
+    cbind(
+      data.frame(id = tech$id, stringsAsFactors = FALSE), y_cols,
+      data.frame(
+        b = b_p, b_star = num("b_star"),
+        efficiency = num("b_star") / b_p, stringsAsFactors = FALSE
+      ),
+      dual_cols(),
+      data.frame(
+        mb_headroom = num("mb_rhs") - num("b_star"),
+        status = status, stringsAsFactors = FALSE
+      )
     )
   )
 
   n_failed <- sum(status != 0)
   if (n_failed > 0) {
     hint <- switch(model,
-      wgd = paste0(" For model = \"wgd\" this flags DMUs violating a ",
-                   "materials-balance identity; run mb_check()."),
+      wgd_anchored = paste0(" For model = \"wgd_anchored\" this flags ",
+                            "DMUs violating a materials-balance ",
+                            "identity; run mb_check()."),
       fdmo = paste0(" For model = \"fdmo\" this flags DMUs whose ",
                     "accounts do not close exactly; run mb_check()."),
       "")
@@ -371,7 +429,7 @@ summary.pgt <- function(object, ...) {
       if (directional) {
         out$median_good <- stats::median(d$good_eff, na.rm = TRUE)
         out$median_bad <- stats::median(d$bad_eff, na.rm = TRUE)
-      } else {
+      } else if (!is.null(d$dual_output)) {
         out$median_dual_output <- stats::median(d$dual_output, na.rm = TRUE)
       }
       out

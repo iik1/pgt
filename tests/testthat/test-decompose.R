@@ -16,20 +16,24 @@ test_that("envelope decomposition satisfies its exact identity", {
   expect_equal(r$b_star_all, fit_all$results$b_star, tolerance = 1e-10)
 })
 
-test_that("rodseth decomposition stages are strict relaxations", {
+test_that("Eq. 11 components telescope to the wgd efficiency", {
   tech <- make_random_tech(L = 40, N = 3, seed = 21)
   dec <- pgt_decompose(tech, type = "rodseth")
   r <- dec$results
-
-  ok <- !is.na(r$total)
-  expect_true(all(ok))
-  expect_true(all(r$b_star_te[ok] >= r$b_star_technology[ok] - 1e-8))
-  expect_true(all(r$b_star_technology[ok] >= r$b_star_ae[ok] - 1e-8))
-  expect_equal(r$total[ok], (r$te * r$technology * r$ae)[ok],
-               tolerance = 1e-10)
-  expect_true(all(r$te[ok] > 0 & r$te[ok] <= 1 + 1e-8))
-  expect_true(all(r$technology[ok] > 0 & r$technology[ok] <= 1 + 1e-8))
-  expect_true(all(r$ae[ok] > 0 & r$ae[ok] <= 1 + 1e-8))
+  comps <- r$te_production * r$quality * r$ae_production *
+    r$te_abatement * r$ae_abatement
+  expect_false(anyNA(r$total))
+  expect_equal(r$total, comps, tolerance = 1e-8)
+  fit <- pgt(tech, model = "wgd")
+  expect_equal(r$total, fit$results$efficiency, tolerance = 1e-7)
+  for (cc in pgt:::.decomp_components("rodseth")) {
+    expect_true(all(r[[cc]] > 0 & r[[cc]] <= 1 + 1e-6), label = cc)
+  }
+  # homogeneous coefficients, no abatement data: the quality and
+  # abatement components collapse to exactly 1
+  expect_equal(r$quality, rep(1, nrow(r)))
+  expect_equal(r$te_abatement, rep(1, nrow(r)))
+  expect_equal(r$ae_abatement, rep(1, nrow(r)))
 })
 
 test_that("attribution shares sum to one where inefficiency exists", {
@@ -42,34 +46,43 @@ test_that("attribution shares sum to one where inefficiency exists", {
   expect_equal(tot[ineff], rep(1, sum(ineff)), tolerance = 1e-8)
 })
 
-test_that("rodseth partial-stage infeasibility keeps reference semantics", {
-  # DMU1 (group A) violates its cap (b = 12 > u'x = 10): stage 1 (group
-  # peers) is infeasible, but stages 2-3 solve through group B's DMU3.
-  # Matching the reference implementation, later-stage ratios and total
-  # stay defined while te/technology are NA.
-  x <- matrix(c(10, 10, 10), 3, 1)
-  tech <- pgt_tech(x, y = c(10, 5, 10), b = c(12, 9, 8),
-                   group = c("A", "A", "B"))
-  expect_warning(dec <- pgt_decompose(tech, type = "rodseth"),
-                 "infeasible")
+test_that("quality and abatement components activate with the data", {
+  set.seed(9)
+  L <- 25
+  x <- cbind(fuel = runif(L, 20, 60), sorbent = runif(L, 1, 8),
+             labour = runif(L, 30, 70))
+  U <- cbind(fuel = runif(L, 0.8, 1.6), sorbent = 0, labour = 0)
+  y <- runif(L, 5, 20)
+  pot <- rowSums(U * x)
+  a <- runif(L, 0.05, 0.25) * pot
+  b <- (pot - a) * runif(L, 0.7, 0.98)
+  z <- b + a
+  tech <- pgt_tech(x, y, b, u = U, a = a, x_abate = "sorbent",
+                   id = seq_len(L))
+  dec <- pgt_decompose(tech, type = "rodseth")
   r <- dec$results
-  expect_true(is.na(r$te[1]))
-  expect_true(is.na(r$technology[1]))
-  expect_equal(r$ae[1], 1, tolerance = 1e-8)
-  expect_equal(r$total[1], 8 / 12, tolerance = 1e-8)
-  # identity holds for complete rows
-  cc <- stats::complete.cases(r[c("te", "technology", "ae")])
-  expect_equal(r$total[cc], (r$te * r$technology * r$ae)[cc],
-               tolerance = 1e-10)
-  # summary counts the partially-NA DMU
-  s <- summary(dec)
-  expect_equal(s$by_group$n_na[s$by_group$group == "A"], 1L)
+  comps <- r$te_production * r$quality * r$ae_production *
+    r$te_abatement * r$ae_abatement
+  expect_equal(r$total, comps, tolerance = 1e-7)
+  fit <- pgt(tech, model = "wgd")
+  expect_equal(r$total, fit$results$efficiency, tolerance = 1e-7)
+  # heterogeneous u activates the quality stage; a and x_abate activate
+  # the abatement stages: at least one unit separates each component
+  expect_true(any(r$quality < 1 - 1e-8))
+  expect_true(any(r$te_abatement < 1 - 1e-8) ||
+                any(r$ae_abatement < 1 - 1e-8))
+  # stage minima are monotone under the successive relaxations
+  expect_true(all(r$te_production >= r$total - 1e-8))
 })
 
-test_that("decomposition requires a group", {
-  x <- matrix(1:4, 2, 2)
+test_that("only the envelope decomposition requires a group", {
+  x <- matrix(c(10, 10), 2, 1)
   tech <- pgt_tech(x, y = c(1, 2), b = c(1, 1))
-  expect_error(pgt_decompose(tech), "requires a 'group'")
+  expect_error(pgt_decompose(tech, type = "envelope"),
+               "requires a 'group'")
+  dec <- pgt_decompose(tech, type = "rodseth")
+  expect_s3_class(dec, "pgt_decomp")
+  expect_output(print(summary(dec)), "Group medians")
 })
 
 test_that("decomposition methods run", {

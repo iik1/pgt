@@ -35,7 +35,7 @@ test_that("pgt_tech defaults are sensible", {
   expect_equal(dim(tech$u), c(3L, 2L, 1L))
   expect_true(all(tech$u == 1))
   expect_equal(dim(tech$b), c(3L, 1L))
-  expect_equal(dim(tech$v), c(3L, 1L))
+  expect_equal(dim(tech$v), c(3L, 1L, 1L))
   expect_equal(tech$P, 1L)
   expect_equal(tech$id, c("p1", "p2", "p3"))
   expect_equal(colnames(tech$x), c("input1", "input2"))
@@ -70,11 +70,12 @@ test_that("duplicated (id, period) pairs are rejected", {
   expect_s3_class(tech, "pgt_tech")
 })
 
-test_that("x_abate is flagged as recorded but unused", {
+test_that("x_abate feeds the decomposition without warnings", {
   tech <- make_random_tech(L = 10, N = 3, seed = 11)
   tech_ab <- pgt_tech(x = tech$x, y = tech$y, b = tech$b[, 1],
-                      u = tech$u[1, , 1], v = tech$v[1, 1],
+                      u = tech$u[1, , 1], v = tech$v[1, 1, 1],
                       group = tech$group, x_abate = 1L)
-  expect_warning(pgt(tech_ab, model = "envelope"), "x_abate")
-  expect_warning(pgt_decompose(tech_ab, type = "envelope"), "x_abate")
+  expect_silent(fit <- pgt(tech_ab, model = "envelope"))
+  dec <- pgt_decompose(tech_ab, type = "rodseth")
+  expect_true("ae_abatement" %in% names(dec$results))
 })

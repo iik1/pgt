@@ -124,7 +124,8 @@
 #' head(bt$per_dmu)
 #' }
 #' @export
-boot_pgt <- function(tech, model = c("wgd", "envelope", "byprod",
+boot_pgt <- function(tech, model = c("wgd", "wgd_anchored",
+                                     "envelope", "byprod",
                                      "mb_cost", "wd"),
                      B = 200, m = NULL, level = 0.95, kappa = NULL,
                      returns = c("vrs", "crs"), peers = c("all", "group"),
@@ -146,10 +147,11 @@ boot_pgt <- function(tech, model = c("wgd", "envelope", "byprod",
     # the polluting inputs and b; the input-free envelope lives in the
     # (y, b) plane
     dims <- switch(model,
-      envelope = 2L,
-      mb_cost = tech$N + 1L,
+      wgd = tech$M + 1L,
+      envelope = tech$M + 1L,
+      mb_cost = tech$N + tech$M,
       byprod = length(.polluting_inputs(tech, p)) + 1L,
-      tech$N + 2L)
+      tech$N + tech$M + 1L)
     kappa <- if (vrs) 2 / (dims + 1) else 2 / dims
   }
   stopifnot(is.numeric(kappa), length(kappa) == 1L, kappa > 0)

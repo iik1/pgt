@@ -8,37 +8,69 @@ test_that("wgd model solves a hand-computable example", {
   expect_equal(fit$results$status, c(0L, 0L))
   expect_equal(fit$results$b_star, c(5, 5), tolerance = 1e-8)
   expect_equal(fit$results$efficiency, c(0.5, 1), tolerance = 1e-8)
-  # peer weights: DMU1 projects onto DMU2
   expect_equal(fit$weights[[1]], c(`2` = 1), tolerance = 1e-8)
 })
 
-test_that("materials-balance violations surface as infeasible LPs", {
-  # DMU1 violates closure (b = 2 > u'x = 1) and, having the highest
-  # output, can only reference itself: its LP is infeasible.
+test_that("wgd is always self-feasible, also for violators", {
+  # Equation 6 anchors only the intended output, so every unit's
+  # programme is feasible; a materials-balance violation does not
+  # affect the faithful wgd score (audit it with mb_check()).
   x <- matrix(c(1, 1), 2, 1)
   tech <- pgt_tech(x, y = c(10, 1), b = c(2, 0.5))
-  expect_warning(fit <- pgt(tech, model = "wgd"), "infeasible")
-  expect_true(is.na(fit$results$b_star[1]))
-  expect_true(is.na(fit$results$efficiency[1]))
-  expect_equal(fit$results$efficiency[2], 1, tolerance = 1e-8)
+  fit <- pgt(tech, model = "wgd")
+  expect_equal(fit$results$status, c(0L, 0L))
+  expect_equal(fit$results$efficiency, c(1, 1), tolerance = 1e-8)
+  expect_true(any(mb_check(tech)$violated))
+})
+
+test_that("the v-penalty distinguishes wgd from the plain envelope", {
+  # Evaluating DMU A (y = 1, b = 1) with v = 0.5 against B
+  # (y = 10, b = 0.5): the envelope ignores retained content and picks
+  # B (b* = 0.5); Eq. 6 prices the output overshoot at v and keeps A
+  # (b* = 1 + 0.5*1 - 0.5*1 = 1).
+  x <- matrix(c(10, 10), 2, 1)
+  tech <- pgt_tech(x, y = c(1, 10), b = c(1, 0.5), v = 0.5)
+  env <- pgt(tech, model = "envelope")
+  wgd <- pgt(tech, model = "wgd")
+  expect_equal(env$results$b_star[1], 0.5, tolerance = 1e-8)
+  expect_equal(wgd$results$b_star[1], 1, tolerance = 1e-8)
+  expect_equal(wgd$results$efficiency[1], 1, tolerance = 1e-8)
+})
+
+test_that("wgd equals the envelope when v = 0", {
+  tech <- make_random_tech(L = 30, N = 3, seed = 21)
+  tech0 <- pgt_tech(tech$x, tech$y[, 1], tech$b[, 1], u = tech$u[1, , 1],
+                    v = 0, group = tech$group)
+  expect_equal(pgt(tech0, model = "wgd")$results$b_star,
+               pgt(tech0, model = "envelope")$results$b_star,
+               tolerance = 1e-8)
+})
+
+test_that("wgd handles several intended outputs", {
+  # C (y = (2,2), b = 4) projects onto the A-B midpoint
+  # (y = (2.5, 2.5), b = 2): both output rows hold and b* = 2.
+  x <- matrix(10, 3, 1)
+  Y <- cbind(elec = c(4, 1, 2), heat = c(1, 4, 2))
+  tech <- pgt_tech(x, y = Y, b = c(2, 2, 4))
+  expect_equal(tech$M, 2L)
+  fit <- pgt(tech, model = "wgd")
+  expect_equal(fit$results$b_star, c(2, 2, 2), tolerance = 1e-8)
+  expect_equal(fit$results$efficiency[3], 0.5, tolerance = 1e-8)
+  expect_true(all(c("elec", "heat", "dual_elec", "dual_heat") %in%
+                    names(fit$results)))
 })
 
 test_that("envelope model matches the convex lower (y,b) envelope", {
-  # y = (1, 3, 2), b = (1, 3, 4): DMU3 projects onto the midpoint of
-  # DMUs 1 and 2 (y = 2, b = 2), so b* = 2 and efficiency = 0.5.
   x <- matrix(10, 3, 1)
   tech <- pgt_tech(x, y = c(1, 3, 2), b = c(1, 3, 4))
   fit <- pgt(tech, model = "envelope")
 
   expect_equal(fit$results$b_star, c(1, 3, 2), tolerance = 1e-8)
   expect_equal(fit$results$efficiency, c(1, 1, 0.5), tolerance = 1e-8)
-  # dual of the output constraint = slope of the (y,b) envelope = 1
   expect_equal(fit$results$dual_output[3], 1, tolerance = 1e-6)
 })
 
 test_that("vrs and crs differ as expected for the envelope", {
-  # y = (1, 2), b = (2, 2). VRS: DMU1 cannot scale peers down, b* = 2.
-  # CRS: DMU2 scaled by 0.5 gives (y, b) = (1, 1), so b* = 1.
   x <- matrix(10, 2, 1)
   tech <- pgt_tech(x, y = c(1, 2), b = c(2, 2))
   vrs <- pgt(tech, model = "envelope", returns = "vrs")
@@ -51,13 +83,22 @@ test_that("vrs and crs differ as expected for the envelope", {
 test_that("crs envelope equals y_i * min(b/y)", {
   tech <- make_random_tech(L = 25, seed = 42)
   crs <- pgt(tech, model = "envelope", returns = "crs")
-  expected <- tech$y * min(tech$b / tech$y)
+  y1 <- tech$y[, 1]
+  expected <- y1 * min(tech$b[, 1] / y1)
   expect_equal(crs$results$b_star, expected, tolerance = 1e-6)
 })
 
 test_that("self-reference bounds envelope scores in (0, 1]", {
   tech <- make_random_tech(L = 50, N = 4, seed = 7)
   fit <- pgt(tech, model = "envelope")
+  expect_true(all(fit$results$status == 0))
+  expect_true(all(fit$results$efficiency > 0))
+  expect_true(all(fit$results$efficiency <= 1 + 1e-8))
+})
+
+test_that("wgd scores lie in (0, 1] on consistent data", {
+  tech <- make_random_tech(L = 40, N = 3, seed = 13)
+  fit <- pgt(tech, model = "wgd")
   expect_true(all(fit$results$status == 0))
   expect_true(all(fit$results$efficiency > 0))
   expect_true(all(fit$results$efficiency <= 1 + 1e-8))
@@ -98,49 +139,51 @@ test_that("crs relaxes vrs for the wgd model", {
   tech <- make_random_tech(L = 25, N = 3, seed = 55)
   vrs <- pgt(tech, model = "wgd", returns = "vrs")
   crs <- pgt(tech, model = "wgd", returns = "crs")
-  ok <- vrs$results$status == 0 & crs$results$status == 0
-  expect_true(any(ok))
-  expect_true(all(crs$results$b_star[ok] <= vrs$results$b_star[ok] + 1e-8))
+  expect_true(all(crs$results$b_star <= vrs$results$b_star + 1e-8))
 })
 
-test_that("wgd diagnostics carry the documented signs", {
-  tech <- make_random_tech(L = 30, N = 3, seed = 77)
-  fit <- pgt(tech, model = "wgd")
-  ok <- fit$results$status == 0
-  # output row is a >= row whose relaxation cannot lower b*: dual >= 0
-  expect_true(all(fit$results$dual_output[ok] >= -1e-10))
-  # the projection can never exceed the DMU's materials-balance ceiling
-  expect_true(all(fit$results$mb_headroom[ok] >= -1e-8))
-})
-
-test_that("the v-term of the materials-balance cap binds feasibility", {
+test_that("anchored model keeps the cap and infeasibility semantics", {
   # u'x = 10, v*y = 5, so the cap is 5. With b = (6, 5.5) no peer mix
-  # fits under any DMU's cap: every LP must be infeasible. Any loosening
-  # of the v-term (cap 10) would make both solvable.
+  # fits under any DMU's cap: every anchored LP must be infeasible.
   x <- matrix(c(10, 10), 2, 1)
   tech <- pgt_tech(x, y = c(10, 10), b = c(6, 5.5), v = 0.5)
-  expect_warning(fit <- pgt(tech, model = "wgd"), "infeasible")
+  expect_warning(fit <- pgt(tech, model = "wgd_anchored"), "infeasible")
   expect_true(all(fit$results$status != 0))
   expect_true(all(is.na(fit$results$b_star)))
+  mb <- mb_check(tech)
+  expect_true(all(mb$gap[fit$results$status != 0] < 0))
+  expect_equal(attr(mb, "n_exact"), 2L)
 
   # Companion: DMU1 violates its cap (b = 6 > 5) but solves through the
   # peer mix lambda = DMU2 (b = 4 <= 5): a feasible violator.
   tech2 <- pgt_tech(x, y = c(10, 10), b = c(6, 4), v = 0.5)
-  fit2 <- pgt(tech2, model = "wgd")
+  fit2 <- pgt(tech2, model = "wgd_anchored")
   expect_equal(fit2$results$status, c(0L, 0L))
   expect_equal(fit2$results$b_star, c(4, 4), tolerance = 1e-8)
   expect_equal(fit2$results$efficiency[1], 4 / 6, tolerance = 1e-8)
   expect_equal(fit2$results$mb_headroom, c(1, 1), tolerance = 1e-8)
 })
 
-test_that("infeasible wgd LPs are confined to DMUs with exact gap < 0", {
-  x <- matrix(c(10, 10), 2, 1)
-  tech <- pgt_tech(x, y = c(10, 10), b = c(6, 5.5), v = 0.5)
-  expect_warning(fit <- pgt(tech, model = "wgd"), "infeasible")
-  mb <- mb_check(tech)
-  infeasible <- fit$results$status != 0
-  expect_true(all(mb$gap[infeasible] < 0))
-  expect_equal(attr(mb, "n_exact"), 2L)
+test_that("anchored diagnostics carry the documented signs", {
+  tech <- make_random_tech(L = 30, N = 3, seed = 77)
+  fit <- pgt(tech, model = "wgd_anchored")
+  ok <- fit$results$status == 0
+  expect_true(all(fit$results$dual_output[ok] >= -1e-10))
+  expect_true(all(fit$results$mb_headroom[ok] >= -1e-8))
+})
+
+test_that("anchored never beats the faithful wgd", {
+  # The anchored programme adds input rows and the cap to a programme
+  # whose remaining rows coincide with Eq. 6 only at v = 0, so the
+  # comparison is made there: extra constraints cannot lower b*.
+  tech <- make_random_tech(L = 30, N = 3, seed = 31)
+  tech0 <- pgt_tech(tech$x, tech$y[, 1], tech$b[, 1], v = 0,
+                    group = tech$group)
+  wgd <- pgt(tech0, model = "wgd")
+  anch <- pgt(tech0, model = "wgd_anchored")
+  ok <- anch$results$status == 0
+  expect_true(all(wgd$results$b_star[ok] <=
+                    anch$results$b_star[ok] + 1e-8))
 })
 
 test_that("wgd with group peers restricts the reference set", {
@@ -148,48 +191,59 @@ test_that("wgd with group peers restricts the reference set", {
   tech <- pgt_tech(x, y = c(5, 5, 5), b = c(10, 5, 1),
                    group = c("A", "A", "B"), id = c("d1", "d2", "d3"))
   fit <- pgt(tech, model = "wgd", peers = "group")
-  # d1 must not benchmark against group B's b = 1
   expect_equal(fit$results$b_star, c(5, 5, 1), tolerance = 1e-8)
   expect_equal(names(fit$weights[["d1"]]), "d2")
   expect_equal(names(fit$weights[["d3"]]), "d3")
 })
 
-test_that("wgd group peers equal the rodseth stage-1 minima", {
-  tech <- make_random_tech(L = 25, N = 3, seed = 88)
-  fit <- pgt(tech, model = "wgd", peers = "group")
-  dec <- pgt_decompose(tech, type = "rodseth")
-  expect_equal(fit$results$b_star, dec$results$b_star_te,
-               tolerance = 1e-10)
+test_that("the stage kernel reproduces the reduced form (Proposition 1)", {
+  # The fully freed stage programme of the extended representation
+  # (Eq. 9) must return the same minimal emissions as the reduced-form
+  # wgd kernel, with and without producer-specific coefficients.
+  tech <- make_random_tech(L = 20, N = 3, seed = 61)
+  fit <- pgt(tech, model = "wgd")
+  b5 <- vapply(seq_len(tech$L), function(i) {
+    pgt:::.lp_wgd_stage(i, tech, seq_len(tech$L), vrs = TRUE, p = 1L,
+                        hold_xp = FALSE, hold_xa = FALSE,
+                        hold_a = FALSE, hold_quality = FALSE)$b_star
+  }, numeric(1))
+  expect_equal(b5, fit$results$b_star, tolerance = 1e-7)
+
+  U <- matrix(runif(tech$L * tech$N, 0.5, 2), tech$L, tech$N)
+  vv <- runif(tech$L, 0, 0.3)
+  het <- pgt_tech(tech$x, tech$y[, 1], tech$b[, 1], u = U, v = vv)
+  fit_h <- pgt(het, model = "wgd")
+  b5_h <- vapply(seq_len(het$L), function(i) {
+    pgt:::.lp_wgd_stage(i, het, seq_len(het$L), vrs = TRUE, p = 1L,
+                        hold_xp = FALSE, hold_xa = FALSE,
+                        hold_a = FALSE, hold_quality = FALSE)$b_star
+  }, numeric(1))
+  expect_equal(b5_h, fit_h$results$b_star, tolerance = 1e-7)
 })
 
 test_that("wgd agrees with an independent reference implementation", {
-  # Independent, self-contained statement of the Rodseth (2025) Eq. 6
-  # reduced-form LP, against which the package must agree to the solver
-  # tolerance. Guards the packaged kernel against refactoring drift.
-  # u_row: the evaluated DMU's own material flow coefficients (one row of
-  # the L x N x P array, pollutant 1); v_l: its good-output coefficient.
-  ref_wgd <- function(l_prime, X, y, b, u_row, v_l, vrs = TRUE) {
-    L <- length(y); N <- ncol(X)
-    lp <- lpSolveAPI::make.lp(nrow = 0, ncol = L + 1)
+  # Independent statement of the Eq. 6 reduced form: minimise
+  # sum lambda (b_l + v_i' y_l) - v_i' y_i subject to the output rows
+  # and VRS. Guards the packaged kernel against refactoring drift.
+  ref_wgd <- function(l_prime, Y, b, v_row, vrs = TRUE) {
+    L <- nrow(Y)
+    lp <- lpSolveAPI::make.lp(nrow = 0, ncol = L)
     invisible(lpSolveAPI::lp.control(lp, sense = "min"))
-    lpSolveAPI::set.objfn(lp, c(rep(0, L), 1))
-    lpSolveAPI::add.constraint(lp, c(y, 0), ">=", y[l_prime])
-    for (n in 1:N) {
-      lpSolveAPI::add.constraint(lp, c(X[, n], 0), "<=", X[l_prime, n])
+    lpSolveAPI::set.objfn(lp, b + as.vector(Y %*% v_row))
+    for (m in seq_len(ncol(Y))) {
+      lpSolveAPI::add.constraint(lp, Y[, m], ">=", Y[l_prime, m])
     }
-    lpSolveAPI::add.constraint(lp, c(b, -1), "<=", 0)
-    mb_rhs <- sum(u_row * X[l_prime, ]) - v_l * y[l_prime]
-    lpSolveAPI::add.constraint(lp, c(rep(0, L), 1), "<=", mb_rhs)
-    if (vrs) lpSolveAPI::add.constraint(lp, c(rep(1, L), 0), "=", 1)
-    lpSolveAPI::set.bounds(lp, lower = rep(0, L + 1))
+    if (vrs) lpSolveAPI::add.constraint(lp, rep(1, L), "=", 1)
+    lpSolveAPI::set.bounds(lp, lower = rep(0, L))
     if (lpSolveAPI::solve.lpExtPtr(lp) != 0) return(NA_real_)
-    lpSolveAPI::get.variables(lp)[L + 1]
+    lpSolveAPI::get.objective(lp) - sum(v_row * Y[l_prime, ])
   }
 
   tech <- make_random_tech(L = 20, N = 3, seed = 99)
   fit <- pgt(tech, model = "wgd")
   ref <- vapply(seq_len(tech$L), function(i) {
-    ref_wgd(i, tech$x, tech$y, tech$b[, 1], tech$u[i, , 1], tech$v[i, 1])
+    ref_wgd(i, tech$y, tech$b[, 1],
+            as.vector(tech$v[i, , 1]))
   }, numeric(1))
 
   expect_equal(fit$results$b_star, ref, tolerance = 1e-8)

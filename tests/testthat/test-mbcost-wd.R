@@ -90,7 +90,8 @@ test_that("a failed sub-LP yields all-NA scores under nonzero status", {
   # alone (peer's polluting input is below DMU 2's), while T1 solves;
   # the whole intersection measure must then be NA.
   X <- matrix(c(1, 5), 2, 1)
-  sol <- pgt:::.lp_byprod_one(2, X, y = c(1, 1), b = c(1, 1), pol = 1L,
+  sol <- pgt:::.lp_byprod_one(2, X, Y = matrix(c(1, 1), 2, 1),
+                              b = c(1, 1), pol = 1L,
                               peers = 1L, vrs = TRUE)
   expect_true(sol$status != 0)
   expect_true(is.na(sol$output_eff))
