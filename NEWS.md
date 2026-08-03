@@ -70,6 +70,9 @@ the published paper.
   feasible replicates fall below half of `B`, instead of an interval
   resting on the remainder; `n_ok` still reports the count.
 * `print.pgt_tech()` separates the dimension counts with semicolons.
+* The negative-`b_star` warning of `model = "mb_cost"` no longer
+  attributes the sign to DMU-specific coefficients, which need not be
+  present; any positive retained-content coefficient permits it.
 * Documentation: the `status` column is documented as the `lp_solve`
   solver code (0 solved, 2 infeasible, 5 numerically failed), and the
   directional model's documentation warns that rescaling `y` or `b`

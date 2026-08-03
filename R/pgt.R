@@ -361,9 +361,9 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "wgd_input_fixed",
     if (n_neg > 0) {
       warning(sprintf(paste0(
         "%d of %d DMUs have a negative implied minimal emission b_star ",
-        "(minimised material inflow below the DMU's retained content, ",
-        "possible under DMU-specific coefficients); interpret b_star ",
-        "with care."), n_neg, L), call. = FALSE)
+        "(the minimised material inflow lies below the DMU's retained ",
+        "content, which positive retained-content coefficients permit); ",
+        "interpret b_star with care."), n_neg, L), call. = FALSE)
     }
   }
   results <- .insert_group(results, tech$group)
