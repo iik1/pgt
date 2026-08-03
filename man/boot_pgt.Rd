@@ -6,7 +6,7 @@
 \usage{
 boot_pgt(
   tech,
-  model = c("wgd", "wgd_anchored", "envelope", "byprod", "mb_cost", "wd"),
+  model = c("wgd", "wgd_input_fixed", "envelope", "byprod", "mb_cost", "wd"),
   B = 200,
   m = NULL,
   level = 0.95,
@@ -21,7 +21,7 @@ boot_pgt(
 \item{tech}{A [pgt_tech()] object.}
 
 \item{model}{One of the environmental-efficiency models
-(\code{"wgd"}, \code{"wgd_anchored"}, \code{"envelope"},
+(\code{"wgd"}, \code{"wgd_input_fixed"}, \code{"envelope"},
 \code{"byprod"}, \code{"mb_cost"}, \code{"wd"}); the directional
 model \code{"fdmo"} is not supported.}
 
@@ -39,7 +39,7 @@ distribution. Defaults to the DEA rate \eqn{2/(d+1)} under VRS and
 \eqn{2/d} under CRS (Kneip, Simar and Wilson 2008) for the model's
 effective frontier dimension \eqn{d}: \eqn{M+1} for \code{"wgd"}
 and \code{"envelope"}, whose frontiers live in the \eqn{(y, b)}
-space with the inputs free; \eqn{N+M+1} for \code{"wgd_anchored"}
+space with the inputs free; \eqn{N+M+1} for \code{"wgd_input_fixed"}
 and \code{"wd"} (inputs, good and bad outputs); \eqn{N+M} for
 \code{"mb_cost"}, whose programmes live in the \eqn{(x, y)} space;
 and the number of emission-causing inputs plus one for
@@ -84,7 +84,9 @@ carry genuine resampling variation instead of a degenerate
 zero-width interval. Replicates in which a DMU's program is
 infeasible are dropped as \code{NA} and counted: \code{per_dmu$n_ok}
 reports the number of feasible replicates behind each interval, and
-a warning is issued when it falls below half of \code{B}. Because a
+a DMU whose count falls below half of \code{B} is returned with
+\code{NA} bounds and standard error, with a warning, rather than
+with an interval resting on the few feasible replicates. Because a
 subsample frontier lies weakly inside the full-sample frontier, the
 deviations are non-negative and the interval extends downward from
 the point estimate, matching the direction of the frontier bias; the

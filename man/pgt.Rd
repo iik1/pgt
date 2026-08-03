@@ -6,7 +6,7 @@
 \usage{
 pgt(
   tech,
-  model = c("wgd", "wgd_rodseth", "wgd_anchored", "envelope", "fdmo", "ddf", "byprod",
+  model = c("wgd", "wgd_rodseth", "wgd_input_fixed", "envelope", "fdmo", "ddf", "byprod",
     "mb_cost", "wd"),
   returns = c("vrs", "crs"),
   peers = c("all", "group"),
@@ -17,7 +17,7 @@ pgt(
 \item{tech}{A [pgt_tech()] object.}
 
 \item{model}{Character: \code{"wgd"} (alias \code{"wgd_rodseth"}),
-\code{"wgd_anchored"}, \code{"envelope"}, \code{"fdmo"} (alias
+\code{"wgd_input_fixed"}, \code{"envelope"}, \code{"fdmo"} (alias
 \code{"ddf"}), \code{"mb_cost"}, \code{"byprod"} or \code{"wd"}.
 See Details.}
 
@@ -31,7 +31,7 @@ group (requires \code{group} in [pgt_tech()]).}
 \item{pollutant}{For a multi-pollutant technology, the pollutant to
 estimate: a column name or index of \code{b}. Defaults to the first
 pollutant. This selects which bad output the objective acts on. For
-\code{model = "wgd_anchored"} the materials-balance caps of every
+\code{model = "wgd_input_fixed"} the materials-balance caps of every
 pollutant constrain the projection; the other models use only the
 selected pollutant's data.}
 }
@@ -49,12 +49,13 @@ An object of class \code{"pgt"}: a list with
       \eqn{\partial b^*/\partial y_{mi} = \mu_m - v_{mi}}, which can
       be negative when the retained-content coefficient is large),
       \code{z_star} and \code{a_star} (only when \code{a} is
-      observed) and \code{status} (0 = solved). For
-      \code{"wgd_anchored"}, \code{"envelope"} and \code{"wd"}: the
+      observed) and \code{status}, the \code{lp_solve} solver code
+      (0 = solved; 2 = infeasible; 5 = numerically failed). For
+      \code{"wgd_input_fixed"}, \code{"envelope"} and \code{"wd"}: the
       same score columns with non-negative output duals and
       \code{mb_headroom}, the cap slack
       \eqn{u_i'x_i - v_i'y_i - b^*_i} (\code{NA} except for
-      \code{"wgd_anchored"}). For \code{"fdmo"}: \code{id},
+      \code{"wgd_input_fixed"}). For \code{"fdmo"}: \code{id},
       \code{group} (if present), \code{y}, \code{b}, \code{gross}
       (\eqn{\theta_y + \theta_b}), \code{good_eff} (\eqn{\theta_y}),
       \code{bad_eff} (\eqn{\theta_b}), \code{maximal_y}
@@ -75,7 +76,7 @@ contraction.
 }
 \details{
 The models fall into two axiom families. The materials-balance models
-(\code{"wgd"}, \code{"wgd_anchored"}, \code{"envelope"},
+(\code{"wgd"}, \code{"wgd_input_fixed"}, \code{"envelope"},
 \code{"fdmo"}, \code{"mb_cost"}) enforce the identity
 \eqn{u'x_l - v'y_l \ge b_l}; the reference models (\code{"byprod"},
 \code{"wd"}) implement competing systems for cross-comparison (see
@@ -99,7 +100,7 @@ The models fall into two axiom families. The materials-balance models
     \eqn{= \sum_l \lambda_l z_l} and abatement \code{a_star}
     \eqn{= \sum_l \lambda_l a_l}, the Table 2 quantities of Rodseth
     (2025). \code{model = "wgd_rodseth"} is an alias.}
-  \item{\code{"wgd_anchored"}}{The input-fixed companion benchmark
+  \item{\code{"wgd_input_fixed"}}{The input-fixed companion benchmark
     (the model estimated as \code{"wgd"} before version 0.6.0):
     minimise the bad output subject to output feasibility, the input
     rows \eqn{\sum_l \lambda_l x_{nl} \le x_{ni}}, the peer emission
@@ -126,7 +127,9 @@ The models fall into two axiom families. The materials-balance models
     \eqn{\theta_y + \theta_b}, with 0 for a frontier DMU. The gross
     score adds good-output units to bad-output units (direction
     \eqn{(1, 1)}), so it is unit-dependent and comparable only
-    within one unit system, as in Rodseth's Table 3. Requires an
+    within one unit system, as in Rodseth's Table 3; rescaling
+    \code{y} or \code{b} changes the direction's implicit weighting
+    and can change the optimiser, not merely the reported number. Requires an
     abatement output \code{a} in [pgt_tech()] and a single intended
     output. The model imposes the
     materials-balance identity as an exact equality

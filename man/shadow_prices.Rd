@@ -8,14 +8,14 @@ shadow_prices(fit)
 }
 \arguments{
 \item{fit}{A [pgt()] fit with \code{model = "wgd"},
-\code{"wgd_anchored"} or \code{"envelope"}, the models that report
+\code{"wgd_input_fixed"} or \code{"envelope"}, the models that report
 output duals.}
 }
 \value{
 A data frame with one row per DMU: \code{id}, \code{group}
   (if present), \code{b}, \code{b_star}, the output-dual columns
   and \code{mb_headroom} where the fit reports it
-  (\code{"wgd_anchored"}; the column is \code{NA} for
+  (\code{"wgd_input_fixed"}; the column is \code{NA} for
   \code{"envelope"} and absent for \code{"wgd"}).
 }
 \description{
@@ -29,14 +29,14 @@ the total derivative
 \eqn{\partial b^*/\partial y_m = \mu_m - v_m}, which can be negative
 when the retained-content coefficient \eqn{v} is large (producing
 more output binds more pollutant into the product); for
-\code{"wgd_anchored"} and \code{"envelope"} the dual is
-non-negative. \code{mb_headroom} (\code{"wgd_anchored"} only) is the
+\code{"wgd_input_fixed"} and \code{"envelope"} the dual is
+non-negative. \code{mb_headroom} (\code{"wgd_input_fixed"} only) is the
 slack \eqn{u'x_l - v'y_l - b^*_l} between the projection and the
 DMU's materials-balance ceiling.
 }
 \details{
 The dual of the peer emission envelope
-\eqn{\sum_l \lambda_l b_l \le b} in the \code{"wgd_anchored"}
+\eqn{\sum_l \lambda_l b_l \le b} in the \code{"wgd_input_fixed"}
 programme is not reported: it equals \eqn{-1} whenever the LP solves
 (dual feasibility on the emission variable, with the
 materials-balance row slack at any optimum), so it carries no

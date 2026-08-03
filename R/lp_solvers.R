@@ -104,7 +104,7 @@
 # feasibility here, so its LP solves only if some peer mix meets every
 # row within the caps; infeasibility (status != 0) is confined to
 # violating DMUs.
-.lp_wgd_anchored_one <- function(i, X, Y, b, mb_rhs, peers, vrs = TRUE,
+.lp_wgd_input_fixed_one <- function(i, X, Y, b, mb_rhs, peers, vrs = TRUE,
                                  input_constraints = TRUE,
                                  b_other = NULL, cap_other = NULL) {
   L <- length(peers)
@@ -482,10 +482,10 @@
     ctx$z <- .mb_cap(tech, p)
     ctx$a_p <- if (is.null(tech$a)) NULL else tech$a[, p]
   }
-  if (model %in% c("wgd_anchored", "fdmo")) {
+  if (model %in% c("wgd_input_fixed", "fdmo")) {
     ctx$mb_cap <- .mb_cap(tech, p)
   }
-  if (model == "wgd_anchored" && tech$P > 1L) {
+  if (model == "wgd_input_fixed" && tech$P > 1L) {
     q <- setdiff(seq_len(tech$P), p)
     ctx$b_other <- tech$b[, q, drop = FALSE]
     ctx$cap_other <- vapply(q, function(pp) .mb_cap(tech, pp),
@@ -511,7 +511,7 @@
     model,
     wgd = .lp_wgd_one(i, tech$y, ctx$b_p, ctx$v_p[i, ], peers,
                       vrs = vrs, z = ctx$z, a = ctx$a_p),
-    wgd_anchored = .lp_wgd_anchored_one(
+    wgd_input_fixed = .lp_wgd_input_fixed_one(
       i, tech$x, tech$y, ctx$b_p, ctx$mb_cap, peers, vrs = vrs,
       input_constraints = input_constraints,
       b_other = ctx$b_other, cap_other = ctx$cap_other),

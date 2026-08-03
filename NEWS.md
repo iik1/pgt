@@ -19,7 +19,8 @@ the published paper.
   are total derivatives and can be negative under large retained
   content. Scores on any data with `v > 0` differ from 0.5.x.
 * The previous input-fixed programme with the materials-balance cap
-  survives unchanged as `model = "wgd_anchored"`, documented as the
+  survives unchanged as `model = "wgd_input_fixed"` (briefly named
+  `wgd_anchored` in unreleased development commits), documented as the
   package's own current-input benchmark rather than Eq. 6. It keeps
   the cap, `mb_headroom`, infeasibility confined to violators, and the
   per-pollutant cap rows.
@@ -56,14 +57,24 @@ the published paper.
   numerically failed for a handful of units.
 * `pgt_ml()` now defaults to `technology = "wd"`, the
   weak-disposability reference under which Oh (2010) defines the
-  index. The previous default `"wgd"` keeps the input rows of the
-  pre-0.6.0 programme (the `"wgd_anchored"` shape), so after the wgd
-  redefinition it no longer matched the estimating model of the same
-  name; it remains available alongside `"envelope"` as an exploratory
-  option.
+  index, and the input-keeping exploratory option is named
+  `"input_envelope"` (previously `"wgd"`): it keeps the input rows of
+  the pre-0.6.0 programme, so after the wgd redefinition its old label
+  no longer matched the estimating model of the same name. No
+  technology label is now shared with a `pgt()` model whose programme
+  differs.
 * `inst/simulations/coverage.R` writes its results next to the script
   when the package-source path is absent, so a sourced installed copy
   no longer fails at the final write.
+* `boot_pgt()` returns `NA` bounds and standard error for a DMU whose
+  feasible replicates fall below half of `B`, instead of an interval
+  resting on the remainder; `n_ok` still reports the count.
+* `print.pgt_tech()` separates the dimension counts with semicolons.
+* Documentation: the `status` column is documented as the `lp_solve`
+  solver code (0 solved, 2 infeasible, 5 numerically failed), and the
+  directional model's documentation warns that rescaling `y` or `b`
+  changes its implicit direction weighting, not merely the reported
+  number.
 
 # pgt 0.5.1
 

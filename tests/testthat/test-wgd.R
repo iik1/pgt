@@ -142,12 +142,12 @@ test_that("crs relaxes vrs for the wgd model", {
   expect_true(all(crs$results$b_star <= vrs$results$b_star + 1e-8))
 })
 
-test_that("wgd_anchored keeps the cap and infeasibility semantics", {
+test_that("wgd_input_fixed keeps the cap and infeasibility semantics", {
   # u'x = 10, v*y = 5, so the cap is 5. With b = (6, 5.5) no peer mix
-  # fits under any DMU's cap: every wgd_anchored LP must be infeasible.
+  # fits under any DMU's cap: every wgd_input_fixed LP must be infeasible.
   x <- matrix(c(10, 10), 2, 1)
   tech <- pgt_tech(x, y = c(10, 10), b = c(6, 5.5), v = 0.5)
-  expect_warning(fit <- pgt(tech, model = "wgd_anchored"), "infeasible")
+  expect_warning(fit <- pgt(tech, model = "wgd_input_fixed"), "infeasible")
   expect_true(all(fit$results$status != 0))
   expect_true(all(is.na(fit$results$b_star)))
   mb <- mb_check(tech)
@@ -157,30 +157,30 @@ test_that("wgd_anchored keeps the cap and infeasibility semantics", {
   # Companion: DMU1 violates its cap (b = 6 > 5) but solves through the
   # peer mix lambda = DMU2 (b = 4 <= 5): a feasible violator.
   tech2 <- pgt_tech(x, y = c(10, 10), b = c(6, 4), v = 0.5)
-  fit2 <- pgt(tech2, model = "wgd_anchored")
+  fit2 <- pgt(tech2, model = "wgd_input_fixed")
   expect_equal(fit2$results$status, c(0L, 0L))
   expect_equal(fit2$results$b_star, c(4, 4), tolerance = 1e-8)
   expect_equal(fit2$results$efficiency[1], 4 / 6, tolerance = 1e-8)
   expect_equal(fit2$results$mb_headroom, c(1, 1), tolerance = 1e-8)
 })
 
-test_that("wgd_anchored diagnostics carry the documented signs", {
+test_that("wgd_input_fixed diagnostics carry the documented signs", {
   tech <- make_random_tech(L = 30, N = 3, seed = 77)
-  fit <- pgt(tech, model = "wgd_anchored")
+  fit <- pgt(tech, model = "wgd_input_fixed")
   ok <- fit$results$status == 0
   expect_true(all(fit$results$dual_output[ok] >= -1e-10))
   expect_true(all(fit$results$mb_headroom[ok] >= -1e-8))
 })
 
-test_that("wgd_anchored never beats the faithful wgd", {
-  # The wgd_anchored programme adds input rows and the cap to a
+test_that("wgd_input_fixed never beats the faithful wgd", {
+  # The wgd_input_fixed programme adds input rows and the cap to a
   # programme whose remaining rows coincide with Eq. 6 only at v = 0,
   # so the comparison is made there: extra constraints cannot lower b*.
   tech <- make_random_tech(L = 30, N = 3, seed = 31)
   tech0 <- pgt_tech(tech$x, tech$y[, 1], tech$b[, 1], v = 0,
                     group = tech$group)
   wgd <- pgt(tech0, model = "wgd")
-  anch <- pgt(tech0, model = "wgd_anchored")
+  anch <- pgt(tech0, model = "wgd_input_fixed")
   ok <- anch$results$status == 0
   expect_true(all(wgd$results$b_star[ok] <=
                     anch$results$b_star[ok] + 1e-8))

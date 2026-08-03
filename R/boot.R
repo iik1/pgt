@@ -21,7 +21,9 @@
 #' zero-width interval. Replicates in which a DMU's program is
 #' infeasible are dropped as \code{NA} and counted: \code{per_dmu$n_ok}
 #' reports the number of feasible replicates behind each interval, and
-#' a warning is issued when it falls below half of \code{B}. Because a
+#' a DMU whose count falls below half of \code{B} is returned with
+#' \code{NA} bounds and standard error, with a warning, rather than
+#' with an interval resting on the few feasible replicates. Because a
 #' subsample frontier lies weakly inside the full-sample frontier, the
 #' deviations are non-negative and the interval extends downward from
 #' the point estimate, matching the direction of the frontier bias; the
@@ -55,7 +57,7 @@
 #'
 #' @param tech A [pgt_tech()] object.
 #' @param model One of the environmental-efficiency models
-#'   (\code{"wgd"}, \code{"wgd_anchored"}, \code{"envelope"},
+#'   (\code{"wgd"}, \code{"wgd_input_fixed"}, \code{"envelope"},
 #'   \code{"byprod"}, \code{"mb_cost"}, \code{"wd"}); the directional
 #'   model \code{"fdmo"} is not supported.
 #' @param B Number of subsampling replicates.
@@ -69,7 +71,7 @@
 #'   \eqn{2/d} under CRS (Kneip, Simar and Wilson 2008) for the model's
 #'   effective frontier dimension \eqn{d}: \eqn{M+1} for \code{"wgd"}
 #'   and \code{"envelope"}, whose frontiers live in the \eqn{(y, b)}
-#'   space with the inputs free; \eqn{N+M+1} for \code{"wgd_anchored"}
+#'   space with the inputs free; \eqn{N+M+1} for \code{"wgd_input_fixed"}
 #'   and \code{"wd"} (inputs, good and bad outputs); \eqn{N+M} for
 #'   \code{"mb_cost"}, whose programmes live in the \eqn{(x, y)} space;
 #'   and the number of emission-causing inputs plus one for
@@ -127,7 +129,7 @@
 #' head(bt$per_dmu)
 #' }
 #' @export
-boot_pgt <- function(tech, model = c("wgd", "wgd_anchored",
+boot_pgt <- function(tech, model = c("wgd", "wgd_input_fixed",
                                      "envelope", "byprod",
                                      "mb_cost", "wd"),
                      B = 200, m = NULL, level = 0.95, kappa = NULL,
@@ -146,7 +148,7 @@ boot_pgt <- function(tech, model = c("wgd", "wgd_anchored",
   }
   if (is.null(kappa)) {
     # effective frontier dimension: wgd and the envelope live in the
-    # (y, b) space (inputs free); wgd_anchored/wd use (x, y, b);
+    # (y, b) space (inputs free); wgd_input_fixed/wd use (x, y, b);
     # mb_cost lives in (x, y); byprod's principal score comes from the
     # T2 sub-LP over the polluting inputs and b
     dims <- switch(model,
@@ -239,11 +241,19 @@ boot_pgt <- function(tech, model = c("wgd", "wgd_anchored",
   )
   per_dmu <- .insert_group(per_dmu, grp)
   rownames(per_dmu) <- NULL
-  n_thin <- sum(n_ok < B / 2)
+  # a unit whose feasible replicates fall below half of B carries too
+  # little resampling information for an interval: report NA bounds
+  # under the recorded n_ok instead of an interval resting on the
+  # remainder
+  thin <- n_ok < B / 2
+  per_dmu$lower[thin] <- NA_real_
+  per_dmu$upper[thin] <- NA_real_
+  per_dmu$se[thin] <- NA_real_
+  n_thin <- sum(thin)
   if (n_thin > 0) {
     warning(sprintf(paste0(
       "%d of %d DMUs have infeasible LPs in more than half of their ",
-      "subsample replicates; their intervals rest on few replicates ",
+      "subsample replicates; their bounds are returned as NA ",
       "(see per_dmu$n_ok)."), n_thin, L), call. = FALSE)
   }
 

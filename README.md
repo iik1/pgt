@@ -83,7 +83,7 @@ compare_models(tech, models = c("wgd", "byprod", "mb_cost", "wd"))
 | `pgt_tech()` | Technology constructor: inputs, good/bad outputs, material flow coefficients `u`, `v`, abatement `a`, technology groups, panel `period` |
 | `mb_check()` | Audit of `u'x - v y >= b` per DMU and pollutant |
 | `pgt(model = "wgd")` | Rodseth (2025) weak-G-disposability model, Eq. 6 in reduced form |
-| `pgt(model = "wgd_anchored")` | Input-fixed benchmark with the materials-balance cap (the pre-0.6.0 `wgd`) |
+| `pgt(model = "wgd_input_fixed")` | Input-fixed benchmark with the materials-balance cap (the pre-0.6.0 `wgd`) |
 | `pgt(model = "envelope")` | The v = 0 case of Eq. 6: convex lower (y, b) envelope |
 | `pgt(model = "fdmo")` | Rodseth (2025) directional representation, Eq. 13 (alias `"ddf"`) |
 | `pgt(model = "mb_cost")` | Coelli et al. (2007) materials-balance cost model, `EE = TE x EAE` |

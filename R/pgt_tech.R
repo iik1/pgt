@@ -533,7 +533,7 @@ pgt_tech <- function(x, y, b, u = NULL, v = 0, a = NULL, x_abate = NULL,
 #' @export
 print.pgt_tech <- function(x, ...) {
   cat("Pollution-generating technology\n")
-  cat(sprintf("  DMUs: %d   inputs: %d   good outputs: %d   bad outputs: %d\n",
+  cat(sprintf("  DMUs: %d;  inputs: %d;  good outputs: %d;  bad outputs: %d\n",
               x$L, x$N, x$M, x$P))
   cat(sprintf("  inputs: %s\n", paste(colnames(x$x), collapse = ", ")))
   if (length(x$x_abate)) {

@@ -34,7 +34,7 @@ Pre-estimation feasibility audit of the materials-balance condition
 \eqn{u'x_l - v'y_l \ge b_l} for every DMU (and every pollutant). DMUs
 that violate the identity carry inconsistent material accounts (more
 pollutant leaves than enters). A violation makes self-reference
-infeasible in the input-fixed \code{"wgd_anchored"} programme of
+infeasible in the input-fixed \code{"wgd_input_fixed"} programme of
 [pgt()], so that DMU's LP solves only if some peer mix meets every
 constraint within its materials-balance cap; conversely,
 infeasibility is confined to DMUs with an exact violation,

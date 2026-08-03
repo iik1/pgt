@@ -39,11 +39,11 @@ The `technology` argument selects the reference technology. The
 default `"wd"` imposes weak disposability of the bad output in the
 Kuosmanen (2005) form; this is the technology under which Chung, Färe
 and Grosskopf (1997) and Oh (2010) define the index, so it is the
-faithful comparator. The `"wgd"` and `"envelope"` options treat the
-bad output as reducible to the peer emission envelope and are
-exploratory companions (the `"wgd"` label here keeps the input rows,
-matching the input-fixed benchmark of `pgt()` rather than its Eq. 6
-programme).
+faithful comparator. The `"input_envelope"` and `"envelope"` options
+treat the bad output as reducible to the peer emission envelope and
+are exploratory companions; the input-keeping variant matches the
+shape of the input-fixed benchmark of `pgt()` rather than its Eq. 6
+programme.
 
 ### A constructed panel
 

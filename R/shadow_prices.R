@@ -10,13 +10,13 @@
 #' \eqn{\partial b^*/\partial y_m = \mu_m - v_m}, which can be negative
 #' when the retained-content coefficient \eqn{v} is large (producing
 #' more output binds more pollutant into the product); for
-#' \code{"wgd_anchored"} and \code{"envelope"} the dual is
-#' non-negative. \code{mb_headroom} (\code{"wgd_anchored"} only) is the
+#' \code{"wgd_input_fixed"} and \code{"envelope"} the dual is
+#' non-negative. \code{mb_headroom} (\code{"wgd_input_fixed"} only) is the
 #' slack \eqn{u'x_l - v'y_l - b^*_l} between the projection and the
 #' DMU's materials-balance ceiling.
 #'
 #' The dual of the peer emission envelope
-#' \eqn{\sum_l \lambda_l b_l \le b} in the \code{"wgd_anchored"}
+#' \eqn{\sum_l \lambda_l b_l \le b} in the \code{"wgd_input_fixed"}
 #' programme is not reported: it equals \eqn{-1} whenever the LP solves
 #' (dual feasibility on the emission variable, with the
 #' materials-balance row slack at any optimum), so it carries no
@@ -31,13 +31,13 @@
 #' price via [mac_curve()].
 #'
 #' @param fit A [pgt()] fit with \code{model = "wgd"},
-#'   \code{"wgd_anchored"} or \code{"envelope"}, the models that report
+#'   \code{"wgd_input_fixed"} or \code{"envelope"}, the models that report
 #'   output duals.
 #'
 #' @return A data frame with one row per DMU: \code{id}, \code{group}
 #'   (if present), \code{b}, \code{b_star}, the output-dual columns
 #'   and \code{mb_headroom} where the fit reports it
-#'   (\code{"wgd_anchored"}; the column is \code{NA} for
+#'   (\code{"wgd_input_fixed"}; the column is \code{NA} for
 #'   \code{"envelope"} and absent for \code{"wgd"}).
 #'
 #' @references
@@ -67,9 +67,9 @@
 #' @export
 shadow_prices <- function(fit) {
   stopifnot(inherits(fit, "pgt"))
-  if (!fit$model %in% c("wgd", "wgd_anchored", "envelope")) {
+  if (!fit$model %in% c("wgd", "wgd_input_fixed", "envelope")) {
     stop("shadow_prices() requires a fit with output duals ",
-         "(model = \"wgd\", \"wgd_anchored\" or \"envelope\"); got ",
+         "(model = \"wgd\", \"wgd_input_fixed\" or \"envelope\"); got ",
          "model = \"", fit$model, "\".", call. = FALSE)
   }
   keep <- intersect(c("id", "group", "b", "b_star", "dual_output",
@@ -120,7 +120,7 @@ shadow_prices <- function(fit) {
 #' platforms. Frontier-interior projections have unique duals.
 #'
 #' @param fit A [pgt()] fit with \code{model = "wgd"},
-#'   \code{"wgd_anchored"} or \code{"envelope"}, the models that report
+#'   \code{"wgd_input_fixed"} or \code{"envelope"}, the models that report
 #'   output duals. The fit must have a single intended output; with
 #'   several, the per-output duals are in [shadow_prices()].
 #' @param price Optional scalar price of the good output. If supplied,
@@ -158,9 +158,9 @@ shadow_prices <- function(fit) {
 #' @export
 mac_curve <- function(fit, price = NULL) {
   stopifnot(inherits(fit, "pgt"))
-  if (!fit$model %in% c("wgd", "wgd_anchored", "envelope")) {
+  if (!fit$model %in% c("wgd", "wgd_input_fixed", "envelope")) {
     stop("mac_curve() requires a fit with output duals ",
-         "(model = \"wgd\", \"wgd_anchored\" or \"envelope\"); got ",
+         "(model = \"wgd\", \"wgd_input_fixed\" or \"envelope\"); got ",
          "model = \"", fit$model, "\".", call. = FALSE)
   }
   if (is.null(fit$results$dual_output)) {
@@ -227,16 +227,22 @@ print.pgt_mac <- function(x, ...) {
 }
 
 #' @export
-plot.pgt_mac <- function(x, ...) {
+plot.pgt_mac <- function(x, xlab = NULL, ylab = NULL, ...) {
   if (nrow(x) == 0) {
     stop("empty MAC curve: no DMUs with a positive output dual.",
          call. = FALSE)
   }
+  # generic axis labels by default; pass xlab/ylab to state the
+  # pollutant's own units
+  if (is.null(xlab)) {
+    xlab <- "Cumulative abatement potential (units of b)"
+  }
+  if (is.null(ylab)) {
+    ylab <- if (is.null(attr(x, "price")))
+      "Marginal abatement cost (units of y per b)"
+    else "Marginal abatement cost (money per unit of b)"
+  }
   graphics::plot(x$cum_abatement, x$mac, type = "s",
-                 xlab = "Cumulative abatement potential (units of b)",
-                 ylab = if (is.null(attr(x, "price")))
-                   "Marginal abatement cost (units of y per b)"
-                 else "Marginal abatement cost (money per unit of b)",
-                 ...)
+                 xlab = xlab, ylab = ylab, ...)
   invisible(x)
 }

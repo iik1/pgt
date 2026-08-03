@@ -117,3 +117,20 @@ test_that("boot_pgt warns on panel technologies", {
   expect_warning(boot_pgt(tech, model = "envelope", B = 5, seed = 1),
                  "period")
 })
+
+test_that("thin replicate counts return NA bounds, not intervals", {
+  # units with feasible replicates below B / 2 carry too little
+  # resampling information; their bounds and se must be NA while the
+  # estimate and n_ok remain reported
+  tech <- make_random_tech(L = 30, N = 2, seed = 8)
+  bt <- suppressWarnings(boot_pgt(tech, model = "wgd", B = 60, seed = 2))
+  pd <- bt$per_dmu
+  thin <- pd$n_ok < 30
+  if (any(thin)) {
+    expect_true(all(is.na(pd$lower[thin])))
+    expect_true(all(is.na(pd$upper[thin])))
+    expect_true(all(is.na(pd$se[thin])))
+    expect_true(all(!is.na(pd$estimate[thin])))
+  }
+  expect_true(all(!is.na(pd$lower[!thin])))
+})

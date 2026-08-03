@@ -8,7 +8,7 @@ mac_curve(fit, price = NULL)
 }
 \arguments{
 \item{fit}{A [pgt()] fit with \code{model = "wgd"},
-\code{"wgd_anchored"} or \code{"envelope"}, the models that report
+\code{"wgd_input_fixed"} or \code{"envelope"}, the models that report
 output duals. The fit must have a single intended output; with
 several, the per-output duals are in [shadow_prices()].}
 

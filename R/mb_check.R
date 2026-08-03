@@ -4,7 +4,7 @@
 #' \eqn{u'x_l - v'y_l \ge b_l} for every DMU (and every pollutant). DMUs
 #' that violate the identity carry inconsistent material accounts (more
 #' pollutant leaves than enters). A violation makes self-reference
-#' infeasible in the input-fixed \code{"wgd_anchored"} programme of
+#' infeasible in the input-fixed \code{"wgd_input_fixed"} programme of
 #' [pgt()], so that DMU's LP solves only if some peer mix meets every
 #' constraint within its materials-balance cap; conversely,
 #' infeasibility is confined to DMUs with an exact violation,
@@ -103,7 +103,7 @@ print.pgt_mb <- function(x, ...) {
   cat(sprintf("  closure gap (gap / potential): min %.4f, median %.4f, max %.4f\n",
               min(x$rel_gap), stats::median(x$rel_gap), max(x$rel_gap)))
   ne <- sum(x$gap < 0)
-  cat(sprintf("  accounts with gap < 0 (exact): %d; any infeasible \"wgd_anchored\" LPs are confined to DMUs with gap < 0 in at least one account\n",
+  cat(sprintf("  accounts with gap < 0 (exact): %d; any infeasible \"wgd_input_fixed\" LPs are confined to DMUs with gap < 0 in at least one account\n",
               ne))
   if (!is.null(x$closure)) {
     cat(sprintf("  equality closure (gap - a): largest |closure| / potential = %.2g (model = \"fdmo\" requires exact closure)\n",

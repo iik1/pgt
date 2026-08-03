@@ -79,7 +79,7 @@ of crude steel (the synthetic generator's assumption; see
 where more pollutant leaves than enters. The audit is the data-quality
 check behind the materials-balance interpretation of every model, and
 it gates the models that constrain the projection by the DMU's own
-account: the input-fixed benchmark `"wgd_anchored"` and the
+account: the input-fixed benchmark `"wgd_input_fixed"` and the
 directional model `"fdmo"`.
 
 ```{r}
@@ -88,7 +88,7 @@ head(as.data.frame(mb))
 attr(mb, "n_violations")
 ```
 
-An infeasible `"wgd_anchored"` programme always belongs to a DMU with
+An infeasible `"wgd_input_fixed"` programme always belongs to a DMU with
 a strictly negative gap, so the audit locates any estimation problem
 in advance; such DMUs return `NA` scores and `pgt()` warns. The
 faithful weak-G-disposability programme of Eq. 6 is always

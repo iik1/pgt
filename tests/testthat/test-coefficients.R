@@ -122,7 +122,7 @@ test_that("fractional pollutant index is rejected", {
   expect_silent(pgt(tech, model = "envelope", pollutant = 2))  # integer double ok
 })
 
-test_that("the wgd_anchored model enforces every pollutant's cap", {
+test_that("the wgd_input_fixed model enforces every pollutant's cap", {
   # Peer B is attractive on pollutant 1 (b1 = 2) but breaches DMU A's
   # pollutant-2 cap (cap2 = 0.3 * 10 = 3 < b2_B = 8), so enforcing all
   # caps must raise A's minimal b1 above the single-pollutant solution.
@@ -133,8 +133,8 @@ test_that("the wgd_anchored model enforces every pollutant's cap", {
   tech2 <- pgt_tech(x, y, b = cbind(p1 = b1, p2 = b2),
                     u = list(p1 = 1, p2 = 0.3), v = c(0, 0))
   tech1 <- pgt_tech(x, y, b = b1)
-  fit2 <- pgt(tech2, model = "wgd_anchored", pollutant = "p1")
-  fit1 <- pgt(tech1, model = "wgd_anchored")
+  fit2 <- pgt(tech2, model = "wgd_input_fixed", pollutant = "p1")
+  fit1 <- pgt(tech1, model = "wgd_input_fixed")
   expect_gt(fit2$results$b_star[1], fit1$results$b_star[1])
   # DMU A satisfies both identities, so its LP stays feasible.
   expect_equal(fit2$results$status[1], 0L)

@@ -6,7 +6,7 @@
 \usage{
 pgt_ml(
   tech,
-  technology = c("wd", "wgd", "envelope"),
+  technology = c("wd", "input_envelope", "envelope"),
   returns = c("vrs", "crs"),
   pollutant = 1L
 )
@@ -18,9 +18,10 @@ is defined for a single good output.}
 
 \item{technology}{Reference technology: \code{"wd"} (the default)
 imposes weak disposability of the bad output, the technology of
-Oh (2010); \code{"wgd"} keeps the input constraints and the lower
-emission envelope; \code{"envelope"} frees the inputs, so the
-frontier becomes the \eqn{(y, b)} envelope. See Details.}
+Oh (2010); \code{"input_envelope"} keeps the input constraints
+and the lower emission envelope; \code{"envelope"} frees the
+inputs, so the frontier becomes the \eqn{(y, b)} envelope. See
+Details.}
 
 \item{returns}{Returns to scale: \code{"vrs"} (default) or
 \code{"crs"}.}
@@ -68,12 +69,13 @@ default) imposes weak disposability of the bad output (the Kuosmanen
 an abatement part): this is the technology under which Chung, Fare
 and Grosskopf (1997) and Oh (2010) define the (global)
 Malmquist-Luenberger index, so \code{technology = "wd"} is the
-faithful Oh (2010) comparator. \code{"wgd"} and \code{"envelope"}
-instead treat the bad output as reducible down to the peer emission
-envelope with no proportional output sacrifice, with (\code{"wgd"})
-and without (\code{"envelope"}) the input rows; the input-keeping
-variant mirrors the input-fixed \code{"wgd_anchored"} shape of
-[pgt()] rather than the input-free Eq. 6 programme. Under constant returns
+faithful Oh (2010) comparator. \code{"input_envelope"} and
+\code{"envelope"} instead treat the bad output as reducible down to
+the peer emission envelope with no proportional output sacrifice,
+with (\code{"input_envelope"}) and without (\code{"envelope"}) the
+input rows; the input-keeping variant mirrors the input-fixed
+\code{"wgd_input_fixed"} shape of [pgt()] rather than the
+input-free Eq. 6 programme. Under constant returns
 the free-disposal technologies contain the weak-disposability set,
 so their distances are weakly larger than under \code{"wd"}; under
 variable returns the sets are not nested in general, because the
@@ -81,12 +83,12 @@ Kuosmanen form lets the active intensity weights sum below one.
 
 This estimator is experimental: the global Malmquist-Luenberger
 index under a materials-balance technology is not yet settled in the
-literature. Under \code{"wgd"} and \code{"envelope"} the index does
-not re-impose the per-DMU materials-balance cap on the projected
-point, and the bad output is freely disposable toward the envelope
-rather than weakly disposable, so these variants are exploratory
-companions to the \code{"wd"} index, not implementations of Oh
-(2010).
+literature. Under \code{"input_envelope"} and \code{"envelope"} the
+index does not re-impose the per-DMU materials-balance cap on the
+projected point, and the bad output is freely disposable toward the
+envelope rather than weakly disposable, so these variants are
+exploratory companions to the \code{"wd"} index, not
+implementations of Oh (2010).
 }
 \examples{
 # Two-period panel: period 2's frontier emits less for the same output.
