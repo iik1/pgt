@@ -22,7 +22,9 @@ pgt_tech(
 \item{x}{Numeric matrix or data frame of material inputs, one row per
 decision-making unit (DMU), one column per input.}
 
-\item{y}{Numeric vector of the good output, strictly positive.}
+\item{y}{Good outputs, strictly positive: a numeric vector for a
+single intended output, or an \eqn{L \times M} matrix or data
+frame with one named column per output.}
 
 \item{b}{Bad outputs (controlled emissions), strictly positive: a
 numeric vector for a single pollutant, or an \eqn{L \times P}
@@ -34,10 +36,14 @@ vector (one coefficient per input column, shared by all DMUs), an
 several pollutants, a named list with one such element per
 pollutant. Defaults to 1 for every input and pollutant.}
 
-\item{v}{Material flow coefficient of the good output (pollutant
-embodied in the product). A scalar, a length-\eqn{L} vector
-(DMU-specific), or, with several pollutants, a length-\eqn{P}
-vector, \eqn{L \times P} matrix, or list. Defaults to 0.}
+\item{v}{Material flow coefficients of the good outputs (pollutant
+embodied in the products). A scalar, a length-\eqn{M} vector (one
+coefficient per output), a length-\eqn{L} vector (single output,
+DMU-specific), or an \eqn{L \times M} matrix; with several
+pollutants, a named list with one such element per pollutant, an
+\eqn{M \times P} matrix, an \eqn{L \times M \times P} array, or
+the single-output shapes of earlier versions (length-\eqn{P}
+vector, \eqn{L \times P} matrix). Defaults to 0.}
 
 \item{a}{Optional abatement output (pollutant removed by end-of-pipe
 control), non-negative: a numeric vector for a single pollutant or
@@ -47,9 +53,10 @@ pollution control explicitly; see [pgt()].}
 \item{x_abate}{Optional marker of the pollution-control input columns
 of \code{x} (Rodseth 2025, Eq. 7): a character vector of column
 names or an integer vector of column positions. The remaining
-columns are production inputs. Currently recorded and reported
-only: the estimators do not yet treat pollution-control inputs
-separately, and [pgt()] warns when the marker is set.}
+columns are production inputs. Used by the Rodseth decomposition
+of [pgt_decompose()], whose final stage frees the
+pollution-control inputs to separate abatement-input allocative
+efficiency; the [pgt()] estimators treat all inputs alike.}
 
 \item{polluting}{Optional marker of the emission-generating input
 columns of \code{x} (the residual-generating sub-technology of the
@@ -71,50 +78,62 @@ names of \code{x}, or a running index.}
 }
 \value{
 An object of class \code{"pgt_tech"}: a list with elements
-  \code{x} (\eqn{L \times N} matrix), \code{y} (length \eqn{L}),
-  \code{b} (\eqn{L \times P} matrix), \code{u}
-  (\eqn{L \times N \times P} array), \code{v} (\eqn{L \times P}
-  matrix), \code{a} (\eqn{L \times P} matrix or \code{NULL}),
-  \code{x_abate} (integer vector of pollution-control input columns,
-  possibly empty), \code{group}, \code{id}, \code{L}, \code{N},
-  \code{P} and \code{pollutants} (character vector of pollutant
-  names). Single-pollutant input is stored in the same canonical
-  shapes with \eqn{P = 1}.
+  \code{x} (\eqn{L \times N} matrix), \code{y} (\eqn{L \times M}
+  matrix), \code{b} (\eqn{L \times P} matrix), \code{u}
+  (\eqn{L \times N \times P} array), \code{v}
+  (\eqn{L \times M \times P} array), \code{a} (\eqn{L \times P}
+  matrix or \code{NULL}), \code{x_abate} (integer vector of
+  pollution-control input columns, possibly empty), \code{group},
+  \code{id}, \code{L}, \code{N}, \code{M}, \code{P},
+  \code{outputs} and \code{pollutants} (character vectors of output
+  and pollutant names). Single-output, single-pollutant input is
+  stored in the same canonical shapes with \eqn{M = P = 1}.
 }
 \description{
-Bundles the data of a pollution-generating technology, a single good
-output, one or more bad outputs, and material inputs, together with
-the material flow coefficients that tie them to the materials-balance
-identity. The returned object is the input to [pgt()],
-[pgt_decompose()] and [mb_check()].
+Bundles the data of a pollution-generating technology, one or more
+good outputs, one or more bad outputs, and material inputs, together
+with the material flow coefficients that tie them to the
+materials-balance identity. The returned object is the input to
+[pgt()], [pgt_decompose()] and [mb_check()].
 }
 \details{
 The materials-balance principle requires that the pollutant content
 of the inputs is either embodied in the good output, removed by
 end-of-pipe abatement, or emitted:
-\deqn{u'x_l - v y_l \ge b_l,}
+\deqn{u'x_l - v'y_l \ge b_l,}
 where \eqn{u} holds the material flow coefficients of the inputs (for
 example tonnes of CO2 potential per unit of input) and \eqn{v} the
-coefficient of the good output (pollutant retained in the product).
-Data already expressed in pollutant-potential units use the default
-\code{u = 1} for every input. When the abatement output \code{a} is
-observed, the identity closes as an equality,
-\eqn{u'x_l - v y_l = b_l + a_l}. Use [mb_check()] to audit the
+coefficients of the good outputs (pollutant retained in the
+products). Data already expressed in pollutant-potential units use
+the default \code{u = 1} for every input. When the abatement output
+\code{a} is observed, the identity closes as an equality,
+\eqn{u'x_l - v'y_l = b_l + a_l}. Use [mb_check()] to audit the
 identity before estimation.
 
 Material flow coefficients may vary across DMUs (heterogeneous input
 or output quality; Eder 2022, Rodseth 2025). Supply \code{u} as an
-\eqn{L \times N} matrix and \code{v} as a length-\eqn{L} vector to
-attach DMU-specific coefficients. With homogeneous coefficients a
-length-\eqn{N} vector \code{u} and scalar \code{v} suffice, and all
-estimators reduce to the homogeneous-quality case.
+\eqn{L \times N} matrix and \code{v} as a length-\eqn{L} vector
+(single output) or \eqn{L \times M} matrix to attach DMU-specific
+coefficients. With homogeneous coefficients a length-\eqn{N} vector
+\code{u} and scalar \code{v} suffice, and all estimators reduce to
+the homogeneous-quality case.
+
+With several intended outputs, supply \code{y} as an
+\eqn{L \times M} matrix (one named column per output). Every
+estimator supports \eqn{M > 1} except \code{model = "fdmo"} in
+[pgt()] and [pgt_ml()]; the retained content of pollutant \eqn{p}
+generalises to \eqn{v_p'y_l} with one coefficient per output.
 
 With several pollutants, supply \code{b} as an \eqn{L \times P}
 matrix (one named column per pollutant), \code{u} as a named list
 with one element per pollutant (each a length-\eqn{N} vector or
-\eqn{L \times N} matrix), and \code{v} as a length-\eqn{P} vector,
-\eqn{L \times P} matrix, or list. Each pollutant carries its own
-materials-balance identity.
+\eqn{L \times N} matrix), and \code{v} as a named list with one
+element per pollutant (each a scalar, length-\eqn{M} vector or
+\eqn{L \times M} matrix), an \eqn{M \times P} matrix, or an
+\eqn{L \times M \times P} array; the single-output shapes of
+earlier versions (length-\eqn{P} vector, \eqn{L \times P} matrix)
+remain accepted. Each pollutant carries its own materials-balance
+identity.
 }
 \examples{
 data(steeldemo)

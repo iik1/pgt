@@ -7,8 +7,10 @@
 mac_curve(fit, price = NULL)
 }
 \arguments{
-\item{fit}{A [pgt()] fit with \code{model = "wgd"} or
-\code{"envelope"}, the models that report output duals.}
+\item{fit}{A [pgt()] fit with \code{model = "wgd"},
+\code{"wgd_anchored"} or \code{"envelope"}, the models that report
+output duals. The fit must have a single intended output; with
+several, the per-output duals are in [shadow_prices()].}
 
 \item{price}{Optional scalar price of the good output. If supplied,
 \code{mac} is in money per unit of bad output.}
@@ -39,11 +41,14 @@ loss; the \code{mac} value is the marginal cost of abatement beyond
 the frontier point. The area under the curve is consequently not a
 total-cost estimate.
 
-DMUs with \eqn{\eta_l = 0} are excluded: a zero output dual arises
+DMUs with \eqn{\eta_l \le 0} are excluded. A zero output dual arises
 when the output constraint is slack, i.e. the DMU projects onto the
 flat segment of the \eqn{(y, b)} frontier, where abatement via
-output contraction has locally infinite marginal cost. Only
-exact-zero duals are excluded. Unsolved LPs are excluded as well.
+output contraction has locally infinite marginal cost. A negative
+dual (possible under \code{model = "wgd"}, whose dual nets out the
+retained content \eqn{v}) means output contraction increases
+emissions at the margin, so it admits no abatement-cost reading
+either. Unsolved LPs are excluded as well.
 The number of excluded DMUs and the summed abatement potential of
 the solved-but-excluded ones (which is NOT part of the curve) are
 attached as attributes \code{"n_excluded"} and

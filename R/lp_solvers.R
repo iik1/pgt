@@ -31,8 +31,8 @@
 }
 
 # Weak-G-disposability estimator (Rodseth 2025, Eq. 6/7) in reduced
-# form, for pollutant p. Equation 6 anchors only the intended outputs
-# at the evaluated unit (inputs are decision variables), so
+# form, for pollutant p. Equation 6 fixes only the intended outputs
+# at the evaluated unit's levels (inputs are decision variables), so
 # substituting the summing-up condition u_i'eps_x + v_i'eps_y = eps_b
 # and setting the input slacks to zero collapses the programme to
 #
@@ -85,7 +85,7 @@
   )
 }
 
-# The package's input-anchored benchmark (previously model = "wgd"):
+# The package's input-fixed benchmark (previously model = "wgd"):
 # minimal emissions holding the evaluated unit's inputs fixed, with the
 # peer emission envelope and the unit's own materials-balance cap. This
 # is NOT Eq. 6 of Rodseth (2025), whose inputs are free; it is the

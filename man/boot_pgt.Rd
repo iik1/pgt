@@ -6,7 +6,7 @@
 \usage{
 boot_pgt(
   tech,
-  model = c("wgd", "envelope", "byprod", "mb_cost", "wd"),
+  model = c("wgd", "wgd_anchored", "envelope", "byprod", "mb_cost", "wd"),
   B = 200,
   m = NULL,
   level = 0.95,
@@ -21,8 +21,9 @@ boot_pgt(
 \item{tech}{A [pgt_tech()] object.}
 
 \item{model}{One of the environmental-efficiency models
-(\code{"wgd"}, \code{"envelope"}, \code{"byprod"}, \code{"mb_cost"},
-\code{"wd"}); the directional model \code{"fdmo"} is not supported.}
+(\code{"wgd"}, \code{"wgd_anchored"}, \code{"envelope"},
+\code{"byprod"}, \code{"mb_cost"}, \code{"wd"}); the directional
+model \code{"fdmo"} is not supported.}
 
 \item{B}{Number of subsampling replicates.}
 
@@ -36,12 +37,14 @@ check the default with [boot_pgt_sensitivity()].}
 \item{kappa}{Convergence-rate exponent used to rescale the subsample
 distribution. Defaults to the DEA rate \eqn{2/(d+1)} under VRS and
 \eqn{2/d} under CRS (Kneip, Simar and Wilson 2008) for the model's
-effective frontier dimension \eqn{d}: \eqn{N+2} for \code{"wgd"}
-and \code{"wd"} (inputs, good and bad output), \eqn{N+1} for
-\code{"mb_cost"} and \code{"byprod"} (whose programs live in the
-\eqn{(x, y)} and sub-technology spaces), and \eqn{2} for the
-input-free \code{"envelope"} model, whose frontier lives in the
-\eqn{(y, b)} plane. A heuristic; supply your own exponent to
+effective frontier dimension \eqn{d}: \eqn{M+1} for \code{"wgd"}
+and \code{"envelope"}, whose frontiers live in the \eqn{(y, b)}
+space with the inputs free; \eqn{N+M+1} for \code{"wgd_anchored"}
+and \code{"wd"} (inputs, good and bad outputs); \eqn{N+M} for
+\code{"mb_cost"}, whose programmes live in the \eqn{(x, y)} space;
+and the number of emission-causing inputs plus one for
+\code{"byprod"}, whose principal score comes from the residual
+sub-technology. A heuristic; supply your own exponent to
 override.}
 
 \item{returns, peers, pollutant}{Passed to the underlying model, as in

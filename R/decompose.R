@@ -1,50 +1,53 @@
-#' Decompose environmental efficiency across technology groups
+#' Decompose environmental efficiency
 #'
-#' Metafrontier decompositions of the environmental efficiency score
-#' \eqn{b^*/b} into within-group and technology-gap components, built on
-#' Rodseth's (2025) weak-G-disposability technology and the DEA
-#' metafrontier and technology-gap ratio of O'Donnell, Rao and Battese
-#' (2008); the metafrontier idea originates with Battese, Rao and
-#' O'Donnell (2004).
+#' Multiplicative decompositions of the environmental efficiency score
+#' \eqn{b^*/b} of Rodseth's (2025) weak-G-disposability technology: the
+#' five-component source decomposition of Rodseth (2025, Eq. 11), and a
+#' metafrontier decomposition across technology groups in the tradition
+#' of Battese, Rao and O'Donnell (2004) and O'Donnell, Rao and Battese
+#' (2008).
 #'
 #' \describe{
-#'   \item{\code{"envelope"}}{The \eqn{(y, b)}-envelope decomposition
-#'     built on Rodseth's (2025) Eq. 6 with inputs free. Stages differ by
-#'     peer set only, so the weak-G-disposability slack equality is
-#'     respected throughout:
+#'   \item{\code{"envelope"}}{The metafrontier decomposition on the
+#'     \eqn{(y, b)} lower envelope (the \code{"envelope"} model of
+#'     [pgt()]). Stages differ by peer set only:
 #'     \deqn{Total = \frac{b^*_{all}}{b} = WR \times TGR, \quad
 #'           WR = \frac{b^*_{group}}{b}, \quad
 #'           TGR = \frac{b^*_{all}}{b^*_{group}}.}
 #'     \eqn{WR} is within-group reallocation efficiency; \eqn{TGR} is the
 #'     technology-gap ratio (O'Donnell, Rao and Battese 2008).
 #'     Self-reference is always feasible, so every component lies in
-#'     \eqn{(0, 1]} with no feasibility screen.}
-#'   \item{\code{"rodseth"}}{A three-stage decomposition of the full
-#'     weak-G-disposability model (Rodseth 2025, Eq. 11, collapsed to
-#'     three components when there are no dedicated abatement inputs):
-#'     \deqn{EnvEff = \frac{b^*_3}{b}
-#'       = \underbrace{\frac{b^*_1}{b}}_{TE}
-#'         \times \underbrace{\frac{b^*_2}{b^*_1}}_{Technology}
-#'         \times \underbrace{\frac{b^*_3}{b^*_2}}_{AE},}
-#'     where stage 1 solves the WGD program against own-group peers
-#'     (technical efficiency), stage 2 against all peers (technology
-#'     gap), and stage 3 additionally drops the input constraints
-#'     (input-mix / allocative component). Each stage is a strict
-#'     relaxation of the previous one, so every component lies in
-#'     \eqn{(0, 1]} where feasible for DMUs satisfying every
-#'     pollutant's materials-balance identity; as in [pgt()], a DMU
-#'     violating another pollutant's identity can have \code{te} and
-#'     \code{total} above 1, since its MB-consistent projection may
-#'     emit more of the selected pollutant than the DMU reports. When
-#'     an early stage is infeasible
-#'     (materials-balance violators, see [mb_check()]) its component is
-#'     \code{NA} while later-stage ratios and \code{total} can remain
-#'     defined, matching the reference implementation; the
-#'     multiplicative identity holds for rows with all components
-#'     present.}
+#'     \eqn{(0, 1]} with no feasibility screen. Requires a \code{group}
+#'     in [pgt_tech()].}
+#'   \item{\code{"rodseth"}}{The five-component source decomposition of
+#'     Rodseth (2025, Eq. 11), computed from stage programmes of the
+#'     extended representation (Eq. 9). Stage 1 holds the evaluated
+#'     DMU's production inputs, pollution-control inputs, coefficient
+#'     quality and (when observed) abatement output at their observed
+#'     levels; the later stages free them one at a time, so each stage
+#'     relaxes the previous one. The components are the stage-to-stage
+#'     ratios \code{te_production} (\eqn{b^*_1/b}), \code{quality}
+#'     (\eqn{b^*_2/b^*_1}), \code{ae_production} (\eqn{b^*_3/b^*_2}),
+#'     \code{te_abatement} (\eqn{b^*_4/b^*_3}) and \code{ae_abatement}
+#'     (\eqn{b^*_5/b^*_4}), with
+#'     \deqn{Total = \frac{b^*_5}{b} = TE_{prod} \times Quality \times
+#'       AE_{prod} \times TE_{abate} \times AE_{abate},}
+#'     equal to the \code{"wgd"} efficiency of [pgt()]. Every stage is
+#'     self-feasible, so all components lie in \eqn{(0, 1]}; a failed
+#'     solve yields \code{NA} components and a warning. A component
+#'     collapses to 1 when the data cannot separate it: \code{quality}
+#'     requires producer-specific coefficients (the stage prices the
+#'     peer mix at the peers' own \eqn{u, v} instead of the evaluated
+#'     DMU's, which changes nothing under homogeneous coefficients),
+#'     \code{te_abatement} requires an observed abatement output
+#'     \code{a}, and \code{ae_abatement} requires pollution-control
+#'     input columns marked by \code{x_abate} in [pgt_tech()]. Groups
+#'     are not required; when present they are carried into the
+#'     results for the summaries.}
 #' }
 #'
-#' @param tech A [pgt_tech()] object with a non-\code{NULL} \code{group}.
+#' @param tech A [pgt_tech()] object. \code{type = "envelope"} requires
+#'   a non-\code{NULL} \code{group}.
 #' @param type \code{"envelope"} (default) or \code{"rodseth"}. See
 #'   Details.
 #' @param returns Returns to scale: \code{"vrs"} (default) or
@@ -57,8 +60,9 @@
 #'   \code{results} (one row per DMU with the stage minima and the
 #'   multiplicative components), \code{type} and \code{returns}. The
 #'   component columns are \code{WR}, \code{TGR}, \code{total} for
-#'   \code{type = "envelope"} and \code{te}, \code{technology},
-#'   \code{ae}, \code{total} for \code{type = "rodseth"}.
+#'   \code{type = "envelope"} and \code{te_production}, \code{quality},
+#'   \code{ae_production}, \code{te_abatement}, \code{ae_abatement},
+#'   \code{total} for \code{type = "rodseth"}.
 #'
 #' @references
 #' Battese, G. E., Rao, D. S. P., & O'Donnell, C. J. (2004). A
@@ -90,6 +94,18 @@
 #' )
 #' dec <- pgt_decompose(tech, type = "envelope")
 #' summary(dec)
+#'
+#' # Source decomposition with observed abatement (Rodseth 2025)
+#' data(pigfarms)
+#' tech2 <- pgt_tech(
+#'   x = pigfarms[, c("uncontrolled", "labor", "capital")],
+#'   y = pigfarms$meat,
+#'   b = pigfarms$controlled,
+#'   u = c(1, 0, 0),
+#'   a = pigfarms$abatement,
+#'   id = pigfarms$farm
+#' )
+#' pgt_decompose(tech2, type = "rodseth")
 #' @export
 pgt_decompose <- function(tech, type = c("envelope", "rodseth"),
                           returns = c("vrs", "crs"), pollutant = 1L) {

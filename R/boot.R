@@ -55,8 +55,9 @@
 #'
 #' @param tech A [pgt_tech()] object.
 #' @param model One of the environmental-efficiency models
-#'   (\code{"wgd"}, \code{"envelope"}, \code{"byprod"}, \code{"mb_cost"},
-#'   \code{"wd"}); the directional model \code{"fdmo"} is not supported.
+#'   (\code{"wgd"}, \code{"wgd_anchored"}, \code{"envelope"},
+#'   \code{"byprod"}, \code{"mb_cost"}, \code{"wd"}); the directional
+#'   model \code{"fdmo"} is not supported.
 #' @param B Number of subsampling replicates.
 #' @param m Subsample size. Defaults to \code{round(L^0.7)}, a point in
 #'   the interior of the admissible range; Simar and Wilson (2011) show
@@ -66,12 +67,14 @@
 #' @param kappa Convergence-rate exponent used to rescale the subsample
 #'   distribution. Defaults to the DEA rate \eqn{2/(d+1)} under VRS and
 #'   \eqn{2/d} under CRS (Kneip, Simar and Wilson 2008) for the model's
-#'   effective frontier dimension \eqn{d}: \eqn{N+2} for \code{"wgd"}
-#'   and \code{"wd"} (inputs, good and bad output), \eqn{N+1} for
-#'   \code{"mb_cost"} and \code{"byprod"} (whose programs live in the
-#'   \eqn{(x, y)} and sub-technology spaces), and \eqn{2} for the
-#'   input-free \code{"envelope"} model, whose frontier lives in the
-#'   \eqn{(y, b)} plane. A heuristic; supply your own exponent to
+#'   effective frontier dimension \eqn{d}: \eqn{M+1} for \code{"wgd"}
+#'   and \code{"envelope"}, whose frontiers live in the \eqn{(y, b)}
+#'   space with the inputs free; \eqn{N+M+1} for \code{"wgd_anchored"}
+#'   and \code{"wd"} (inputs, good and bad outputs); \eqn{N+M} for
+#'   \code{"mb_cost"}, whose programmes live in the \eqn{(x, y)} space;
+#'   and the number of emission-causing inputs plus one for
+#'   \code{"byprod"}, whose principal score comes from the residual
+#'   sub-technology. A heuristic; supply your own exponent to
 #'   override.
 #' @param returns,peers,pollutant Passed to the underlying model, as in
 #'   [pgt()].
@@ -142,10 +145,10 @@ boot_pgt <- function(tech, model = c("wgd", "wgd_anchored",
     stop("'m' must lie in 2..L.", call. = FALSE)
   }
   if (is.null(kappa)) {
-    # effective frontier dimension: wgd/wd use (x, y, b); mb_cost lives
-    # in (x, y); byprod's principal score comes from the T2 sub-LP over
-    # the polluting inputs and b; the input-free envelope lives in the
-    # (y, b) plane
+    # effective frontier dimension: wgd and the envelope live in the
+    # (y, b) space (inputs free); wgd_anchored/wd use (x, y, b);
+    # mb_cost lives in (x, y); byprod's principal score comes from the
+    # T2 sub-LP over the polluting inputs and b
     dims <- switch(model,
       wgd = tech$M + 1L,
       envelope = tech$M + 1L,

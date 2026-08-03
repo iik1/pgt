@@ -13,7 +13,8 @@ pgt_ml(
 }
 \arguments{
 \item{tech}{A [pgt_tech()] object with a non-\code{NULL} \code{period}
-and \code{id} identifying the same DMU across periods.}
+and \code{id} identifying the same DMU across periods. The index
+is defined for a single good output.}
 
 \item{technology}{Reference technology: \code{"wgd"} keeps the input
 constraints and the lower emission envelope (default);
@@ -69,9 +70,10 @@ and Oh (2010) define the (global) Malmquist-Luenberger index, so
 \code{technology = "wd"} is the faithful Oh (2010) comparator.
 \code{"wgd"} (the default) and \code{"envelope"} instead treat the
 bad output as reducible down to the peer emission envelope with no
-proportional output sacrifice, the same lower-envelope treatment as
-the corresponding [pgt()] programs, with (\code{"wgd"}) and without
-(\code{"envelope"}) the input constraints. Under constant returns
+proportional output sacrifice, with (\code{"wgd"}) and without
+(\code{"envelope"}) the input rows; the input-keeping variant
+mirrors the input-fixed \code{"wgd_anchored"} shape of [pgt()]
+rather than the input-free Eq. 6 programme. Under constant returns
 the free-disposal technologies contain the weak-disposability set,
 so their distances are weakly larger than under \code{"wd"}; under
 variable returns the sets are not nested in general, because the

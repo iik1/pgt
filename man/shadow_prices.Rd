@@ -7,34 +7,44 @@
 shadow_prices(fit)
 }
 \arguments{
-\item{fit}{A [pgt()] fit with \code{model = "wgd"} or
-\code{"envelope"}, the models that report output duals.}
+\item{fit}{A [pgt()] fit with \code{model = "wgd"},
+\code{"wgd_anchored"} or \code{"envelope"}, the models that report
+output duals.}
 }
 \value{
 A data frame with one row per DMU: \code{id}, \code{group}
-  (if present), \code{b}, \code{b_star}, \code{dual_output} and
-  \code{mb_headroom} (\code{NA} for the envelope model).
+  (if present), \code{b}, \code{b_star}, the output-dual columns
+  and \code{mb_headroom} where the fit reports it
+  (\code{"wgd_anchored"}; the column is \code{NA} for
+  \code{"envelope"} and absent for \code{"wgd"}).
 }
 \description{
 Returns the informative constraint diagnostics of the per-DMU linear
-programs. \code{dual_output} is the shadow value of the output
-constraint, \eqn{\partial b^* / \partial y \ge 0}: the marginal
-bad-output content of the good output along the frontier (for CO2,
-the marginal emission intensity in tonnes of CO2 per tonne of
-output). \code{mb_headroom} (weak-G-disposability model only) is the
-slack \eqn{u'x_l - v y_l - b^*_l} between the projection and the
+programs. \code{dual_output} (one column per intended output when
+several are present) is the shadow value of the output constraint:
+the marginal bad-output content of the good output along the
+frontier (for CO2, the marginal emission intensity in tonnes of CO2
+per tonne of output). For \code{model = "wgd"} the reported dual is
+the total derivative
+\eqn{\partial b^*/\partial y_m = \mu_m - v_m}, which can be negative
+when the retained-content coefficient \eqn{v} is large (producing
+more output binds more pollutant into the product); for
+\code{"wgd_anchored"} and \code{"envelope"} the dual is
+non-negative. \code{mb_headroom} (\code{"wgd_anchored"} only) is the
+slack \eqn{u'x_l - v'y_l - b^*_l} between the projection and the
 DMU's materials-balance ceiling.
 }
 \details{
 The dual of the peer emission envelope
-\eqn{\sum_l \lambda_l b_l \le b} is not reported: in this reduced
-form it equals \eqn{-1} whenever the LP solves (dual feasibility on
-the emission variable, with the materials-balance row slack at any
-optimum), so it carries no cross-DMU information. In the boundary
-case \eqn{b^* = u'x_l - v y_l} exactly, the split of this dual
-between the envelope and cap rows is basis-dependent. A
-materials-balance cap that would bind manifests as an infeasible LP,
-not as a capped projection.
+\eqn{\sum_l \lambda_l b_l \le b} in the \code{"wgd_anchored"}
+programme is not reported: it equals \eqn{-1} whenever the LP solves
+(dual feasibility on the emission variable, with the
+materials-balance row slack at any optimum), so it carries no
+cross-DMU information. In the boundary case
+\eqn{b^* = u'x_l - v'y_l} exactly, the split of this dual between
+the envelope and cap rows is basis-dependent. A materials-balance
+cap that would bind manifests as an infeasible LP, not as a capped
+projection.
 
 Values are reported in the units of the linear program (quantities,
 not money). To monetise the output dual, combine it with an output

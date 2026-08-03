@@ -54,11 +54,17 @@ tech <- pgt_tech(
   id = pigfarms$farm
 )
 fit <- pgt(tech, model = "wgd")
-data.frame(farm = fit$results$id, b_star = fit$results$b_star)
+data.frame(farm = fit$results$id, b_star = fit$results$b_star,
+           z_star = fit$results$z_star, a_star = fit$results$a_star)
 ```
 
 The minimal controlled emissions are $(16, 16, 16, 20, 16)$, which match
-the paper's Table 2.
+the paper's Table 2. Because the abatement output is observed, the fit
+also reports the projection's implied uncontrolled emission `z_star`
+and abatement `a_star`; for farms A, D and E these match the paper's
+Table 2 uncontrolled and abatement entries, while for the frontier
+farms the optimal peer mix is not unique and the split between
+`z_star` and `a_star` is solver-dependent.
 
 ## Rødseth (2025), Table 3: the directional representation
 

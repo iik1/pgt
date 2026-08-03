@@ -122,7 +122,7 @@ test_that("fractional pollutant index is rejected", {
   expect_silent(pgt(tech, model = "envelope", pollutant = 2))  # integer double ok
 })
 
-test_that("the anchored model enforces every pollutant's cap", {
+test_that("the wgd_anchored model enforces every pollutant's cap", {
   # Peer B is attractive on pollutant 1 (b1 = 2) but breaches DMU A's
   # pollutant-2 cap (cap2 = 0.3 * 10 = 3 < b2_B = 8), so enforcing all
   # caps must raise A's minimal b1 above the single-pollutant solution.

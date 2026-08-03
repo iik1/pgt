@@ -12,7 +12,7 @@ test_that("wgd model solves a hand-computable example", {
 })
 
 test_that("wgd is always self-feasible, also for violators", {
-  # Equation 6 anchors only the intended output, so every unit's
+  # Equation 6 fixes only the intended output, so every unit's
   # programme is feasible; a materials-balance violation does not
   # affect the faithful wgd score (audit it with mb_check()).
   x <- matrix(c(1, 1), 2, 1)
@@ -142,9 +142,9 @@ test_that("crs relaxes vrs for the wgd model", {
   expect_true(all(crs$results$b_star <= vrs$results$b_star + 1e-8))
 })
 
-test_that("anchored model keeps the cap and infeasibility semantics", {
+test_that("wgd_anchored keeps the cap and infeasibility semantics", {
   # u'x = 10, v*y = 5, so the cap is 5. With b = (6, 5.5) no peer mix
-  # fits under any DMU's cap: every anchored LP must be infeasible.
+  # fits under any DMU's cap: every wgd_anchored LP must be infeasible.
   x <- matrix(c(10, 10), 2, 1)
   tech <- pgt_tech(x, y = c(10, 10), b = c(6, 5.5), v = 0.5)
   expect_warning(fit <- pgt(tech, model = "wgd_anchored"), "infeasible")
@@ -164,7 +164,7 @@ test_that("anchored model keeps the cap and infeasibility semantics", {
   expect_equal(fit2$results$mb_headroom, c(1, 1), tolerance = 1e-8)
 })
 
-test_that("anchored diagnostics carry the documented signs", {
+test_that("wgd_anchored diagnostics carry the documented signs", {
   tech <- make_random_tech(L = 30, N = 3, seed = 77)
   fit <- pgt(tech, model = "wgd_anchored")
   ok <- fit$results$status == 0
@@ -172,10 +172,10 @@ test_that("anchored diagnostics carry the documented signs", {
   expect_true(all(fit$results$mb_headroom[ok] >= -1e-8))
 })
 
-test_that("anchored never beats the faithful wgd", {
-  # The anchored programme adds input rows and the cap to a programme
-  # whose remaining rows coincide with Eq. 6 only at v = 0, so the
-  # comparison is made there: extra constraints cannot lower b*.
+test_that("wgd_anchored never beats the faithful wgd", {
+  # The wgd_anchored programme adds input rows and the cap to a
+  # programme whose remaining rows coincide with Eq. 6 only at v = 0,
+  # so the comparison is made there: extra constraints cannot lower b*.
   tech <- make_random_tech(L = 30, N = 3, seed = 31)
   tech0 <- pgt_tech(tech$x, tech$y[, 1], tech$b[, 1], v = 0,
                     group = tech$group)

@@ -75,10 +75,12 @@ of crude steel (the synthetic generator's assumption; see
 
 ## Auditing the identity before estimation
 
-The weak-G-disposability model gives every DMU a self-reference (its
-own observation as a feasible solution to its programme) only when its
-own materials balance holds. `mb_check()` reports the closure gap per
-DMU and flags the accounts where more pollutant leaves than enters.
+`mb_check()` reports the closure gap per DMU and flags the accounts
+where more pollutant leaves than enters. The audit is the data-quality
+check behind the materials-balance interpretation of every model, and
+it gates the models that constrain the projection by the DMU's own
+account: the input-fixed benchmark `"wgd_anchored"` and the
+directional model `"fdmo"`.
 
 ```{r}
 mb <- mb_check(tech)
@@ -86,26 +88,29 @@ head(as.data.frame(mb))
 attr(mb, "n_violations")
 ```
 
-An infeasible weak-G-disposability program always belongs to a DMU with
-a strictly negative gap, so this audit locates any estimation problem
-in advance. Such DMUs return `NA` scores and `pgt()` warns; all other
-DMUs score in $(0, 1]$.
+An infeasible `"wgd_anchored"` programme always belongs to a DMU with
+a strictly negative gap, so the audit locates any estimation problem
+in advance; such DMUs return `NA` scores and `pgt()` warns. The
+faithful weak-G-disposability programme of Eq. 6 is always
+self-feasible, so its scores lie in $(0, 1]$ on any data.
 
 ## Estimating environmental efficiency
 
-The weak-G-disposability model minimises the bad output subject to output
-and input feasibility, the peer emission envelope, and the DMU's own
-materials-balance cap (the programmes are stated in full in
-`vignette("models", "pgt")`). The score is $b^*_l / b_l$.
+The weak-G-disposability model of Rødseth (2025, Eq. 6) minimises
+emissions over peer mixes that hold the good output at the DMU's
+level, pricing any extra good output at the DMU's retained-content
+coefficient $v$; the inputs are decision variables (the programmes are
+stated in full in `vignette("models", "pgt")`). The score is
+$b^*_l / b_l$.
 
 ```{r}
 fit <- pgt(tech, model = "wgd")
 summary(fit)
 ```
 
-The envelope model frees the inputs and reduces the program to the
-convex lower envelope of the $(y, b)$ scatter. Its self-reference is
-always feasible.
+The envelope model drops the retained-content term (the $v = 0$ case)
+and reduces the programme to the convex lower envelope of the
+$(y, b)$ scatter.
 
 ```{r}
 fit_env <- pgt(tech, model = "envelope")
@@ -146,6 +151,12 @@ dec <- pgt_decompose(tech, type = "envelope")
 summary(dec)
 ```
 
+The five-component source decomposition of Rødseth (2025, Eq. 11) —
+production and abatement efficiency, coefficient quality and
+allocative components — is available as
+`pgt_decompose(tech, type = "rodseth")` and needs no groups; the stage
+programmes are stated in `vignette("models", "pgt")`.
+
 ## A worked example on real data
 
 The `frontier` package ships a balanced panel of Philippine rice farms
@@ -175,9 +186,8 @@ Here environmental efficiency is the scope to cut fertiliser nitrogen
 while holding rice output at its observed level. One caveat on this
 construction: because the bad output is defined as the full nitrogen
 potential of a single input ($b = u_N \cdot$ `NPK`), every farm's
-account closes with equality by construction, the materials-balance cap
-can never bind, and `mb_check()` passes trivially; the example
-illustrates the workflow, not the audit.
+account closes with equality by construction and `mb_check()` passes
+trivially; the example illustrates the workflow, not the audit.
 
 The other vignettes state the estimating programmes in full
 (`vignette("models", "pgt")`), reproduce the published-result

@@ -1,3 +1,55 @@
+# pgt 0.6.0
+
+Faithful weak-G-disposability, several intended outputs, and the
+five-component decomposition of Rodseth (2025), from a close reading of
+the published paper.
+
+## The wgd model is redefined (breaking)
+
+* `pgt(model = "wgd")` now implements Rodseth (2025) Eq. 6/7 as
+  printed: only the intended outputs are held at the evaluated unit's
+  levels; inputs are decision variables. The reduced form minimises
+  `sum lambda (b_l + v_i'y_l) - v_i'y_i` over output-constrained peer
+  mixes. The programme is always self-feasible, scores lie in (0, 1]
+  on any data, and materials-balance violations no longer affect it
+  (they remain a data audit in `mb_check()`). When an abatement output
+  is observed the fit reports the projection's implied uncontrolled
+  emission `z_star` and abatement `a_star`, the quantities of the
+  paper's Table 2, which the test suite now replicates. Output duals
+  are total derivatives and can be negative under large retained
+  content. Scores on any data with `v > 0` differ from 0.5.x.
+* The previous input-fixed programme with the materials-balance cap
+  survives unchanged as `model = "wgd_anchored"`, documented as the
+  package's own current-input benchmark rather than Eq. 6. It keeps
+  the cap, `mb_headroom`, infeasibility confined to violators, and the
+  per-pollutant cap rows.
+
+## Several intended outputs
+
+* `pgt_tech()` accepts `y` as an L x M matrix with named columns and
+  `v` in per-output shapes up to an L x M x P array; every historical
+  single-output shape still works. All estimators except `fdmo` and
+  `pgt_ml` handle M > 1 (those two stop with a clear error, since
+  their directions are defined for a single output). Fits carry one
+  column per output and per-output duals; `mac_curve()` requires a
+  single-output fit.
+
+## The Eq. 11 decomposition
+
+* `pgt_decompose(type = "rodseth")` is now the five-component
+  decomposition of Rodseth (2025, Eq. 11), built on stage programmes
+  of the extended representation (Eq. 9): TE production, Quality
+  (producer-specific coefficients), AE production, TE abatement
+  (observed abatement output) and AE abatement (dedicated
+  pollution-control inputs). Components collapse to exactly 1 when the
+  data cannot separate them, and their product telescopes to the wgd
+  efficiency. Technology groups are no longer required for this type.
+  The stage programmes use measurement-consistent uncontrolled
+  emissions `z = b + a`, which coincide with the paper's accounting
+  when accounts close.
+* `x_abate` is now functional: it partitions the inputs for the two
+  abatement stages, and the recorded-but-unused warning is gone.
+
 # pgt 0.5.1
 
 * Terminology: the score reported in the `efficiency` column is called

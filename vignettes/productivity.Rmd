@@ -41,7 +41,9 @@ Kuosmanen (2005) form; this is the technology under which Chung, Färe
 and Grosskopf (1997) and Oh (2010) define the index, so it is the
 faithful comparator. The default `"wgd"` and the `"envelope"` option
 treat the bad output as reducible to the peer emission envelope and are
-exploratory companions.
+exploratory companions (the `"wgd"` label here keeps the input rows,
+matching the input-fixed benchmark of `pgt()` rather than its Eq. 6
+programme).
 
 ### A constructed panel
 

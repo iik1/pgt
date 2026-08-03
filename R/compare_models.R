@@ -10,23 +10,25 @@
 #'
 #' Each model reports its principal environmental-efficiency score,
 #' normalised so that 1 is efficient: \eqn{b^*/b} for \code{"wgd"},
-#' \code{"envelope"}, \code{"byprod"} and \code{"wd"}, and the
-#' material-inflow ratio \eqn{EE = u'x^*/u'x} for \code{"mb_cost"}. The
-#' directional model \code{"fdmo"} stays excluded, since its score is a
-#' gross inefficiency on another scale. Because the scores measure
-#' different quantities, only the rank-based statistics (the Spearman
-#' matrix and the bottom-quartile overlap) are strictly comparable
-#' across models; the median column is a per-model summary. Rank
-#' agreement is measured by Spearman correlation over the DMUs solved
-#' by both members of each pair. Note that \code{"wgd"} scores can
-#' exceed 1 for DMUs violating another pollutant's materials-balance
-#' identity (see [pgt()]); such DMUs enter the comparison unflagged.
+#' \code{"wgd_anchored"}, \code{"envelope"}, \code{"byprod"} and
+#' \code{"wd"}, and the material-inflow ratio \eqn{EE = u'x^*/u'x} for
+#' \code{"mb_cost"}. The directional model \code{"fdmo"} stays
+#' excluded, since its score is a gross inefficiency on another scale.
+#' Because the scores measure different quantities, only the rank-based
+#' statistics (the Spearman matrix and the bottom-quartile overlap) are
+#' strictly comparable across models; the median column is a per-model
+#' summary. Rank agreement is measured by Spearman correlation over the
+#' DMUs solved by both members of each pair. Note that
+#' \code{"wgd_anchored"} scores can exceed 1 for DMUs violating another
+#' pollutant's materials-balance identity (see [pgt()]); such DMUs
+#' enter the comparison unflagged.
 #'
 #' @param tech A [pgt_tech()] object.
 #' @param models Character vector of models to compare. Defaults to
 #'   \code{c("wgd", "byprod", "mb_cost", "wd")}: the weak-G-disposability
 #'   (materials balance), by-production, materials-balance cost and
-#'   weak-disposability systems.
+#'   weak-disposability systems. \code{"wgd_anchored"} and
+#'   \code{"envelope"} may be added.
 #' @param returns Returns to scale passed to every model: \code{"vrs"}
 #'   (default) or \code{"crs"}.
 #' @param peers Reference set passed to every model: \code{"all"}

@@ -4,7 +4,7 @@
 pollution-generating technologies under the materials-balance
 principle. It packages the competing axiom systems for modelling bad
 outputs behind one interface, with an enforced materials-balance
-identity, a pre-estimation feasibility audit, metafrontier
+identity, a pre-estimation feasibility audit, source and metafrontier
 decompositions, bad-output shadow prices, marginal abatement cost
 curves, a productivity index and subsampling inference.
 
@@ -22,9 +22,10 @@ behind one coherent API.
 
 ## Scope
 
-Each technology has one good output; several pollutants (with their own
-materials-balance accounts) and DMU-specific material flow coefficients
-are supported. The efficiency estimators treat the rows as an
+Technologies may carry several good outputs, several pollutants (with
+their own materials-balance accounts) and DMU-specific material flow
+coefficients; the directional model and `pgt_ml()` are defined for a
+single good output. The efficiency estimators treat the rows as an
 independent cross-section: panel structure enters only through
 `pgt_ml()`'s pooled global frontier, and `boot_pgt()` warns when a
 panel technology is subsampled.
@@ -32,10 +33,10 @@ panel technology is subsampled.
 ## Installation
 
 ``` r
+# from CRAN
+install.packages("pgt")
 # development version
 remotes::install_github("iik1/pgt")
-# the peer-reviewed snapshot
-remotes::install_github("iik1/pgt@v0.4.1")
 ```
 
 Cite the package with `citation("pgt")`.
@@ -81,20 +82,22 @@ compare_models(tech, models = c("wgd", "byprod", "mb_cost", "wd"))
 |---|---|
 | `pgt_tech()` | Technology constructor: inputs, good/bad outputs, material flow coefficients `u`, `v`, abatement `a`, technology groups, panel `period` |
 | `mb_check()` | Audit of `u'x - v y >= b` per DMU and pollutant |
-| `pgt(model = "wgd")` | Rodseth (2025) weak-G-disposability LP |
-| `pgt(model = "envelope")` | Eq. 6 with inputs free: convex lower (y, b) envelope |
+| `pgt(model = "wgd")` | Rodseth (2025) weak-G-disposability model, Eq. 6 in reduced form |
+| `pgt(model = "wgd_anchored")` | Input-fixed benchmark with the materials-balance cap (the pre-0.6.0 `wgd`) |
+| `pgt(model = "envelope")` | The v = 0 case of Eq. 6: convex lower (y, b) envelope |
 | `pgt(model = "fdmo")` | Rodseth (2025) directional representation, Eq. 13 (alias `"ddf"`) |
 | `pgt(model = "mb_cost")` | Coelli et al. (2007) materials-balance cost model, `EE = TE x EAE` |
 | `pgt(model = "byprod")` | Murty-Russell-Levkoff (2012) by-production intersection technology |
 | `pgt(model = "wd")` | Kuosmanen (2005) weak-disposability reference model |
-| `pgt_decompose()` | Metafrontier decompositions (envelope WR x TGR; staged Rodseth) |
+| `pgt_decompose()` | Decompositions: envelope WR x TGR metafrontier; five-component Rodseth (2025, Eq. 11) |
 | `compare_models()` | Competing axiom systems on identical data, with rank agreement |
 | `pgt_ml()` | Global Malmquist-Luenberger productivity index (Oh 2010; experimental) |
 | `boot_pgt()` | Subsampling inference for scores and group means (heuristic intervals) |
 | `shadow_prices()`, `mac_curve()` | Constraint duals and marginal abatement cost curves |
 
-DMU-specific material flow coefficients and multiple pollutants are
-supported: pass `u` as a matrix or list and `b` as a matrix.
+DMU-specific material flow coefficients, multiple pollutants and
+several good outputs are supported: pass `u` as a matrix or list, `b`
+as a matrix, and `y` as a matrix.
 
 ## Validation
 
@@ -103,7 +106,9 @@ strength.
 
 - **Published-table replication.** `pgt(model = "wgd")` reproduces the
   Rødseth (2025) Table 2 minimal controlled emissions
-  (16, 16, 16, 20, 16), `pgt(model = "fdmo")` the Table 3 directional
+  (16, 16, 16, 20, 16) and the implied uncontrolled-emission and
+  abatement targets for farms A, D and E,
+  `pgt(model = "fdmo")` the Table 3 directional
   scores for farms A to D exactly (farm E is discussed in the
   replication vignette), and `pgt(model = "byprod")` the analytic
   efficiency scores of Murty, Russell and Levkoff's (2012) Example 1.
@@ -131,7 +136,8 @@ The vignettes reproduce the published-table replications in the open:
 - `replication`: the published-result replications above.
 - `comparing-axioms`: `compare_models()` across the axiom systems.
 - `multiple-pollutants`: multi-pollutant technologies, DMU-specific
-  coefficients and the staged decomposition.
+  coefficients, several intended outputs and the five-component
+  decomposition.
 - `productivity`: `pgt_ml()` productivity change and `boot_pgt()`
   inference.
 

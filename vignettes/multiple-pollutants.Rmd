@@ -19,8 +19,9 @@ library(pgt)
 A technology can carry several pollutants, each with its own
 materials-balance account, and the material flow coefficients can vary
 across units (heterogeneous input quality; Eder 2022, Rødseth 2025).
-This vignette demonstrates both features and the staged decomposition,
-on a small synthetic example.
+This vignette demonstrates multi-pollutant accounts, DMU-specific
+coefficients, several intended outputs and the five-component
+decomposition, on a small synthetic example.
 
 ## A two-pollutant technology
 
@@ -64,16 +65,19 @@ mb <- mb_check(tech2)
 table(subset(as.data.frame(mb), violated)$pollutant)
 ```
 
-## Every pollutant's cap constrains the projection
+## Every pollutant's cap constrains the input-fixed benchmark
 
-`pgt(model = "wgd")` selects one pollutant for the objective through
-`pollutant`, but the caps of every pollutant constrain the peer mix
-(see `vignette("models", "pgt")` for the collapsed cap rows). A peer
-that looks attractive on CO2 can be unusable because leaning on it
-would breach the evaluated plant's SO2 account.
+The faithful `"wgd"` programme of Eq. 6 uses only the selected
+pollutant's data. Cross-account discipline lives in the input-fixed
+benchmark: `pgt(model = "wgd_anchored")` selects one pollutant for the
+objective through `pollutant`, but the caps of every pollutant
+constrain the peer mix (see `vignette("models", "pgt")` for the
+collapsed cap rows). A peer that looks attractive on CO2 can be
+unusable because leaning on it would breach the evaluated plant's SO2
+account.
 
 ```{r}
-fit_co2 <- pgt(tech2, model = "wgd", pollutant = "co2")
+fit_co2 <- pgt(tech2, model = "wgd_anchored", pollutant = "co2")
 summary(fit_co2)
 ```
 
@@ -86,7 +90,7 @@ tech1 <- pgt_tech(
   x = cbind(coal = coal, gas = gas), y = y, b = b_co2, u = u_co2,
   v = 0.1, group = factor(rep(c("A", "B"), each = L / 2))
 )
-fit1 <- pgt(tech1, model = "wgd")
+fit1 <- pgt(tech1, model = "wgd_anchored")
 summary(fit1$results$b_star - fit_co2$results$b_star)
 ```
 
@@ -116,29 +120,63 @@ tech_het <- pgt_tech(
   b = pmin(b_co2, (2.8 * coal + 1.4 * gas - 0.1 * y) * 0.95),
   u = U_co2, v = 0.1
 )
-fit_het <- pgt(tech_het, model = "wgd")
+fit_het <- pgt(tech_het, model = "wgd_anchored")
 median(fit_het$results$efficiency, na.rm = TRUE)
 ```
 
 Each plant's cap now uses its own coefficients, so two plants with the
-same fuel bill face different materials-balance ceilings.
+same fuel bill face different materials-balance ceilings. The input
+coefficients do not enter the reduced form of the faithful `"wgd"`
+programme (only the output coefficients $v_i$ do); producer-specific
+$u$ instead surfaces in the `quality` component of the decomposition
+below.
 
-## The staged decomposition
+## The five-component decomposition
 
-With a technology group, `pgt_decompose(type = "rodseth")` decomposes
-the full weak-G-disposability score in three stages: own-group peers
-(technical efficiency), all peers (technology gap), and all peers with
-the input constraints dropped (input-mix component), an exact
-multiplicative identity for rows with all stages feasible.
+`pgt_decompose(type = "rodseth")` splits the weak-G-disposability
+score into the five components of Rødseth (2025, Eq. 11): production
+technical efficiency, coefficient quality, production allocative
+efficiency, abatement technical efficiency and abatement allocative
+efficiency (the stage programmes are stated in
+`vignette("models", "pgt")`). A component collapses to exactly 1 when
+the data cannot separate it. Here no abatement output is observed and
+no pollution-control input is marked, so the two abatement components
+are 1, while the heterogeneous coefficients of `tech_het` activate the
+quality component.
 
 ```{r}
-dec <- pgt_decompose(tech2, type = "rodseth", pollutant = "co2")
+dec <- pgt_decompose(tech_het, type = "rodseth")
 summary(dec)
 ```
 
-The caveats of the estimator carry over: a plant violating another
-pollutant's account can have `te` and `total` above 1, and infeasible
-stages return `NA` (see `?pgt_decompose`).
+The product of the five components equals the `"wgd"` efficiency
+exactly, and technology groups are not required for this type.
+
+## Several intended outputs
+
+Good outputs can be a matrix with one named column per output, and the
+retained content becomes $v_i'y_i$ with one coefficient per output.
+Here the plants sell power and process heat, retaining different
+carbon shares per unit, and the programme holds both outputs at the
+evaluated plant's levels.
+
+```{r}
+y2 <- cbind(power = y, heat = runif(L, 5, 20))
+tech_m <- pgt_tech(
+  x = cbind(coal = coal, gas = gas),
+  y = y2,
+  b = b_co2,
+  u = u_co2,
+  v = c(0.10, 0.05)
+)
+fit_m <- pgt(tech_m, model = "wgd")
+head(fit_m$results, 3)
+```
+
+The fit carries one column per output and per-output duals
+(`dual_power`, `dual_heat`). Every model except `"fdmo"` handles
+several outputs; `mac_curve()` needs a single-output fit, while
+`shadow_prices()` reports every output dual.
 
 ## References
 
