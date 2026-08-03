@@ -54,6 +54,16 @@ the published paper.
   time-limited: with the default scaling alone, self-feasible stages
   on large-magnitude data (emissions of order 1e7) were reported as
   numerically failed for a handful of units.
+* `pgt_ml()` now defaults to `technology = "wd"`, the
+  weak-disposability reference under which Oh (2010) defines the
+  index. The previous default `"wgd"` keeps the input rows of the
+  pre-0.6.0 programme (the `"wgd_anchored"` shape), so after the wgd
+  redefinition it no longer matched the estimating model of the same
+  name; it remains available alongside `"envelope"` as an exploratory
+  option.
+* `inst/simulations/coverage.R` writes its results next to the script
+  when the package-source path is absent, so a sourced installed copy
+  no longer fails at the final write.
 
 # pgt 0.5.1
 

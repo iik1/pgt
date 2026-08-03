@@ -25,18 +25,18 @@
 #' productivity growth; \eqn{EC} is catch-up to the frontier and
 #' \eqn{BPC} is frontier movement.
 #'
-#' Three reference technologies are available. \code{"wd"} imposes weak
-#' disposability of the bad output (the Kuosmanen 2005 VRS form, with
-#' the intensity weights split into an active and an abatement part):
-#' this is the technology under which Chung, Fare and Grosskopf (1997)
-#' and Oh (2010) define the (global) Malmquist-Luenberger index, so
-#' \code{technology = "wd"} is the faithful Oh (2010) comparator.
-#' \code{"wgd"} (the default) and \code{"envelope"} instead treat the
-#' bad output as reducible down to the peer emission envelope with no
-#' proportional output sacrifice, with (\code{"wgd"}) and without
-#' (\code{"envelope"}) the input rows; the input-keeping variant
-#' mirrors the input-fixed \code{"wgd_anchored"} shape of [pgt()]
-#' rather than the input-free Eq. 6 programme. Under constant returns
+#' Three reference technologies are available. \code{"wd"} (the
+#' default) imposes weak disposability of the bad output (the Kuosmanen
+#' 2005 VRS form, with the intensity weights split into an active and
+#' an abatement part): this is the technology under which Chung, Fare
+#' and Grosskopf (1997) and Oh (2010) define the (global)
+#' Malmquist-Luenberger index, so \code{technology = "wd"} is the
+#' faithful Oh (2010) comparator. \code{"wgd"} and \code{"envelope"}
+#' instead treat the bad output as reducible down to the peer emission
+#' envelope with no proportional output sacrifice, with (\code{"wgd"})
+#' and without (\code{"envelope"}) the input rows; the input-keeping
+#' variant mirrors the input-fixed \code{"wgd_anchored"} shape of
+#' [pgt()] rather than the input-free Eq. 6 programme. Under constant returns
 #' the free-disposal technologies contain the weak-disposability set,
 #' so their distances are weakly larger than under \code{"wd"}; under
 #' variable returns the sets are not nested in general, because the
@@ -54,11 +54,11 @@
 #' @param tech A [pgt_tech()] object with a non-\code{NULL} \code{period}
 #'   and \code{id} identifying the same DMU across periods. The index
 #'   is defined for a single good output.
-#' @param technology Reference technology: \code{"wgd"} keeps the input
-#'   constraints and the lower emission envelope (default);
-#'   \code{"envelope"} frees the inputs, so the frontier becomes the
-#'   \eqn{(y, b)} envelope; \code{"wd"} imposes weak disposability of
-#'   the bad output, the technology of Oh (2010). See Details.
+#' @param technology Reference technology: \code{"wd"} (the default)
+#'   imposes weak disposability of the bad output, the technology of
+#'   Oh (2010); \code{"wgd"} keeps the input constraints and the lower
+#'   emission envelope; \code{"envelope"} frees the inputs, so the
+#'   frontier becomes the \eqn{(y, b)} envelope. See Details.
 #' @param returns Returns to scale: \code{"vrs"} (default) or
 #'   \code{"crs"}.
 #' @param pollutant For a multi-pollutant technology, the pollutant to
@@ -100,10 +100,10 @@
 #' d <- rbind(cbind(d1, period = 1), cbind(d2, period = 2))
 #' tech <- pgt_tech(x = d[, "x", drop = FALSE], y = d$y, b = d$b,
 #'                  period = d$period, id = d$id)
-#' ml <- pgt_ml(tech)
+#' ml <- pgt_ml(tech)  # weak-disposability reference, the Oh (2010) form
 #' summary(ml)
 #' @export
-pgt_ml <- function(tech, technology = c("wgd", "envelope", "wd"),
+pgt_ml <- function(tech, technology = c("wd", "wgd", "envelope"),
                    returns = c("vrs", "crs"), pollutant = 1L) {
   stopifnot(inherits(tech, "pgt_tech"))
   technology <- match.arg(technology)

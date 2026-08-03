@@ -2,13 +2,18 @@
 
 ## Submission
 
-First submission of pgt 0.5.0 to CRAN.
+Update release: pgt 0.6.0 (previous CRAN version: 0.5.0).
 
-The package implements nonparametric efficiency analysis for
-pollution-generating technologies under the materials-balance principle
-(weak-G-disposability, by-production, materials-balance cost and
-weak-disposability estimators, with a feasibility audit, decompositions,
-shadow prices, a productivity index and subsampling inference).
+This release redefines the package's principal estimator to follow its
+source paper exactly: `pgt(model = "wgd")` now implements Equation 6 of
+Rodseth (2025) as printed (inputs are decision variables), and the
+previous programme survives unchanged as `model = "wgd_anchored"`. The
+release also adds support for several intended outputs, the
+five-component efficiency decomposition of Rodseth (2025, Eq. 11), and
+a numerically robust retry ladder for the decomposition's stage
+programmes. The breaking change is documented at the head of NEWS.md;
+scores on data with a positive retained-content coefficient differ
+from 0.5.x by design.
 
 ## Test environments
 
@@ -17,13 +22,11 @@ shadow prices, a productivity index and subsampling inference).
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
-* "New submission": this is the package's first CRAN submission.
-
-A second local note, "unable to verify current time", is an artifact of
-the checking machine's restricted network access and does not concern
-the package.
+A local note, "unable to verify current time", is an artifact of the
+checking machine's restricted network access and does not concern the
+package.
 
 ## Notes for the reviewers
 

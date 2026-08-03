@@ -35,12 +35,12 @@ under a materials-balance technology is not yet settled in the
 literature, and the default technologies do not re-impose the per-DMU
 materials-balance cap on the projected point.
 
-The `technology` argument selects the reference technology.
-`technology = "wd"` imposes weak disposability of the bad output in the
+The `technology` argument selects the reference technology. The
+default `"wd"` imposes weak disposability of the bad output in the
 Kuosmanen (2005) form; this is the technology under which Chung, Färe
 and Grosskopf (1997) and Oh (2010) define the index, so it is the
-faithful comparator. The default `"wgd"` and the `"envelope"` option
-treat the bad output as reducible to the peer emission envelope and are
+faithful comparator. The `"wgd"` and `"envelope"` options treat the
+bad output as reducible to the peer emission envelope and are
 exploratory companions (the `"wgd"` label here keeps the input rows,
 matching the input-fixed benchmark of `pgt()` rather than its Eq. 6
 programme).

@@ -64,5 +64,11 @@ res <- do.call(rbind, lapply(grid, function(L) {
 }))
 
 print(res, row.names = FALSE)
-write.csv(res, file.path("inst", "simulations", "coverage-results.csv"),
-          row.names = FALSE)
+# written into the package sources when run from the source root, and
+# next to a temporary copy otherwise (a sourced installed copy has no
+# inst/ tree to write into)
+out_dir <- file.path("inst", "simulations")
+if (!dir.exists(out_dir)) out_dir <- tempdir()
+out_file <- file.path(out_dir, "coverage-results.csv")
+write.csv(res, out_file, row.names = FALSE)
+message("coverage results written to ", out_file)
