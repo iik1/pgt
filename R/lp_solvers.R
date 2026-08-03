@@ -549,6 +549,31 @@
 .lp_wgd_stage <- function(i, tech, peers, vrs, p = 1L,
                           hold_xp = TRUE, hold_xa = TRUE,
                           hold_a = TRUE, hold_quality = TRUE) {
+  # lp_solve's default scaling occasionally reports self-feasible
+  # stages as numerically failed when the equality rows span many
+  # orders of magnitude (emissions of order 1e7 against the unit VRS
+  # row); alternative scalings solve those cases but can cycle when
+  # applied unconditionally, so failures retry under progressively
+  # stronger scalings, each attempt a fresh build (re-solving a failed
+  # LP object carries solver state into the retry) under a time limit
+  sol <- .lp_wgd_stage_once(i, tech, peers, vrs, p, hold_xp, hold_xa,
+                            hold_a, hold_quality, scaling = NULL)
+  if (sol$status != 0) {
+    for (sc in list(c("range", "equilibrate", "dynupdate"),
+                    c("extreme", "equilibrate", "dynupdate"))) {
+      sol <- .lp_wgd_stage_once(i, tech, peers, vrs, p, hold_xp,
+                                hold_xa, hold_a, hold_quality,
+                                scaling = sc)
+      if (sol$status == 0) break
+    }
+  }
+  sol
+}
+
+.lp_wgd_stage_once <- function(i, tech, peers, vrs, p = 1L,
+                               hold_xp = TRUE, hold_xa = TRUE,
+                               hold_a = TRUE, hold_quality = TRUE,
+                               scaling = NULL) {
   L <- length(peers)
   M <- tech$M
   x_abate <- tech$x_abate
@@ -584,7 +609,10 @@
   nc <- L + 5L + M + H
 
   lp <- lpSolveAPI::make.lp(nrow = 0, ncol = nc)
-  invisible(lpSolveAPI::lp.control(lp, sense = "min"))
+  invisible(lpSolveAPI::lp.control(lp, sense = "min", timeout = 10))
+  if (!is.null(scaling)) {
+    invisible(lpSolveAPI::lp.control(lp, scaling = scaling))
+  }
   obj <- numeric(nc); obj[iz] <- 1; obj[ia] <- -1
   lpSolveAPI::set.objfn(lp, obj)
 

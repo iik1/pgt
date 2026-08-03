@@ -49,6 +49,11 @@ the published paper.
   when accounts close.
 * `x_abate` is now functional: it partitions the inputs for the two
   abatement stages, and the recorded-but-unused warning is gone.
+* A failed stage programme is rebuilt and re-solved under
+  progressively stronger `lp_solve` scalings, each attempt
+  time-limited: with the default scaling alone, self-feasible stages
+  on large-magnitude data (emissions of order 1e7) were reported as
+  numerically failed for a handful of units.
 
 # pgt 0.5.1
 

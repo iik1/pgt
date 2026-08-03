@@ -100,3 +100,21 @@ test_that("decomposition methods run", {
   grDevices::dev.off()
   unlink(f)
 })
+
+test_that("stage LPs stay solvable on large-magnitude data (steeldemo)", {
+  # emissions of order 1e7 defeated the default lp_solve scaling: the
+  # self-feasible stage 1 was reported failed for 5 of 180 plants
+  data(steeldemo)
+  tech <- pgt_tech(
+    x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+    y = steeldemo$production, b = steeldemo$emissions, v = 0.01467,
+    group = steeldemo$route, id = steeldemo$plant
+  )
+  dec <- pgt_decompose(tech, type = "rodseth")
+  r <- dec$results
+  comps <- c("te_production", "quality", "ae_production",
+             "te_abatement", "ae_abatement", "total")
+  expect_true(all(stats::complete.cases(r[comps])))
+  fit <- pgt(tech, model = "wgd")
+  expect_equal(r$total, fit$results$efficiency, tolerance = 1e-6)
+})
