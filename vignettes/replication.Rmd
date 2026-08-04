@@ -130,7 +130,7 @@ mrl <- pgt_tech(
 bp <- pgt(mrl, model = "byprod", returns = "crs")
 rb <- bp$results
 data.frame(id = rb$id, output_eff = round(rb$output_eff, 4),
-           emission_eff = round(rb$efficiency, 4), fgl = round(rb$fgl, 4))
+           emission_eff = round(rb$efficiency, 4), mean_eff = round(rb$mean_eff, 4))
 ```
 
 For DMU3 the output efficiency is $1/3$, the emission efficiency $1/2$

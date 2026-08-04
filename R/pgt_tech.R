@@ -551,7 +551,7 @@ print.pgt_tech <- function(x, ...) {
                   paste(format(vm[1L, ], digits = 4), collapse = ", ")))
     } else {
       cat(sprintf(
-        "  material flow coefficients%s: DMU-specific (u in [%s], v in [%s])\n",
+        "  material flow coefficients%s: DMU-specific\n    (u in [%s], v in [%s])\n",
         tag,
         paste(format(range(x$u[, , p]), digits = 4), collapse = ", "),
         paste(format(range(vm), digits = 4), collapse = ", ")))
@@ -568,7 +568,7 @@ print.pgt_tech <- function(x, ...) {
   mb <- mb_check(x)
   nv <- attr(mb, "n_violations")
   if (nv > 0) {
-    cat(sprintf("  materials balance: %d of %d DMU-pollutant accounts violate the identity (see mb_check())\n",
+    cat(sprintf("  materials balance: %d of %d accounts violate the identity\n    (see mb_check())\n",
                 nv, x$L * x$P))
   } else {
     cat("  materials balance: satisfied for all DMUs\n")

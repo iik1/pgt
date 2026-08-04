@@ -214,7 +214,7 @@ E_2 = \min\{\psi :\ \textstyle\sum_l \mu_l b_l \le \psi b_i,\ \sum_l
 \mu_l x_{nl} \ge x_{ni}\ \forall n \in \mathcal{P},\ \sum_l \mu_l =
 1\}.
 $$
-$E_2$ is the principal environmental efficiency; `fgl` is the arithmetic
+$E_2$ is the principal environmental efficiency; `mean_eff` is the arithmetic
 mean $(E_1 + E_2)/2$, in the spirit of the Färe-Grosskopf-Lovell graph
 measure. If either sub-programme fails, every score of that unit is
 `NA`.

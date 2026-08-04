@@ -23,12 +23,12 @@ test_that("byprod reproduces MRL (2012) Example 1 analytic scores", {
   # graph measure E_FGL = 5/12.
   expect_equal(r["DMU3", "output_eff"], 1 / 3, tolerance = 1e-7)
   expect_equal(r["DMU3", "efficiency"], 1 / 2, tolerance = 1e-7)
-  expect_equal(r["DMU3", "fgl"], 5 / 12, tolerance = 1e-7)
+  expect_equal(r["DMU3", "mean_eff"], 5 / 12, tolerance = 1e-7)
 
   # DMU2: E1 = 3/4, E2 = 1, E_FGL = 7/8.
   expect_equal(r["DMU2", "output_eff"], 3 / 4, tolerance = 1e-7)
   expect_equal(r["DMU2", "efficiency"], 1, tolerance = 1e-7)
-  expect_equal(r["DMU2", "fgl"], 7 / 8, tolerance = 1e-7)
+  expect_equal(r["DMU2", "mean_eff"], 7 / 8, tolerance = 1e-7)
 })
 
 test_that("byprod scores are ratios in (0, 1] with FGL their average", {
@@ -36,7 +36,7 @@ test_that("byprod scores are ratios in (0, 1] with FGL their average", {
   r <- fit$results
   expect_true(all(r$efficiency > 0 & r$efficiency <= 1 + 1e-9))
   expect_true(all(r$output_eff > 0 & r$output_eff <= 1 + 1e-9))
-  expect_equal(r$fgl, (r$output_eff + r$efficiency) / 2, tolerance = 1e-9)
+  expect_equal(r$mean_eff, (r$output_eff + r$efficiency) / 2, tolerance = 1e-9)
 })
 
 test_that("byprod defaults polluting inputs to those with u > 0", {

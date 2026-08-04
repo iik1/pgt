@@ -69,10 +69,22 @@ the published paper.
 * `boot_pgt()` returns `NA` bounds and standard error for a DMU whose
   feasible replicates fall below half of `B`, instead of an interval
   resting on the remainder; `n_ok` still reports the count.
-* `print.pgt_tech()` separates the dimension counts with semicolons.
+* `print.pgt_tech()` separates the dimension counts with semicolons
+  and wraps the DMU-specific-coefficient and audit lines within a
+  76-character console.
 * The negative-`b_star` warning of `model = "mb_cost"` no longer
   attributes the sign to DMU-specific coefficients, which need not be
   present; any positive retained-content coefficient permits it.
+* New dataset `uscoal`: 212 US coal-fired power plants (2022) with a
+  measured sulfur-dioxide materials-balance account, built from
+  EIA-923 and EPA eGRID2022 (construction in `data-raw/uscoal.R`).
+  Producer-specific sulfur-based coefficients, an FGD sorbent
+  pollution-control input for `x_abate`, an FGD/no-FGD group, and 8
+  genuinely violating accounts for the audit.
+* The by-production average of the two sub-efficiencies is reported
+  as `mean_eff` (previously `fgl`): the column is a plain average,
+  not the Fare-Grosskopf-Lovell hyperbolic graph measure, and its
+  old name invited the confusion.
 * Documentation: the `status` column is documented as the `lp_solve`
   solver code (0 solved, 2 infeasible, 5 numerically failed), and the
   directional model's documentation warns that rescaling `y` or `b`

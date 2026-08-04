@@ -332,12 +332,12 @@
   status <- if (st1 == 0 && st2 == 0) 0L else max(st1, st2)
   if (status != 0L) {
     return(list(status = status, output_eff = NA_real_,
-                emission_eff = NA_real_, fgl = NA_real_,
+                emission_eff = NA_real_, mean_eff = NA_real_,
                 b_star = NA_real_, lambda = NULL, mu = NULL))
   }
   e1 <- if (phi <= 0) NA_real_ else 1 / phi
   list(status = status, output_eff = e1, emission_eff = psi,
-       fgl = (e1 + psi) / 2, b_star = psi * b[i],
+       mean_eff = (e1 + psi) / 2, b_star = psi * b[i],
        lambda = lam, mu = mu)
 }
 

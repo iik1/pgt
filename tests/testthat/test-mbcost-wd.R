@@ -96,6 +96,6 @@ test_that("a failed sub-LP yields all-NA scores under nonzero status", {
   expect_true(sol$status != 0)
   expect_true(is.na(sol$output_eff))
   expect_true(is.na(sol$emission_eff))
-  expect_true(is.na(sol$fgl))
+  expect_true(is.na(sol$mean_eff))
   expect_true(is.na(sol$b_star))
 })

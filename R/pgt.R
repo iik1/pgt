@@ -84,7 +84,7 @@
 #'     abatement-integrated extension. Returns emission efficiency
 #'     (\eqn{b^*/b}, reported as \code{efficiency}), output
 #'     efficiency (\code{output_eff})
-#'     and \code{fgl}, the arithmetic mean of the two sub-efficiencies,
+#'     and \code{mean_eff}, the arithmetic mean of the two sub-efficiencies,
 #'     in the spirit of the Fare-Grosskopf-Lovell graph measure. Set the
 #'     emission-causing inputs with \code{polluting} in [pgt_tech()].}
 #'   \item{\code{"wd"}}{The weak-disposability model (Kuosmanen 2005
@@ -301,7 +301,7 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "wgd_input_fixed",
       data.frame(
         b = b_p, b_star = num("b_star"),
         efficiency = num("emission_eff"),
-        output_eff = num("output_eff"), fgl = num("fgl"),
+        output_eff = num("output_eff"), mean_eff = num("mean_eff"),
         status = status, stringsAsFactors = FALSE
       )
     ),
