@@ -109,7 +109,11 @@
 #' accounts are open by the sulfur retained in ash and, at the 180
 #' plants with flue-gas desulphurisation (FGD), by the sulfur removed
 #' by the scrubbers. The FGD sorbent quantity is a dedicated
-#' pollution-control input for \code{x_abate}.
+#' pollution-control input for \code{x_abate}. Note that
+#' \code{sorbent} is 0 both at plants without SO2 controls and at the
+#' 36 FGD plants that list a control but report no sorbent quantity,
+#' so a zero does not by itself mark an unscrubbed plant; \code{fgd}
+#' is the scrubbing indicator.
 #'
 #' Construction conventions, filters and download URLs are documented
 #' in \code{data-raw/uscoal.R} in the package sources (sources accessed
@@ -126,8 +130,8 @@
 #'   \item{coal}{Coal consumption (short tons).}
 #'   \item{other_heat}{Non-coal fuel consumption (MMBtu).}
 #'   \item{capacity}{Nameplate capacity (MW).}
-#'   \item{sorbent}{FGD sorbent quantity (short tons; 0 without SO2
-#'     controls).}
+#'   \item{sorbent}{FGD sorbent quantity (short tons; 0 both without
+#'     SO2 controls and where an FGD plant reports no quantity).}
 #'   \item{gen}{Net generation (MWh).}
 #'   \item{so2}{Measured SO2 emissions (short tons).}
 #'   \item{sulfur}{Receipt-tonnage-weighted sulfur content of the

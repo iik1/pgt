@@ -196,13 +196,22 @@ as.data.frame.pgt_compare <- function(x, ...) {
 plot.pgt_compare <- function(x, ...) {
   score_cols <- x$models
   m <- as.matrix(x$scores[score_cols])
-  graphics::matplot(
-    seq_len(nrow(m)), m[order(m[, 1]), , drop = FALSE],
-    type = "l", lty = 1, col = seq_along(score_cols),
-    xlab = "DMU (ordered by first model's efficiency)",
-    ylab = "Environmental efficiency (b*/b)", ...
-  )
+  # vary line type as well as colour so the series stay readable in
+  # greyscale, and label the axis with what each model's score is:
+  # b*/b for the disposability models, EE for mb_cost
+  dots <- list(...)
+  if (is.null(dots$lty)) dots$lty <- seq_along(score_cols)
+  if (is.null(dots$col)) dots$col <- seq_along(score_cols)
+  if (is.null(dots$xlab))
+    dots$xlab <- "DMU (ordered by first model's efficiency)"
+  if (is.null(dots$ylab))
+    dots$ylab <- if ("mb_cost" %in% score_cols)
+      "Principal score (b*/b; EE for mb_cost)"
+    else "Environmental efficiency (b*/b)"
+  do.call(graphics::matplot,
+          c(list(seq_len(nrow(m)), m[order(m[, 1]), , drop = FALSE],
+                 type = "l"), dots))
   graphics::legend("bottomright", legend = score_cols,
-                   col = seq_along(score_cols), lty = 1, bty = "n")
+                   col = dots$col, lty = dots$lty, bty = "n")
   invisible(x)
 }

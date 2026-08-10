@@ -23,9 +23,10 @@
 # 2 x sulfur/100 short tons (molar mass ratio SO2/S = 2, full
 # conversion, no ash retention); other_heat is the year-total MMBtu of
 # all non-coal fuels; sorbent is the Schedule 8C FGD sorbent quantity
-# (converted from thousand short tons to short tons, 0 for plants
-# without SO2 controls); fgd marks plants with at least one SO2 control
-# listed in Schedule 8C.
+# (converted from thousand short tons to short tons; 0 both for plants
+# without SO2 controls and for FGD plants that list a control but
+# report no sorbent quantity); fgd marks plants with at least one SO2
+# control listed in Schedule 8C.
 #
 # Run from the package root: Rscript data-raw/uscoal.R
 # Requires: readxl. Downloads about 38 MB into tempdir().

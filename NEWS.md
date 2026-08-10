@@ -80,7 +80,16 @@ the published paper.
   EIA-923 and EPA eGRID2022 (construction in `data-raw/uscoal.R`).
   Producer-specific sulfur-based coefficients, an FGD sorbent
   pollution-control input for `x_abate`, an FGD/no-FGD group, and 8
-  genuinely violating accounts for the audit.
+  genuinely violating accounts for the audit. `?uscoal` documents that
+  `sorbent` is 0 both without SO2 controls and at the 36 FGD plants
+  that report no sorbent quantity, so `fgd`, not a zero sorbent, is
+  the scrubbing indicator.
+* `plot.pgt_compare()` varies line type as well as colour, so the
+  series stay readable in greyscale, and labels the y axis
+  "Principal score (b*/b; EE for mb_cost)" when `mb_cost` is among
+  the compared models: its EE is a material-inflow ratio, not an
+  emission ratio. Passing `lty`, `col`, `xlab` or `ylab` overrides
+  the defaults.
 * The by-production average of the two sub-efficiencies is reported
   as `mean_eff` (previously `fgl`): the column is a plain average,
   not the Fare-Grosskopf-Lovell hyperbolic graph measure, and its
