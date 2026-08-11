@@ -101,9 +101,9 @@
 #' a plant's coal is \code{2 * sulfur/100} short tons per short ton of
 #' coal (molar mass ratio, full conversion), giving a producer-specific
 #' material flow coefficient; electricity retains no sulfur, so
-#' \code{v = 0}. Unlike the synthetic \code{steeldemo} panel, the
-#' account here is measured on both sides, and it does not close by
-#' construction: 8 of the 212 accounts violate the materials-balance
+#' \code{v = 0}. Unlike the synthetic \code{steeldemo} panel, the two
+#' sides of the account here come from separate data collections, and
+#' it does not close by construction: 8 of the 212 accounts violate the materials-balance
 #' condition (measured SO2 exceeds the sulfur-implied potential,
 #' a data inconsistency the audit exists to catch), and the remaining
 #' accounts are open by the sulfur retained in ash and, at the 180
@@ -113,7 +113,24 @@
 #' \code{sorbent} is 0 both at plants without SO2 controls and at the
 #' 36 FGD plants that list a control but report no sorbent quantity,
 #' so a zero does not by itself mark an unscrubbed plant; \code{fgd}
-#' is the scrubbing indicator.
+#' is the scrubbing indicator. \code{coal} is the EIA-923 total fuel
+#' consumption, which at combined-heat-and-power plants includes coal
+#' burned for useful thermal output, while \code{gen} is net electric
+#' generation only and eGRID allocates a CHP plant's SO2 to
+#' electricity with a factor built from EIA heat-input data; at such
+#' plants the sulfur-implied potential is overstated relative to the
+#' emissions side, and their accounts lean toward looser closure
+#' (fewer violations, larger relative gaps).
+#'
+#' eGRID's SO2 value is a monitored stack measurement only for units
+#' reporting to the EPA Clean Air Markets Division's (CAMD) Power
+#' Sector Emissions Data, which generally covers fossil units serving
+#' generators above 25 MW; for other units eGRID estimates SO2 from
+#' EIA heat input and fuel-specific emission factors, that is, from
+#' the same EIA-923 fuel data that build the potential (see the
+#' eGRID2022 Technical Guide). No filter on this measurement
+#' provenance is applied, so the two sides of the account are fully
+#' independent only at CAMD-monitored plants.
 #'
 #' Construction conventions, filters and download URLs are documented
 #' in \code{data-raw/uscoal.R} in the package sources (sources accessed
@@ -133,7 +150,8 @@
 #'   \item{sorbent}{FGD sorbent quantity (short tons; 0 both without
 #'     SO2 controls and where an FGD plant reports no quantity).}
 #'   \item{gen}{Net generation (MWh).}
-#'   \item{so2}{Measured SO2 emissions (short tons).}
+#'   \item{so2}{Annual SO2 emissions from eGRID (short tons; see
+#'     Details for measurement provenance).}
 #'   \item{sulfur}{Receipt-tonnage-weighted sulfur content of the
 #'     coal (percent by weight).}
 #' }

@@ -62,6 +62,15 @@ p1 <- read_excel(main, sheet = "Page 1 Generation and Fuel Data",
 names(p1) <- gsub("[\r\n]+", " ", names(p1))
 p1$pid <- suppressWarnings(as.integer(p1[["Plant Id"]]))
 p1$fuel <- p1[["Reported Fuel Type Code"]]
+# Total-fuel basis: at combined-heat-and-power plants this quantity
+# includes coal burned for useful thermal output, while gen (eGRID
+# net generation) and the eGRID SO2 value (which eGRID allocates to
+# electricity at CHP plants using EIA heat-input data) are electric
+# only, so the sulfur-implied SO2 potential at such plants is
+# overstated relative to the emissions side (Page 1 also reports an
+# electric-only consumption column that this script does not use),
+# and their accounts lean toward looser closure (fewer violations,
+# larger gaps).
 p1$qty <- suppressWarnings(as.numeric(p1[["Total Fuel Consumption Quantity"]]))
 p1$mmbtu <- suppressWarnings(as.numeric(p1[["Total Fuel Consumption MMBtu"]]))
 p1 <- p1[!is.na(p1$pid), ]

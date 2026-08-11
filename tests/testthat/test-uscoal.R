@@ -23,7 +23,7 @@ test_that("uscoal carries a genuinely measured account", {
   )
   mb <- mb_check(tech)
   # measured accounts violate and stay open in the data, not by design
-  expect_equal(attr(mb, "n_exact"), 8L)
+  expect_equal(attr(mb, "n_negative"), 8L)
   # the faithful programme solves every plant, violators included
   fit <- pgt(tech, model = "wgd")
   expect_true(all(fit$results$status == 0))

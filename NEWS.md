@@ -1,3 +1,31 @@
+# pgt 0.6.1
+
+Documentation scoping and validation hardening after a full
+paper-code audit; no estimator changes.
+
+* Breaking for code reading the attribute: `mb_check()`'s count of
+  accounts with a strictly negative closure gap is renamed from
+  `n_exact` to `n_negative` — the old name read as a count of exactly
+  closing accounts, the opposite of what it counts. The
+  tolerance-flagged count `n_violations` is unchanged.
+* `?uscoal` documents the SO2 measurement provenance (eGRID values
+  are stack measurements only for CAMD-reporting units, and
+  emission-factor estimates built from EIA heat input elsewhere, with
+  a CHP plant's SO2 allocated to electricity) and the total-fuel
+  basis of `coal`, which at combined-heat-and-power plants tilts
+  accounts toward looser closure.
+* `pgt()` documents the directional model's open-account warning
+  threshold (relative closure gap above `1e-6`), `mb_cost`'s status 2
+  without a solver call for units with no pollutant-bearing inputs,
+  and that `"wd"` reports no output duals; the documented
+  `boot_pgt()` default `m` gains its `max(2, .)` floor.
+* A new test pins the `wgd` convention for the implied uncontrolled
+  emission on deliberately open accounts: `z_star` is the peer mix of
+  accounting caps `sum lambda (u'x - v'y)`, which equals
+  `sum lambda (b + a)` only when the peers' accounts close.
+* README and the models vignette carry the same scoped validation
+  wording as the manuscript.
+
 # pgt 0.6.0
 
 Faithful weak-G-disposability, several intended outputs, and the

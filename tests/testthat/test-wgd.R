@@ -152,7 +152,7 @@ test_that("wgd_input_fixed keeps the cap and infeasibility semantics", {
   expect_true(all(is.na(fit$results$b_star)))
   mb <- mb_check(tech)
   expect_true(all(mb$gap[fit$results$status != 0] < 0))
-  expect_equal(attr(mb, "n_exact"), 2L)
+  expect_equal(attr(mb, "n_negative"), 2L)
 
   # Companion: DMU1 violates its cap (b = 6 > 5) but solves through the
   # peer mix lambda = DMU2 (b = 4 <= 5): a feasible violator.

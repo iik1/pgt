@@ -27,8 +27,8 @@ model \code{"fdmo"} is not supported.}
 
 \item{B}{Number of subsampling replicates.}
 
-\item{m}{Subsample size. Defaults to \code{round(L^0.7)}, a point in
-the interior of the admissible range; Simar and Wilson (2011) show
+\item{m}{Subsample size. Defaults to \code{max(2, round(L^0.7))}, a
+point in the interior of the admissible range; Simar and Wilson (2011) show
 that sensitivity to \code{m} is the central practical issue, so
 check the default with [boot_pgt_sensitivity()].}
 

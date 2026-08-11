@@ -113,17 +113,20 @@ strength.
   replication vignette), and `pgt(model = "byprod")` the analytic
   efficiency scores of Murty, Russell and Levkoff's (2012) Example 1.
   The package ships the pig-finishing example as `data(pigfarms)`.
-- **Analytic hand-computed checks.** The `mb_cost`, `wd` and
-  `envelope` models are verified against small problems solved by
-  hand, and the `wgd` kernel against an independent reference
-  implementation in the test suite. The `mb_cost` check uses the
+- **Analytic checks.** The `mb_cost` and `envelope` models are
+  verified against small problems solved by hand, the `wd` model
+  against a constructed example in which the minimum-emission unit
+  scores one and a dominated unit scores below one, and the `wgd`
+  kernel against an independent reference implementation in the test
+  suite. The `mb_cost` check uses the
   phosphorus material-flow coefficients of Coelli, Lauwers and Van
   Huylenbroeck (2007) and confirms the `EE = TE x EAE` decomposition
   (an internal-consistency check, not a replication of a printed
   table).
 - **Identity and property checks.** The decompositions' multiplicative
   identities, `GML = EC x BPC`, score ranges and infeasibility
-  semantics are asserted across randomised technologies.
+  semantics are asserted on fixed-seed randomised fixtures and the
+  shipped data sets.
 
 The vignettes reproduce the published-table replications in the open:
 `vignette("replication", "pgt")`.

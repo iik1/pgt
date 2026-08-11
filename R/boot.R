@@ -61,8 +61,8 @@
 #'   \code{"byprod"}, \code{"mb_cost"}, \code{"wd"}); the directional
 #'   model \code{"fdmo"} is not supported.
 #' @param B Number of subsampling replicates.
-#' @param m Subsample size. Defaults to \code{round(L^0.7)}, a point in
-#'   the interior of the admissible range; Simar and Wilson (2011) show
+#' @param m Subsample size. Defaults to \code{max(2, round(L^0.7))}, a
+#'   point in the interior of the admissible range; Simar and Wilson (2011) show
 #'   that sensitivity to \code{m} is the central practical issue, so
 #'   check the default with [boot_pgt_sensitivity()].
 #' @param level Confidence level for the intervals.

@@ -22,7 +22,7 @@
 #'   its pollutant potential \eqn{u'x_l}. The flag is a data-quality
 #'   screen; LP infeasibility tracks the exact sign of the gap, so the
 #'   flagged set is a subset of the accounts with \code{gap < 0}
-#'   (counted separately in attribute \code{"n_exact"}).
+#'   (counted separately in attribute \code{"n_negative"}).
 #'
 #' @return A data frame of class \code{"pgt_mb"} with one row per DMU
 #'   (per pollutant when several are present): \code{id}, \code{group}
@@ -80,7 +80,7 @@ mb_check <- function(tech, tol = 1e-8) {
   class(out) <- c("pgt_mb", "data.frame")
   attr(out, "tol") <- tol
   attr(out, "n_violations") <- sum(out$violated)
-  attr(out, "n_exact") <- sum(out$gap < 0)
+  attr(out, "n_negative") <- sum(out$gap < 0)
   attr(out, "P") <- P
   out
 }

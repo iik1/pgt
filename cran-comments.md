@@ -2,12 +2,12 @@
 
 ## Submission
 
-Update release: pgt 0.6.0 (previous CRAN version: 0.5.0).
+Update release: pgt 0.6.1 (previous CRAN version: 0.5.0).
 
 This release redefines the package's principal estimator to follow its
 source paper exactly: `pgt(model = "wgd")` now implements Equation 6 of
 Rodseth (2025) as printed (inputs are decision variables), and the
-previous programme survives unchanged as `model = "wgd_anchored"`. The
+previous programme survives unchanged as `model = "wgd_input_fixed"`. The
 release also adds support for several intended outputs, the
 five-component efficiency decomposition of Rodseth (2025, Eq. 11), and
 a numerically robust retry ladder for the decomposition's stage
