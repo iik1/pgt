@@ -14,7 +14,11 @@ mb_check(tech, tol = 1e-08)
 its pollutant potential \eqn{u'x_l}. The flag is a data-quality
 screen; LP infeasibility tracks the exact sign of the gap, so the
 flagged set is a subset of the accounts with \code{gap < 0}
-(counted separately in attribute \code{"n_negative"}).}
+(counted separately in attribute \code{"n_negative"}). An account
+with zero pollutant potential is always flagged: strictly positive
+\code{b} forces a negative gap there, and \code{rel_gap} divides
+by the potential floored at machine epsilon, so it is reported as
+a large negative number rather than \code{NaN}.}
 }
 \value{
 A data frame of class \code{"pgt_mb"} with one row per DMU

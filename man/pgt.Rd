@@ -157,8 +157,10 @@ The models fall into two axiom families. The materials-balance models
     abatement-integrated extension. Returns emission efficiency
     (\eqn{b^*/b}, reported as \code{efficiency}), output
     efficiency (\code{output_eff})
-    and \code{mean_eff}, the arithmetic mean of the two sub-efficiencies,
-    in the spirit of the Fare-Grosskopf-Lovell graph measure. Set the
+    and \code{mean_eff}, the arithmetic mean of the two sub-efficiencies:
+    a package summary in the spirit of, but not identical to, the
+    Fare-Grosskopf-Lovell graph measure, and not a measure defined
+    in the source. Set the
     emission-causing inputs with \code{polluting} in [pgt_tech()].}
   \item{\code{"wd"}}{The weak-disposability model (Kuosmanen 2005
     correct VRS formulation; see the exchange settled in Kuosmanen

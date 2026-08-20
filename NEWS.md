@@ -1,3 +1,21 @@
+# pgt (development version)
+
+Referee-driven documentation and test additions; no behaviour changes,
+so 0.6.1 results and console output are unaffected.
+
+* New `test-invariance.R`: DMU-order invariance and duplicate-DMU
+  neutrality for the `wgd`, `wgd_input_fixed` and `envelope` models,
+  and a two-unit example pinning the retained-content dichotomy (a
+  unit's `wgd` score either coincides with its envelope score for
+  every `v` or moves for every positive `v`, switching peers once `v`
+  exceeds the emission boundary's descent rate).
+* `?mb_check` documents the zero-potential case: such accounts are
+  always flagged, with `rel_gap` computed against a machine-epsilon
+  floor rather than returned as `NaN`.
+* `?pgt` states explicitly that the by-production `mean_eff` column is
+  a package summary, not a measure defined in Murty, Russell and
+  Levkoff (2012).
+
 # pgt 0.6.1
 
 Documentation scoping and validation hardening after a full
