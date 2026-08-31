@@ -7,16 +7,16 @@
 shadow_prices(fit)
 }
 \arguments{
-\item{fit}{A [pgt()] fit with \code{model = "wgd"},
+\item{fit}{A \code{\link[=pgt]{pgt()}} fit with \code{model = "wgd"},
 \code{"wgd_input_fixed"} or \code{"envelope"}, the models that report
 output duals.}
 }
 \value{
 A data frame with one row per DMU: \code{id}, \code{group}
-  (if present), \code{b}, \code{b_star}, the output-dual columns
-  and \code{mb_headroom} where the fit reports it
-  (\code{"wgd_input_fixed"}; the column is \code{NA} for
-  \code{"envelope"} and absent for \code{"wgd"}).
+(if present), \code{b}, \code{b_star}, the output-dual columns
+and \code{mb_headroom} where the fit reports it
+(\code{"wgd_input_fixed"}; the column is \code{NA} for
+\code{"envelope"} and absent for \code{"wgd"}).
 }
 \description{
 Returns the informative constraint diagnostics of the per-DMU linear
@@ -48,7 +48,7 @@ projection.
 
 Values are reported in the units of the linear program (quantities,
 not money). To monetise the output dual, combine it with an output
-price via [mac_curve()].
+price via \code{\link[=mac_curve]{mac_curve()}}.
 }
 \examples{
 data(steeldemo)
@@ -75,5 +75,5 @@ applications. \emph{Journal of Productivity Analysis}, 64(3),
 305--319. \doi{10.1007/s11123-025-00768-0}
 }
 \seealso{
-[pgt()], [mac_curve()]
+\code{\link[=pgt]{pgt()}}, \code{\link[=mac_curve]{mac_curve()}}
 }

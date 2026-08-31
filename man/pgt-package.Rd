@@ -18,20 +18,20 @@ interface, so results can be compared across systems on identical
 data.
 }
 \details{
-The workflow: construct the technology with [pgt_tech()], audit the
-materials-balance accounts with [mb_check()], estimate with [pgt()],
-and post-process with [pgt_decompose()] (the Rodseth source
-decomposition and metafrontier decompositions), [shadow_prices()]
-and [mac_curve()] (output duals and marginal abatement costs) and
-[compare_models()] (cross-system agreement). [pgt_ml()] computes global Malmquist-Luenberger
-productivity change and [boot_pgt()] bootstrap inference.
+The workflow: construct the technology with \code{\link[=pgt_tech]{pgt_tech()}}, audit the
+materials-balance accounts with \code{\link[=mb_check]{mb_check()}}, estimate with \code{\link[=pgt]{pgt()}},
+and post-process with \code{\link[=pgt_decompose]{pgt_decompose()}} (the Rodseth source
+decomposition and metafrontier decompositions), \code{\link[=shadow_prices]{shadow_prices()}}
+and \code{\link[=mac_curve]{mac_curve()}} (output duals and marginal abatement costs) and
+\code{\link[=compare_models]{compare_models()}} (cross-system agreement). \code{\link[=pgt_ml]{pgt_ml()}} computes global Malmquist-Luenberger
+productivity change and \code{\link[=boot_pgt]{boot_pgt()}} bootstrap inference.
 
 Scope: technologies may carry several good outputs, several
 pollutants and DMU-specific material flow coefficients; the
-directional model and [pgt_ml()] are defined for a single good
+directional model and \code{\link[=pgt_ml]{pgt_ml()}} are defined for a single good
 output. The efficiency estimators treat the rows as an independent
-cross-section; panel structure enters only through [pgt_ml()]'s
-pooled global frontier, and [boot_pgt()] warns on panel
+cross-section; panel structure enters only through \code{\link[=pgt_ml]{pgt_ml()}}'s
+pooled global frontier, and \code{\link[=boot_pgt]{boot_pgt()}} warns on panel
 technologies.
 }
 \seealso{

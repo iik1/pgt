@@ -18,22 +18,22 @@ boot_pgt_sensitivity(
 )
 }
 \arguments{
-\item{tech}{A [pgt_tech()] object.}
+\item{tech}{A \code{\link[=pgt_tech]{pgt_tech()}} object.}
 
 \item{model, B, level, kappa, returns, peers, pollutant, seed}{As in
-[boot_pgt()].}
+\code{\link[=boot_pgt]{boot_pgt()}}.}
 
 \item{m_grid}{Integer vector of subsample sizes. Defaults to five
 sizes spanning \eqn{L^{0.5}} to \eqn{L^{0.9}}.}
 }
 \value{
 A data frame with one row per \code{m}: the size, the median
-  per-DMU interval width, the median over strictly positive widths,
-  and the mean rescaled standard error, with attributes
-  \code{"kappa_used"} and (when estimable) \code{"kappa_hat"}.
+per-DMU interval width, the median over strictly positive widths,
+and the mean rescaled standard error, with attributes
+\code{"kappa_used"} and (when estimable) \code{"kappa_hat"}.
 }
 \description{
-Re-runs [boot_pgt()] over a grid of subsample sizes \code{m} and
+Re-runs \code{\link[=boot_pgt]{boot_pgt()}} over a grid of subsample sizes \code{m} and
 reports how the median interval width responds. Stable widths across
 the grid support the choice of \code{m}; a strong trend warns that the
 intervals are driven by the resampling size rather than the data.
@@ -48,12 +48,12 @@ rescaled width scales as \eqn{m^{\kappa - \kappa_0}} for true rate
 \eqn{\log m}. Agreement between \code{kappa_hat} and the working
 \code{kappa} (attribute \code{"kappa_used"}) supports the borrowed
 DEA rate; disagreement suggests supplying \code{kappa_hat} to
-[boot_pgt()]. The same \code{seed} is reset before every grid point,
+\code{\link[=boot_pgt]{boot_pgt()}}. The same \code{seed} is reset before every grid point,
 so replicate draws are comparable across \code{m}.
 }
 \examples{
 data(steeldemo)
-steel60 <- steeldemo[1:60, ]
+steel60 <- steeldemo[steeldemo$year == 2021, ]
 tech <- pgt_tech(
   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
   y = steel60$production, b = steel60$emissions, v = 0.01467,
@@ -65,5 +65,5 @@ boot_pgt_sensitivity(tech, model = "wgd", B = 25,
 }
 }
 \seealso{
-[boot_pgt()]
+\code{\link[=boot_pgt]{boot_pgt()}}
 }

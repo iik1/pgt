@@ -99,12 +99,12 @@ replacement), the resampling scheme with the firmest footing for
 boundary estimators (Politis and Romano 1994; Politis, Romano and Wolf
 1999; Kneip, Simar and Wilson 2008). `boot_pgt()` covers cross-sectional
 efficiency scores only; no inference is currently available for the
-`pgt_ml()` index. The example takes the first 60 plants of the synthetic
-`steeldemo` panel.
+`pgt_ml()` index. The example takes the sixty plants of one year of
+the synthetic `steeldemo` panel, an independent cross-section.
 
 ```{r}
 data(steeldemo)
-steel60 <- steeldemo[1:60, ]
+steel60 <- steeldemo[steeldemo$year == 2021, ]
 tech <- pgt_tech(
   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
   y = steel60$production, b = steel60$emissions, v = 0.01467,

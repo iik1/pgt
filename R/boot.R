@@ -118,7 +118,7 @@
 #' @seealso [pgt()], [boot_pgt_sensitivity()]
 #' @examples
 #' data(steeldemo)
-#' steel60 <- steeldemo[1:60, ]
+#' steel60 <- steeldemo[steeldemo$year == 2021, ]
 #' tech <- pgt_tech(
 #'   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
 #'   y = steel60$production, b = steel60$emissions, v = 0.01467,
@@ -336,7 +336,7 @@ boot_pgt <- function(tech, model = c("wgd", "wgd_input_fixed",
 #' @seealso [boot_pgt()]
 #' @examples
 #' data(steeldemo)
-#' steel60 <- steeldemo[1:60, ]
+#' steel60 <- steeldemo[steeldemo$year == 2021, ]
 #' tech <- pgt_tech(
 #'   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
 #'   y = steel60$production, b = steel60$emissions, v = 0.01467,

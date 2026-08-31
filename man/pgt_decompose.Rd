@@ -12,7 +12,7 @@ pgt_decompose(
 )
 }
 \arguments{
-\item{tech}{A [pgt_tech()] object. \code{type = "envelope"} requires
+\item{tech}{A \code{\link[=pgt_tech]{pgt_tech()}} object. \code{type = "envelope"} requires
 a non-\code{NULL} \code{group}.}
 
 \item{type}{\code{"envelope"} (default) or \code{"rodseth"}. See
@@ -27,12 +27,12 @@ first.}
 }
 \value{
 An object of class \code{"pgt_decomp"}: a list with
-  \code{results} (one row per DMU with the stage minima and the
-  multiplicative components), \code{type} and \code{returns}. The
-  component columns are \code{WR}, \code{TGR}, \code{total} for
-  \code{type = "envelope"} and \code{te_production}, \code{quality},
-  \code{ae_production}, \code{te_abatement}, \code{ae_abatement},
-  \code{total} for \code{type = "rodseth"}.
+\code{results} (one row per DMU with the stage minima and the
+multiplicative components), \code{type} and \code{returns}. The
+component columns are \code{WR}, \code{TGR}, \code{total} for
+\code{type = "envelope"} and \code{te_production}, \code{quality},
+\code{ae_production}, \code{te_abatement}, \code{ae_abatement},
+\code{total} for \code{type = "rodseth"}.
 }
 \description{
 Multiplicative decompositions of the environmental efficiency score
@@ -44,42 +44,42 @@ of Battese, Rao and O'Donnell (2004) and O'Donnell, Rao and Battese
 }
 \details{
 \describe{
-  \item{\code{"envelope"}}{The metafrontier decomposition on the
-    \eqn{(y, b)} lower envelope (the \code{"envelope"} model of
-    [pgt()]). Stages differ by peer set only:
-    \deqn{Total = \frac{b^*_{all}}{b} = WR \times TGR, \quad
+\item{\code{"envelope"}}{The metafrontier decomposition on the
+\eqn{(y, b)} lower envelope (the \code{"envelope"} model of
+\code{\link[=pgt]{pgt()}}). Stages differ by peer set only:
+\deqn{Total = \frac{b^*_{all}}{b} = WR \times TGR, \quad
           WR = \frac{b^*_{group}}{b}, \quad
           TGR = \frac{b^*_{all}}{b^*_{group}}.}
-    \eqn{WR} is within-group reallocation efficiency; \eqn{TGR} is the
-    technology-gap ratio (O'Donnell, Rao and Battese 2008).
-    Self-reference is always feasible, so every component lies in
-    \eqn{(0, 1]} with no feasibility screen. Requires a \code{group}
-    in [pgt_tech()].}
-  \item{\code{"rodseth"}}{The five-component source decomposition of
-    Rodseth (2025, Eq. 11), computed from stage programmes of the
-    extended representation (Eq. 9). Stage 1 holds the evaluated
-    DMU's production inputs, pollution-control inputs, coefficient
-    quality and (when observed) abatement output at their observed
-    levels; the later stages free them one at a time, so each stage
-    relaxes the previous one. The components are the stage-to-stage
-    ratios \code{te_production} (\eqn{b^*_1/b}), \code{quality}
-    (\eqn{b^*_2/b^*_1}), \code{ae_production} (\eqn{b^*_3/b^*_2}),
-    \code{te_abatement} (\eqn{b^*_4/b^*_3}) and \code{ae_abatement}
-    (\eqn{b^*_5/b^*_4}), with
-    \deqn{Total = \frac{b^*_5}{b} = TE_{prod} \times Quality \times
+\eqn{WR} is within-group reallocation efficiency; \eqn{TGR} is the
+technology-gap ratio (O'Donnell, Rao and Battese 2008).
+Self-reference is always feasible, so every component lies in
+\eqn{(0, 1]} with no feasibility screen. Requires a \code{group}
+in \code{\link[=pgt_tech]{pgt_tech()}}.}
+\item{\code{"rodseth"}}{The five-component source decomposition of
+Rodseth (2025, Eq. 11), computed from stage programmes of the
+extended representation (Eq. 9). Stage 1 holds the evaluated
+DMU's production inputs, pollution-control inputs, coefficient
+quality and (when observed) abatement output at their observed
+levels; the later stages free them one at a time, so each stage
+relaxes the previous one. The components are the stage-to-stage
+ratios \code{te_production} (\eqn{b^*_1/b}), \code{quality}
+(\eqn{b^*_2/b^*_1}), \code{ae_production} (\eqn{b^*_3/b^*_2}),
+\code{te_abatement} (\eqn{b^*_4/b^*_3}) and \code{ae_abatement}
+(\eqn{b^*_5/b^*_4}), with
+\deqn{Total = \frac{b^*_5}{b} = TE_{prod} \times Quality \times
       AE_{prod} \times TE_{abate} \times AE_{abate},}
-    equal to the \code{"wgd"} efficiency of [pgt()]. Every stage is
-    self-feasible, so all components lie in \eqn{(0, 1]}; a failed
-    solve yields \code{NA} components and a warning. A component
-    collapses to 1 when the data cannot separate it: \code{quality}
-    requires producer-specific coefficients (the stage prices the
-    peer mix at the peers' own \eqn{u, v} instead of the evaluated
-    DMU's, which changes nothing under homogeneous coefficients),
-    \code{te_abatement} requires an observed abatement output
-    \code{a}, and \code{ae_abatement} requires pollution-control
-    input columns marked by \code{x_abate} in [pgt_tech()]. Groups
-    are not required; when present they are carried into the
-    results for the summaries.}
+equal to the \code{"wgd"} efficiency of \code{\link[=pgt]{pgt()}}. Every stage is
+self-feasible, so all components lie in \eqn{(0, 1]}; a failed
+solve yields \code{NA} components and a warning. A component
+collapses to 1 when the data cannot separate it: \code{quality}
+requires producer-specific coefficients (the stage prices the
+peer mix at the peers' own \eqn{u, v} instead of the evaluated
+DMU's, which changes nothing under homogeneous coefficients),
+\code{te_abatement} requires an observed abatement output
+\code{a}, and \code{ae_abatement} requires pollution-control
+input columns marked by \code{x_abate} in \code{\link[=pgt_tech]{pgt_tech()}}. Groups
+are not required; when present they are carried into the
+results for the summaries.}
 }
 }
 \examples{
@@ -125,5 +125,5 @@ applications. \emph{Journal of Productivity Analysis}, 64(3),
 305--319. \doi{10.1007/s11123-025-00768-0}
 }
 \seealso{
-[pgt()], [pgt_tech()]
+\code{\link[=pgt]{pgt()}}, \code{\link[=pgt_tech]{pgt_tech()}}
 }

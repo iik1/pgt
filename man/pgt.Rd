@@ -14,7 +14,7 @@ pgt(
 )
 }
 \arguments{
-\item{tech}{A [pgt_tech()] object.}
+\item{tech}{A \code{\link[=pgt_tech]{pgt_tech()}} object.}
 
 \item{model}{Character: \code{"wgd"} (alias \code{"wgd_rodseth"}),
 \code{"wgd_input_fixed"}, \code{"envelope"}, \code{"fdmo"} (alias
@@ -26,7 +26,7 @@ See Details.}
 
 \item{peers}{Reference set: \code{"all"} pools every DMU;
 \code{"group"} restricts each DMU's peers to its own technology
-group (requires \code{group} in [pgt_tech()]).}
+group (requires \code{group} in \code{\link[=pgt_tech]{pgt_tech()}}).}
 
 \item{pollutant}{For a multi-pollutant technology, the pollutant to
 estimate: a column name or index of \code{b}. Defaults to the first
@@ -37,35 +37,35 @@ selected pollutant's data.}
 }
 \value{
 An object of class \code{"pgt"}: a list with
-  \describe{
-    \item{\code{results}}{Data frame with one row per DMU. The good
-      outputs appear as a single column \code{y} when \eqn{M = 1}
-      and as one named column per output otherwise, with the output
-      duals named accordingly (\code{dual_output}, or
-      \code{dual_<name>} per output). For \code{"wgd"}: \code{id},
-      \code{group} (if present), the output columns, \code{b},
-      \code{b_star}, \code{efficiency} (\eqn{b^*/b}), the output
-      duals (total derivatives
-      \eqn{\partial b^*/\partial y_{mi} = \mu_m - v_{mi}}, which can
-      be negative when the retained-content coefficient is large),
-      \code{z_star} and \code{a_star} (only when \code{a} is
-      observed) and \code{status}, the \code{lp_solve} solver code
-      (0 = solved; 2 = infeasible; 5 = numerically failed). For
-      \code{"wgd_input_fixed"}, \code{"envelope"} and \code{"wd"}: the
-      same score columns with non-negative output duals (\code{NA}
-      for \code{"wd"}, which reports no duals) and
-      \code{mb_headroom}, the cap slack
-      \eqn{u_i'x_i - v_i'y_i - b^*_i} (\code{NA} except for
-      \code{"wgd_input_fixed"}). For \code{"fdmo"}: \code{id},
-      \code{group} (if present), \code{y}, \code{b}, \code{gross}
-      (\eqn{\theta_y + \theta_b}), \code{good_eff} (\eqn{\theta_y}),
-      \code{bad_eff} (\eqn{\theta_b}), \code{maximal_y}
-      (\eqn{y_l + \theta_y}) and \code{status}.}
-    \item{\code{weights}}{List of named vectors of non-zero peer
-      weights per DMU, keyed by \code{make.unique(id)}.}
-    \item{\code{model}, \code{returns}, \code{peers},
-      \code{pollutant}}{The call settings.}
-  }
+\describe{
+\item{\code{results}}{Data frame with one row per DMU. The good
+outputs appear as a single column \code{y} when \eqn{M = 1}
+and as one named column per output otherwise, with the output
+duals named accordingly (\code{dual_output}, or
+\code{dual_<name>} per output). For \code{"wgd"}: \code{id},
+\code{group} (if present), the output columns, \code{b},
+\code{b_star}, \code{efficiency} (\eqn{b^*/b}), the output
+duals (total derivatives
+\eqn{\partial b^*/\partial y_{mi} = \mu_m - v_{mi}}, which can
+be negative when the retained-content coefficient is large),
+\code{z_star} and \code{a_star} (only when \code{a} is
+observed) and \code{status}, the \code{lp_solve} solver code
+(0 = solved; 2 = infeasible; 5 = numerically failed). For
+\code{"wgd_input_fixed"}, \code{"envelope"} and \code{"wd"}: the
+same score columns with non-negative output duals (\code{NA}
+for \code{"wd"}, which reports no duals) and
+\code{mb_headroom}, the cap slack
+\eqn{u_i'x_i - v_i'y_i - b^*_i} (\code{NA} except for
+\code{"wgd_input_fixed"}). For \code{"fdmo"}: \code{id},
+\code{group} (if present), \code{y}, \code{b}, \code{gross}
+(\eqn{\theta_y + \theta_b}), \code{good_eff} (\eqn{\theta_y}),
+\code{bad_eff} (\eqn{\theta_b}), \code{maximal_y}
+(\eqn{y_l + \theta_y}) and \code{status}.}
+\item{\code{weights}}{List of named vectors of non-zero peer
+weights per DMU, keyed by \code{make.unique(id)}.}
+\item{\code{model}, \code{returns}, \code{peers},
+\code{pollutant}}{The call settings.}
+}
 }
 \description{
 Fits a nonparametric materials-balance efficiency model by solving one
@@ -81,96 +81,96 @@ The models fall into two axiom families. The materials-balance models
 \code{"fdmo"}, \code{"mb_cost"}) enforce the identity
 \eqn{u'x_l - v'y_l \ge b_l}; the reference models (\code{"byprod"},
 \code{"wd"}) implement competing systems for cross-comparison (see
-[compare_models()]).
+\code{\link[=compare_models]{compare_models()}}).
 \describe{
-  \item{\code{"wgd"}}{The weak-G-disposability model of Rodseth
-    (2025), Eq. 6 in reduced form. Equation 6 fixes only the
-    intended outputs at the evaluated DMU's levels; the inputs are
-    decision variables. Substituting the weak-G summing-up condition
-    on the disposal slacks therefore collapses the programme to
-    minimising the peer emission envelope plus the retained content
-    of the good output produced beyond the DMU's own levels,
-    \deqn{b^*_i = \min_\lambda \sum_l \lambda_l b_l +
+\item{\code{"wgd"}}{The weak-G-disposability model of Rodseth
+(2025), Eq. 6 in reduced form. Equation 6 fixes only the
+intended outputs at the evaluated DMU's levels; the inputs are
+decision variables. Substituting the weak-G summing-up condition
+on the disposal slacks therefore collapses the programme to
+minimising the peer emission envelope plus the retained content
+of the good output produced beyond the DMU's own levels,
+\deqn{b^*_i = \min_\lambda \sum_l \lambda_l b_l +
       v_i'\left(\sum_l \lambda_l y_l - y_i\right),}
-    over the output rows \eqn{\sum_l \lambda_l y_{ml} \ge y_{mi}}
-    and the returns-to-scale row, valued at the DMU's own
-    coefficients \eqn{v_i}. Self-reference is always feasible, so
-    every score lies in \eqn{(0, 1]}. When the abatement output
-    \code{a} is observed, the optimal peer mix also delivers the
-    implied uncontrolled emission \code{z_star}
-    \eqn{= \sum_l \lambda_l z_l} and abatement \code{a_star}
-    \eqn{= \sum_l \lambda_l a_l}, the Table 2 quantities of Rodseth
-    (2025). \code{model = "wgd_rodseth"} is an alias.}
-  \item{\code{"wgd_input_fixed"}}{The input-fixed companion benchmark
-    (the model estimated as \code{"wgd"} before version 0.6.0):
-    minimise the bad output subject to output feasibility, the input
-    rows \eqn{\sum_l \lambda_l x_{nl} \le x_{ni}}, the peer emission
-    envelope, and the evaluated DMU's own materials-balance cap
-    \eqn{b \le u_i'x_i - v_i'y_i}. With several pollutants the caps
-    of the remaining pollutants constrain the peer mix as well, so
-    the projection respects every pollutant's materials balance.
-    DMUs whose data violate a materials-balance identity lose the
-    self-reference guarantee: their LP may be infeasible (returning
-    \code{NA}), and every infeasible LP belongs to such a DMU. A DMU
-    violating another pollutant's identity can also score above 1,
-    since its MB-consistent projection may emit more of the selected
-    pollutant than the DMU reports. Audit with [mb_check()] first.}
-  \item{\code{"envelope"}}{The \code{"wgd"} programme without the
-    retained-content term (its \eqn{v = 0} case): the convex lower
-    envelope of the \eqn{(y, b)} scatter. Self-reference is always
-    feasible, so all scores lie in \eqn{(0, 1]}.}
-  \item{\code{"fdmo"}}{The factorially determined multi-output
-    (directional) representation of Rodseth (2025), Eq. 13 with the
-    abatement output fixed at each DMU's own level. It jointly
-    maximises the expansion of the good output (\eqn{\theta_y}) and
-    the contraction of the bad output (\eqn{\theta_b}) along the
-    materials-balance frontier; gross inefficiency is
-    \eqn{\theta_y + \theta_b}, with 0 for a frontier DMU. The gross
-    score adds good-output units to bad-output units (direction
-    \eqn{(1, 1)}), so it is unit-dependent and comparable only
-    within one unit system, as in Rodseth's Table 3; rescaling
-    \code{y} or \code{b} changes the direction's implicit weighting
-    and can change the optimiser, not merely the reported number. Requires an
-    abatement output \code{a} in [pgt_tech()] and a single intended
-    output. The model imposes the
-    materials-balance identity as an exact equality
-    \eqn{u'x_l - v y_l = b_l + a_l}: accounts that do not close
-    exactly either make the LP infeasible or shift the closure gap
-    into the scores, and \code{pgt()} warns when it detects open
-    accounts (absolute closure gap \eqn{|u'x_l - v y_l - b_l - a_l|}
-    exceeding \eqn{10^{-6}} times the pollutant potential
-    \eqn{u'x_l}). \code{model = "ddf"} is an alias.}
-  \item{\code{"mb_cost"}}{The materials-balance cost model of Coelli,
-    Lauwers and Van Huylenbroeck (2007): environmental efficiency is
-    the ratio of minimal to observed aggregate material inflow
-    \eqn{u'x}, decomposed as \eqn{EE = TE \times EAE} into technical
-    and environmental-allocative efficiency (returned as \code{te}
-    and \code{eae}). A unit that uses none of the pollutant-bearing
-    inputs has an undefined inflow ratio: its scores are \code{NA}
-    with \code{status} 2, reported without a solver call.}
-  \item{\code{"byprod"}}{The by-production intersection technology of
-    Murty, Russell and Levkoff (2012): the good output is produced by
-    one sub-technology and the bad output generated by another over
-    the emission-causing inputs. The implemented model is the
-    original Murty-Russell-Levkoff intersection technology without
-    integrated abatement; Hampf (2014) develops the
-    abatement-integrated extension. Returns emission efficiency
-    (\eqn{b^*/b}, reported as \code{efficiency}), output
-    efficiency (\code{output_eff})
-    and \code{mean_eff}, the arithmetic mean of the two sub-efficiencies:
-    a package summary in the spirit of, but not identical to, the
-    Fare-Grosskopf-Lovell graph measure, and not a measure defined
-    in the source. Set the
-    emission-causing inputs with \code{polluting} in [pgt_tech()].}
-  \item{\code{"wd"}}{The weak-disposability model (Kuosmanen 2005
-    correct VRS formulation; see the exchange settled in Kuosmanen
-    and Podinovski 2009), a reference axiom system that imposes no
-    materials balance. Returns emission efficiency \eqn{b^*/b}.}
+over the output rows \eqn{\sum_l \lambda_l y_{ml} \ge y_{mi}}
+and the returns-to-scale row, valued at the DMU's own
+coefficients \eqn{v_i}. Self-reference is always feasible, so
+every score lies in \eqn{(0, 1]}. When the abatement output
+\code{a} is observed, the optimal peer mix also delivers the
+implied uncontrolled emission \code{z_star}
+\eqn{= \sum_l \lambda_l z_l} and abatement \code{a_star}
+\eqn{= \sum_l \lambda_l a_l}, the Table 2 quantities of Rodseth
+(2025). \code{model = "wgd_rodseth"} is an alias.}
+\item{\code{"wgd_input_fixed"}}{The input-fixed companion benchmark
+(the model estimated as \code{"wgd"} before version 0.6.0):
+minimise the bad output subject to output feasibility, the input
+rows \eqn{\sum_l \lambda_l x_{nl} \le x_{ni}}, the peer emission
+envelope, and the evaluated DMU's own materials-balance cap
+\eqn{b \le u_i'x_i - v_i'y_i}. With several pollutants the caps
+of the remaining pollutants constrain the peer mix as well, so
+the projection respects every pollutant's materials balance.
+DMUs whose data violate a materials-balance identity lose the
+self-reference guarantee: their LP may be infeasible (returning
+\code{NA}), and every infeasible LP belongs to such a DMU. A DMU
+violating another pollutant's identity can also score above 1,
+since its MB-consistent projection may emit more of the selected
+pollutant than the DMU reports. Audit with \code{\link[=mb_check]{mb_check()}} first.}
+\item{\code{"envelope"}}{The \code{"wgd"} programme without the
+retained-content term (its \eqn{v = 0} case): the convex lower
+envelope of the \eqn{(y, b)} scatter. Self-reference is always
+feasible, so all scores lie in \eqn{(0, 1]}.}
+\item{\code{"fdmo"}}{The factorially determined multi-output
+(directional) representation of Rodseth (2025), Eq. 13 with the
+abatement output fixed at each DMU's own level. It jointly
+maximises the expansion of the good output (\eqn{\theta_y}) and
+the contraction of the bad output (\eqn{\theta_b}) along the
+materials-balance frontier; gross inefficiency is
+\eqn{\theta_y + \theta_b}, with 0 for a frontier DMU. The gross
+score adds good-output units to bad-output units (direction
+\eqn{(1, 1)}), so it is unit-dependent and comparable only
+within one unit system, as in Rodseth's Table 3; rescaling
+\code{y} or \code{b} changes the direction's implicit weighting
+and can change the optimiser, not merely the reported number. Requires an
+abatement output \code{a} in \code{\link[=pgt_tech]{pgt_tech()}} and a single intended
+output. The model imposes the
+materials-balance identity as an exact equality
+\eqn{u'x_l - v y_l = b_l + a_l}: accounts that do not close
+exactly either make the LP infeasible or shift the closure gap
+into the scores, and \code{pgt()} warns when it detects open
+accounts (absolute closure gap \eqn{|u'x_l - v y_l - b_l - a_l|}
+exceeding \eqn{10^{-6}} times the pollutant potential
+\eqn{u'x_l}). \code{model = "ddf"} is an alias.}
+\item{\code{"mb_cost"}}{The materials-balance cost model of Coelli,
+Lauwers and Van Huylenbroeck (2007): environmental efficiency is
+the ratio of minimal to observed aggregate material inflow
+\eqn{u'x}, decomposed as \eqn{EE = TE \times EAE} into technical
+and environmental-allocative efficiency (returned as \code{te}
+and \code{eae}). A unit that uses none of the pollutant-bearing
+inputs has an undefined inflow ratio: its scores are \code{NA}
+with \code{status} 2, reported without a solver call.}
+\item{\code{"byprod"}}{The by-production intersection technology of
+Murty, Russell and Levkoff (2012): the good output is produced by
+one sub-technology and the bad output generated by another over
+the emission-causing inputs. The implemented model is the
+original Murty-Russell-Levkoff intersection technology without
+integrated abatement; Hampf (2014) develops the
+abatement-integrated extension. Returns emission efficiency
+(\eqn{b^*/b}, reported as \code{efficiency}), output
+efficiency (\code{output_eff})
+and \code{mean_eff}, the arithmetic mean of the two sub-efficiencies:
+a package summary in the spirit of, but not identical to, the
+Fare-Grosskopf-Lovell graph measure, and not a measure defined
+in the source. Set the
+emission-causing inputs with \code{polluting} in \code{\link[=pgt_tech]{pgt_tech()}}.}
+\item{\code{"wd"}}{The weak-disposability model (Kuosmanen 2005
+correct VRS formulation; see the exchange settled in Kuosmanen
+and Podinovski 2009), a reference axiom system that imposes no
+materials balance. Returns emission efficiency \eqn{b^*/b}.}
 }
 
 Several intended outputs are supported by every model except
 \code{"fdmo"}: supply \code{y} as an \eqn{L \times M} matrix in
-[pgt_tech()]. The output rows then hold all \eqn{M} outputs at the
+\code{\link[=pgt_tech]{pgt_tech()}}. The output rows then hold all \eqn{M} outputs at the
 evaluated DMU's levels, and the retained content generalises to
 \eqn{v_i'y_i} with one coefficient per output and pollutant.
 }
@@ -223,6 +223,6 @@ applications. \emph{Journal of Productivity Analysis}, 64(3),
 305--319. \doi{10.1007/s11123-025-00768-0}
 }
 \seealso{
-[pgt_tech()], [pgt_decompose()], [shadow_prices()],
-  [mac_curve()]
+\code{\link[=pgt_tech]{pgt_tech()}}, \code{\link[=pgt_decompose]{pgt_decompose()}}, \code{\link[=shadow_prices]{shadow_prices()}},
+\code{\link[=mac_curve]{mac_curve()}}
 }

@@ -6,23 +6,23 @@
 \title{Synthetic steel plant panel}
 \format{
 A data frame with 180 rows (60 plants over 3 years) and 9
-  columns:
+columns:
 \describe{
-  \item{plant}{Plant identifier.}
-  \item{year}{Observation year.}
-  \item{route}{Production route: \code{"Integrated"} or
-    \code{"Minimill"}.}
-  \item{production}{Crude steel output (tonnes).}
-  \item{coal_coke}{Coal and coke input (tonnes CO2 potential).}
-  \item{other_fuel}{Other fuel input (tonnes CO2 potential).}
-  \item{raw_material}{Raw material input (tonnes CO2 potential).}
-  \item{flux}{Flux and alloy input (tonnes CO2 potential).}
-  \item{emissions}{Scope 1 CO2 emissions (tonnes).}
+\item{plant}{Plant identifier.}
+\item{year}{Observation year.}
+\item{route}{Production route: \code{"Integrated"} or
+\code{"Minimill"}.}
+\item{production}{Crude steel output (tonnes).}
+\item{coal_coke}{Coal and coke input (tonnes CO2 potential).}
+\item{other_fuel}{Other fuel input (tonnes CO2 potential).}
+\item{raw_material}{Raw material input (tonnes CO2 potential).}
+\item{flux}{Flux and alloy input (tonnes CO2 potential).}
+\item{emissions}{Scope 1 CO2 emissions (tonnes).}
 }
 }
 \source{
 Simulated; see \code{data-raw/steeldemo.R} in the package
-  sources.
+sources.
 }
 \usage{
 steeldemo

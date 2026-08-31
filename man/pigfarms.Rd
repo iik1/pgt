@@ -7,23 +7,23 @@
 \format{
 A data frame with 5 rows and 9 columns:
 \describe{
-  \item{farm}{Farm identifier, \code{"A"} to \code{"E"}.}
-  \item{feed}{Feed input.}
-  \item{piglet}{Piglet input.}
-  \item{labor}{Labour input.}
-  \item{capital}{Capital input.}
-  \item{meat}{Saleable meat (good output).}
-  \item{controlled}{Controlled nitrogen emissions (bad output).}
-  \item{uncontrolled}{Uncontrolled (ex ante) nitrogen emissions.}
-  \item{abatement}{End-of-pipe abatement,
-    \code{uncontrolled - controlled}.}
+\item{farm}{Farm identifier, \code{"A"} to \code{"E"}.}
+\item{feed}{Feed input.}
+\item{piglet}{Piglet input.}
+\item{labor}{Labour input.}
+\item{capital}{Capital input.}
+\item{meat}{Saleable meat (good output).}
+\item{controlled}{Controlled nitrogen emissions (bad output).}
+\item{uncontrolled}{Uncontrolled (ex ante) nitrogen emissions.}
+\item{abatement}{End-of-pipe abatement,
+\code{uncontrolled - controlled}.}
 }
 }
 \source{
 Rodseth, K. L. (2025). On the development of a unified,
-  nonparametric materials balance-based efficiency analysis model and
-  its applications. \emph{Journal of Productivity Analysis}, 64(3),
-  305--319, Table 1. \doi{10.1007/s11123-025-00768-0}
+nonparametric materials balance-based efficiency analysis model and
+its applications. \emph{Journal of Productivity Analysis}, 64(3),
+305--319, Table 1. \doi{10.1007/s11123-025-00768-0}
 }
 \usage{
 pigfarms
@@ -45,7 +45,7 @@ units: the uncontrolled-emission aggregate carries the material with
 paper's materials-balance cap exactly. With this mapping,
 \code{pgt(tech, model = "wgd")} reproduces the minimal controlled
 emissions of the paper's Table 2 (16, 16, 16, 20, 16), and
-[mb_check()]'s closure gap recovers the abatement column.
+\code{\link[=mb_check]{mb_check()}}'s closure gap recovers the abatement column.
 }
 \examples{
 data(pigfarms)

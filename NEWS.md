@@ -1,4 +1,4 @@
-# pgt (development version)
+# pgt 0.6.1.9000
 
 Referee-driven documentation and test additions; no behaviour changes,
 so 0.6.1 results and console output are unaffected.
@@ -9,9 +9,10 @@ so 0.6.1 results and console output are unaffected.
   unit's `wgd` score either coincides with its envelope score for
   every `v` or moves for every positive `v`, switching peers once `v`
   exceeds the emission boundary's descent rate).
-* `?mb_check` documents the zero-potential case: such accounts are
-  always flagged, with `rel_gap` computed against a machine-epsilon
-  floor rather than returned as `NaN`.
+* `?mb_check` documents the zero-potential case: `rel_gap` is computed
+  against a machine-epsilon floor rather than returned as `-Inf`, and
+  such an account is flagged whenever `b` exceeds `tol` times machine
+  epsilon.
 * `?pgt` states explicitly that the by-production `mean_eff` column is
   a package summary, not a measure defined in Murty, Russell and
   Levkoff (2012).

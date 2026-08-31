@@ -53,7 +53,9 @@ test_that("the retained-content term moves wgd exactly when the emission boundar
   # peer emission, so the equality boundary falls at rate 1. A's
   # envelope score is 1/2 through B; the wgd score rises in v and
   # switches to self-reference once v exceeds the descent rate.
-  ab <- function(v) pgt_tech(x = matrix(1, 2, 1), y = c(1, 2),
+  # x = 5 with u = 1 keeps both accounts satisfied at every v used
+  # (potential 5 >= v*y + b); x and u never enter the wgd/envelope LPs.
+  ab <- function(v) pgt_tech(x = matrix(5, 2, 1), y = c(1, 2),
                              b = c(2, 1), u = 1, v = v,
                              id = c("A", "B"))
   effA <- vapply(c(0, 0.5, 2), function(v)

@@ -18,7 +18,7 @@ boot_pgt(
 )
 }
 \arguments{
-\item{tech}{A [pgt_tech()] object.}
+\item{tech}{A \code{\link[=pgt_tech]{pgt_tech()}} object.}
 
 \item{model}{One of the environmental-efficiency models
 (\code{"wgd"}, \code{"wgd_input_fixed"}, \code{"envelope"},
@@ -30,7 +30,7 @@ model \code{"fdmo"} is not supported.}
 \item{m}{Subsample size. Defaults to \code{max(2, round(L^0.7))}, a
 point in the interior of the admissible range; Simar and Wilson (2011) show
 that sensitivity to \code{m} is the central practical issue, so
-check the default with [boot_pgt_sensitivity()].}
+check the default with \code{\link[=boot_pgt_sensitivity]{boot_pgt_sensitivity()}}.}
 
 \item{level}{Confidence level for the intervals.}
 
@@ -48,18 +48,18 @@ sub-technology. A heuristic; supply your own exponent to
 override.}
 
 \item{returns, peers, pollutant}{Passed to the underlying model, as in
-[pgt()].}
+\code{\link[=pgt]{pgt()}}.}
 
 \item{seed}{Optional integer seed for reproducibility. The caller's
 RNG state is restored on exit.}
 }
 \value{
 An object of class \code{"pgt_boot"}: a list with
-  \code{per_dmu} (a data frame of point estimate, lower and upper
-  bound, rescaled subsampling standard error, and \code{n_ok}, the
-  number of feasible replicates, per DMU), \code{group_means} (the
-  same for group means, when a group is present), and the call
-  settings.
+\code{per_dmu} (a data frame of point estimate, lower and upper
+bound, rescaled subsampling standard error, and \code{n_ok}, the
+number of feasible replicates, per DMU), \code{group_means} (the
+same for group means, when a group is present), and the call
+settings.
 }
 \description{
 Constructs subsampling confidence intervals for the environmental
@@ -114,13 +114,13 @@ envelopment analysis backs the radial and directional-distance
 technologies, not the materials-balance-constrained programs
 implemented here, so \code{kappa} borrows the DEA convergence rate
 as an approximation. Use the subsample-size sensitivity of
-[boot_pgt_sensitivity()] to check that the intervals are stable in
+\code{\link[=boot_pgt_sensitivity]{boot_pgt_sensitivity()}} to check that the intervals are stable in
 \code{m} (its implied \code{kappa_hat} makes the borrowed rate
 checkable) before relying on them.
 }
 \examples{
 data(steeldemo)
-steel60 <- steeldemo[1:60, ]
+steel60 <- steeldemo[steeldemo$year == 2021, ]
 tech <- pgt_tech(
   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
   y = steel60$production, b = steel60$emissions, v = 0.01467,
@@ -157,5 +157,5 @@ Productivity Analysis}, 36(1), 33--53.
 \doi{10.1007/s11123-010-0200-4}
 }
 \seealso{
-[pgt()], [boot_pgt_sensitivity()]
+\code{\link[=pgt]{pgt()}}, \code{\link[=boot_pgt_sensitivity]{boot_pgt_sensitivity()}}
 }

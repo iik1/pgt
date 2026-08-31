@@ -7,29 +7,29 @@
 \format{
 A data frame with 212 rows and 11 columns:
 \describe{
-  \item{plant}{ORIS plant code (character).}
-  \item{name}{Plant name.}
-  \item{state}{State abbreviation.}
-  \item{fgd}{\code{TRUE} if the plant reports at least one SO2
-    control in EIA-923 Schedule 8C.}
-  \item{coal}{Coal consumption (short tons).}
-  \item{other_heat}{Non-coal fuel consumption (MMBtu).}
-  \item{capacity}{Nameplate capacity (MW).}
-  \item{sorbent}{FGD sorbent quantity (short tons; 0 both without
-    SO2 controls and where an FGD plant reports no quantity).}
-  \item{gen}{Net generation (MWh).}
-  \item{so2}{Annual SO2 emissions from eGRID (short tons; see
-    Details for measurement provenance).}
-  \item{sulfur}{Receipt-tonnage-weighted sulfur content of the
-    coal (percent by weight).}
+\item{plant}{ORIS plant code (character).}
+\item{name}{Plant name.}
+\item{state}{State abbreviation.}
+\item{fgd}{\code{TRUE} if the plant reports at least one SO2
+control in EIA-923 Schedule 8C.}
+\item{coal}{Coal consumption (short tons).}
+\item{other_heat}{Non-coal fuel consumption (MMBtu).}
+\item{capacity}{Nameplate capacity (MW).}
+\item{sorbent}{FGD sorbent quantity (short tons; 0 both without
+SO2 controls and where an FGD plant reports no quantity).}
+\item{gen}{Net generation (MWh).}
+\item{so2}{Annual SO2 emissions from eGRID (short tons; see
+Details for measurement provenance).}
+\item{sulfur}{Receipt-tonnage-weighted sulfur content of the
+coal (percent by weight).}
 }
 }
 \source{
 US Energy Information Administration, Form EIA-923 (2022
-  final revision), \url{https://www.eia.gov/electricity/data/eia923/};
-  US Environmental Protection Agency, eGRID2022,
-  \url{https://www.epa.gov/egrid}. Both public; matched and filtered
-  as documented in \code{data-raw/uscoal.R}.
+final revision), \url{https://www.eia.gov/electricity/data/eia923/};
+US Environmental Protection Agency, eGRID2022,
+\url{https://www.epa.gov/egrid}. Both public; matched and filtered
+as documented in \code{data-raw/uscoal.R}.
 }
 \usage{
 uscoal

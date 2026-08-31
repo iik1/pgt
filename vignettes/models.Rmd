@@ -217,9 +217,10 @@ E_2 = \min\{\psi :\ \textstyle\sum_l \mu_l b_l \le \psi b_i,\ \sum_l
 1\}.
 $$
 $E_2$ is the principal environmental efficiency; `mean_eff` is the arithmetic
-mean $(E_1 + E_2)/2$, in the spirit of the Färe-Grosskopf-Lovell graph
-measure. If either sub-programme fails, every score of that unit is
-`NA`.
+mean $(E_1 + E_2)/2$, a package summary in the spirit of, but not
+identical to, the Färe-Grosskopf-Lovell graph measure, and not a
+measure defined in the source. If either sub-programme fails, every
+score of that unit is `NA`.
 
 ## Weak disposability (`model = "wd"`)
 

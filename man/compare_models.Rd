@@ -13,7 +13,7 @@ compare_models(
 )
 }
 \arguments{
-\item{tech}{A [pgt_tech()] object.}
+\item{tech}{A \code{\link[=pgt_tech]{pgt_tech()}} object.}
 
 \item{models}{Character vector of models to compare. Defaults to
 \code{c("wgd", "byprod", "mb_cost", "wd")}: the weak-G-disposability
@@ -32,26 +32,26 @@ compare on. Defaults to the first.}
 }
 \value{
 An object of class \code{"pgt_compare"}: a list with
-  \describe{
-    \item{\code{scores}}{Data frame of environmental efficiency, one
-      column per model, one row per DMU (with \code{id} and
-      \code{group}).}
-    \item{\code{spearman}}{Matrix of pairwise Spearman rank
-      correlations.}
-    \item{\code{agreement}}{Data frame with, per model, the number of
-      DMUs solved, the median score, and \code{bottom_q_overlap}: the
-      share of the DMUs this model places in its own bottom
-      efficiency quartile that the reference model (the first entry
-      of \code{models}) also places in its bottom quartile
-      (top-of-agenda overlap). The bottom quartile includes all DMUs
-      tied at the 25 per cent cutoff, so it can exceed a quarter of
-      the sample and its size can differ across models.}
-    \item{\code{models}, \code{returns}, \code{peers}}{Call settings.}
-  }
+\describe{
+\item{\code{scores}}{Data frame of environmental efficiency, one
+column per model, one row per DMU (with \code{id} and
+\code{group}).}
+\item{\code{spearman}}{Matrix of pairwise Spearman rank
+correlations.}
+\item{\code{agreement}}{Data frame with, per model, the number of
+DMUs solved, the median score, and \code{bottom_q_overlap}: the
+share of the DMUs this model places in its own bottom
+efficiency quartile that the reference model (the first entry
+of \code{models}) also places in its bottom quartile
+(top-of-agenda overlap). The bottom quartile includes all DMUs
+tied at the 25 per cent cutoff, so it can exceed a quarter of
+the sample and its size can differ across models.}
+\item{\code{models}, \code{returns}, \code{peers}}{Call settings.}
+}
 }
 \description{
 Fits several pollution-generating technology models to the same
-[pgt_tech()] object and reports how their environmental efficiency
+\code{\link[=pgt_tech]{pgt_tech()}} object and reports how their environmental efficiency
 scores and rankings agree. The materials-balance debate turns on which
 disposability axiom is appropriate for bad outputs (Forsund 2021 and
 the accompanying Journal of Productivity Analysis symposium); this
@@ -71,7 +71,7 @@ strictly comparable across models; the median column is a per-model
 summary. Rank agreement is measured by Spearman correlation over the
 DMUs solved by both members of each pair. Note that
 \code{"wgd_input_fixed"} scores can exceed 1 for DMUs violating another
-pollutant's materials-balance identity (see [pgt()]); such DMUs
+pollutant's materials-balance identity (see \code{\link[=pgt]{pgt()}}); such DMUs
 enter the comparison unflagged.
 }
 \examples{
@@ -99,5 +99,5 @@ Economics and Management}, 64(1), 117--135.
 \doi{10.1016/j.jeem.2012.02.005}
 }
 \seealso{
-[pgt()]
+\code{\link[=pgt]{pgt()}}
 }
