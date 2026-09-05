@@ -47,7 +47,7 @@ paper-code audit; no estimator changes.
 
 # pgt 0.6.0
 
-Faithful weak-G-disposability, several intended outputs, and the
+Weak-G-disposability in its Eq. 6 reduced form, several intended outputs, and the
 five-component decomposition of Rodseth (2025), from a close reading of
 the published paper.
 
@@ -186,7 +186,7 @@ submission.
 * `pgt_ml()` gains `technology = "wd"`: the weak-disposability
   directional distance in the Kuosmanen form, the technology under
   which Chung, Fare and Grosskopf (1997) and Oh (2010) define the
-  index, making it the faithful Oh (2010) comparator. The free-disposal
+  index, making it the comparator defined by Oh (2010). The free-disposal
   semantics of the default `"wgd"` and `"envelope"` options are now
   stated plainly and the claim that they coincide with the
   weak-disposability index when the cap does not bind has been removed

@@ -47,7 +47,7 @@ optimal peer mix also delivers the projection's implied uncontrolled
 emission $z^* = \sum_l \lambda_l z_l$, with
 $z_l = u_l'x_l - v_l'y_l$ the peer's materials-balance cap
 (equal to $b_l + a_l$ when the peer's account closes), and abatement
-$a^* = \sum_l \lambda_l a_l$. Faithfulness to the paper is exercised
+$a^* = \sum_l \lambda_l a_l$. Correspondence to the paper is exercised
 numerically: the programme reproduces the Table 2 minima of Rødseth
 (2025) and agrees with an independent reference implementation in the
 test suite. The reported output duals are the total derivatives

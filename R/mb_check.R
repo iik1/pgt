@@ -11,7 +11,7 @@
 #' \code{gap < 0}, in at least one pollutant account (pollutant
 #' \eqn{p}'s LP can be infeasible because of a violation in a different
 #' pollutant \eqn{q}; DMUs satisfying every account always solve via
-#' self-reference). The faithful \code{"wgd"} programme is always
+#' self-reference). The reduced-form \code{"wgd"} programme is always
 #' self-feasible, so its scores carry no feasibility screen; the audit
 #' remains the data-quality check behind its materials-balance
 #' interpretation. Audit before estimation.

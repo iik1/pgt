@@ -67,7 +67,7 @@ table(subset(as.data.frame(mb), violated)$pollutant)
 
 ## Every pollutant's cap constrains the input-fixed benchmark
 
-The faithful `"wgd"` programme of Eq. 6 uses only the selected
+The `"wgd"` programme of Eq. 6 uses only the selected
 pollutant's data. Cross-account discipline lives in the input-fixed
 benchmark: `pgt(model = "wgd_input_fixed")` selects one pollutant for the
 objective through `pollutant`, but the caps of every pollutant
@@ -126,7 +126,7 @@ median(fit_het$results$efficiency, na.rm = TRUE)
 
 Each plant's cap now uses its own coefficients, so two plants with the
 same fuel bill face different materials-balance ceilings. The input
-coefficients do not enter the reduced form of the faithful `"wgd"`
+coefficients do not enter the reduced form of the `"wgd"`
 programme (only the output coefficients $v_i$ do); producer-specific
 $u$ instead surfaces in the `quality` component of the decomposition
 below.

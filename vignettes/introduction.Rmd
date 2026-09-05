@@ -91,7 +91,7 @@ attr(mb, "n_violations")
 An infeasible `"wgd_input_fixed"` programme always belongs to a DMU with
 a strictly negative gap, so the audit locates any estimation problem
 in advance; such DMUs return `NA` scores and `pgt()` warns. The
-faithful weak-G-disposability programme of Eq. 6 is always
+weak-G-disposability programme of Eq. 6 is always
 self-feasible, so its scores lie in $(0, 1]$ on any data.
 
 ## Estimating environmental efficiency
