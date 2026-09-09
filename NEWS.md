@@ -19,6 +19,14 @@ result computed on `steeldemo` differs from 0.6.1.
   not reproduce on this version (the shipped `uscoal` and `pigfarms`
   data are untouched).
 
+* New dataset `usfgd`: 154 US coal-fired power plants with flue-gas
+  desulphurisation in 2023, built from EIA-923 (fuel, sulfur,
+  generation, Schedule 8C control units, sorbent, FGD electricity) and
+  EPA CAMD monitored SO2, with the SO2 removed by the scrubbers as a
+  derived abatement output (potential minus measured SO2) and the
+  reported removal efficiency as a cross-check. The account closes by
+  construction, so the directional model and the abatement stages of
+  the five-component decomposition run on real data.
 * Numerical robustness: the directional kernel (`model = "fdmo"`) and
   the stage kernel of `pgt_decompose(type = "rodseth")` retry a solve
   that lp_solve reports as numerically failed on the same programme
