@@ -48,25 +48,34 @@ library(pgt)
 data(steeldemo)   # synthetic steel-plant panel shipped with the package
 
 # 1. Build the technology: inputs in CO2-potential units (u = 1),
-#    v = carbon retained in the product.
+#    v = carbon retained in the product, captured CO2 as the observed
+#    abatement output and the capture energy as its control input.
 tech <- pgt_tech(
-  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux",
+                    "capture_energy")],
   y = steeldemo$production,
   b = steeldemo$emissions,
+  a = steeldemo$captured,
   v = 0.01467,
+  x_abate = "capture_energy",
   group = steeldemo$route,
   id = steeldemo$plant
 )
 
-# 2. Audit the materials-balance identity before estimating.
+# 2. Audit the materials-balance identity before estimating; with an
+#    observed abatement output it closes exactly: u'x - v y = b + a.
 mb_check(tech)
 
-# 3. Fit the weak-G-disposability model (Rodseth 2025, Eq. 6).
+# 3. Fit the weak-G-disposability model (Rodseth 2025, Eq. 6) and its
+#    directional representation (Eq. 13), which needs the closed account.
 fit <- pgt(tech, model = "wgd")
 summary(fit)
+summary(pgt(tech, model = "fdmo"))
 
-# 4. Decompose environmental efficiency across production routes.
+# 4. Decompose environmental efficiency: across production routes, and
+#    into Rodseth's five sources (the abatement components need `a`).
 summary(pgt_decompose(tech, type = "envelope"))
+summary(pgt_decompose(tech, type = "rodseth"))
 
 # 5. Shadow prices and the marginal abatement cost curve.
 head(shadow_prices(fit))
@@ -81,7 +90,7 @@ compare_models(tech, models = c("wgd", "byprod", "mb_cost", "wd"))
 | Function | What it does |
 |---|---|
 | `pgt_tech()` | Technology constructor: inputs, good/bad outputs, material flow coefficients `u`, `v`, abatement `a`, technology groups, panel `period` |
-| `mb_check()` | Audit of `u'x - v y >= b` per DMU and pollutant |
+| `mb_check()` | Audit of `u'x - v y >= b` per DMU and pollutant, and of the closed identity `u'x - v y = b + a` when abatement is observed |
 | `pgt(model = "wgd")` | Rodseth (2025) weak-G-disposability model, Eq. 6 in reduced form |
 | `pgt(model = "wgd_input_fixed")` | Input-fixed benchmark with the materials-balance cap (the pre-0.6.0 `wgd`) |
 | `pgt(model = "envelope")` | The v = 0 case of Eq. 6: convex lower (y, b) envelope |

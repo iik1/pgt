@@ -53,15 +53,21 @@ does, and puts the competing axiom systems behind one interface.
 
 The constructor bundles the data with the flow coefficients. The shipped
 `steeldemo` data is a synthetic panel of steel plants on two production
-routes, with emissions in CO2 units.
+routes, with emissions in CO2 units, an observed abatement output (CO2
+captured by carbon capture and storage, capture for utilisation, or
+slag mineralisation at the plants that run them) and the CO2 potential
+of the energy the capture consumes as a pollution-control input.
 
 ```{r}
 data(steeldemo)
 tech <- pgt_tech(
-  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux",
+                    "capture_energy")],
   y = steeldemo$production,
   b = steeldemo$emissions,
+  a = steeldemo$captured,
   v = 0.01467,
+  x_abate = "capture_energy",
   group = steeldemo$route,
   id = steeldemo$plant
 )
@@ -71,7 +77,10 @@ tech
 The inputs already sit in pollutant-potential units, so the default
 $u = 1$ applies to each; `v = 0.01467` is the carbon retained per unit
 of crude steel (the synthetic generator's assumption; see
-`?steeldemo` for the derivation).
+`?steeldemo` for the derivation). `captured` fills the abatement slot
+`a`, and `x_abate` marks `capture_energy` as the pollution-control
+input, which the five-component decomposition below frees in its own
+stage while every estimator treats it like any other input.
 
 ## Auditing the identity before estimation
 
@@ -87,6 +96,11 @@ mb <- mb_check(tech)
 head(as.data.frame(mb))
 attr(mb, "n_violations")
 ```
+
+With the abatement output observed, the audit also reports the closure
+of the full identity $u'x - v y = b + a$ (the `closure` column), which
+is exact on this panel: every tonne of CO2 potential is accounted for
+by the product, the emission or the captured stream.
 
 An infeasible `"wgd_input_fixed"` programme always belongs to a DMU with
 a strictly negative gap, so the audit locates any estimation problem
@@ -115,6 +129,17 @@ $(y, b)$ scatter.
 ```{r}
 fit_env <- pgt(tech, model = "envelope")
 summary(fit_env)
+```
+
+The directional representation of Rødseth (2025, Eq. 13) needs the
+closed account and holds abatement at the DMU's own level; it expands
+the good output and contracts the bad output jointly, so its scores are
+in output units rather than ratios, and the materials-balance row ties
+the two together as $\theta_b = v\,\theta_y$.
+
+```{r}
+fit_dir <- pgt(tech, model = "fdmo")
+summary(fit_dir)
 ```
 
 ## Shadow prices and abatement cost
@@ -151,11 +176,39 @@ dec <- pgt_decompose(tech, type = "envelope")
 summary(dec)
 ```
 
-The five-component source decomposition of Rødseth (2025, Eq. 11) —
-production and abatement efficiency, coefficient quality and
-allocative components — is available as
-`pgt_decompose(tech, type = "rodseth")` and needs no groups; the stage
-programmes are stated in `vignette("models", "pgt")`.
+The five-component source decomposition of Rødseth (2025, Eq. 11)
+traces each score to production technical efficiency, coefficient
+quality, production allocative efficiency, abatement technical
+efficiency and abatement allocative efficiency; it needs no groups,
+and the stage programmes are stated in `vignette("models", "pgt")`.
+The abatement components have something to measure here because the
+panel observes `captured` and marks `capture_energy` as the control
+input.
+
+```{r}
+dec5 <- pgt_decompose(tech, type = "rodseth")
+summary(dec5)
+comps <- c("te_production", "quality", "ae_production",
+           "te_abatement", "ae_abatement", "total")
+med <- aggregate(dec5$results[comps],
+                 list(abatement = steeldemo$abatement_tech), median)
+med[comps] <- round(med[comps], 3)
+med
+```
+
+Two components are 1 by construction on this panel: the coefficients
+are homogeneous, so quality is 1, and with the account closed and every
+input held, the first stage pins emissions at the observed level, so
+production technical efficiency is 1. Production allocative
+efficiency, the stage that frees the material inputs, carries most of
+the gap. The abatement components separate the plants by what they
+capture: abatement technical efficiency falls below 1 only where
+capture is active, where it measures how far the plant's captured
+tonnage falls short of the best capture observed at no more capture
+energy, and abatement allocative efficiency, the stage that frees the
+capture-energy input, is lowest at the plants that capture nothing,
+where it measures the emission reduction available from adopting
+capture on the peers' terms.
 
 ## A worked example on real data
 
