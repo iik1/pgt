@@ -98,3 +98,19 @@ test_that("fdmo warns when material accounts do not close exactly", {
   w <- capture_warnings(pgt(tech, model = "fdmo"))
   expect_true(any(grepl("close the materials-balance identity", w)))
 })
+
+test_that("fdmo solves every steeldemo row with capture_energy as control input", {
+  data(steeldemo)
+  tech <- pgt_tech(
+    x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux",
+                      "capture_energy")],
+    y = steeldemo$production, b = steeldemo$emissions,
+    a = steeldemo$captured, v = 0.01467, x_abate = "capture_energy",
+    group = steeldemo$route, id = steeldemo$plant
+  )
+  # the identity closes exactly, so no row may be infeasible; tonne
+  # magnitudes exercise the rescaled retry of the directional kernel
+  r <- pgt(tech, model = "fdmo")$results
+  expect_true(all(r$status == 0))
+  expect_equal(r$bad_eff, 0.01467 * r$good_eff, tolerance = 1e-6)
+})

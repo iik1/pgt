@@ -61,18 +61,30 @@
 #' of global plant-level data: two production routes with different
 #' carbon intensities, four material inputs expressed in CO2-potential
 #' units (so the material flow coefficients are \eqn{u = 1}), crude
-#' steel output, and Scope 1 CO2 emissions satisfying the
-#' materials-balance identity \eqn{u'x - v y \ge b} with
-#' \eqn{v = 0.01467} (carbon retained in the product). The synthetic
-#' generator (see \code{data-raw/steeldemo.R}) assumes roughly 0.4 per
-#' cent retained carbon by mass, converted to CO2 units:
-#' \eqn{0.004 \times 44/12 = 0.01467} tonnes of CO2 per tonne of steel;
-#' emissions are drawn as the CO2 potential minus this retained content,
-#' minus a small non-emitted remainder, so the identity holds in every
-#' row. The data are synthetic; they mimic magnitudes, not any real
-#' plant.
+#' steel output, Scope 1 CO2 emissions, and an observed abatement
+#' output with its pollution-control input. The materials-balance
+#' identity closes exactly in every row,
+#' \eqn{u'x - v y = b + a}, with \eqn{v = 0.01467} (carbon retained in
+#' the product), \eqn{b} the emissions and \eqn{a} the captured CO2;
+#' the five input columns, \code{capture_energy} included, make up
+#' \eqn{x}. The synthetic generator (see \code{data-raw/steeldemo.R})
+#' assumes roughly 0.4 per cent retained carbon by mass, converted to
+#' CO2 units: \eqn{0.004 \times 44/12 = 0.01467} tonnes of CO2 per
+#' tonne of steel. Abatement is assigned at plant level: eight
+#' integrated plants adopt post-combustion carbon capture and storage
+#' (CCS) in 2022 or 2023 and capture 60 to 90 per cent of their gross
+#' emissions from the adoption year on, six plants of either route
+#' capture 5 to 15 per cent for utilisation (CCU), and ten plants
+#' carbonate slag (mineralisation, 1 to 3 per cent). Capturing costs
+#' energy: \code{capture_energy} is the CO2 potential of that energy
+#' (0.10 to 0.20 tonnes per tonne captured for CCS and CCU, 0.01 to
+#' 0.03 for mineralisation), and its CO2 is part of the gross emissions
+#' the capture process treats. The data are synthetic; they mimic
+#' magnitudes, not any real plant. Versions before 0.6.2 shipped this
+#' panel without abatement and with a small unexplained closure gap in
+#' every row; the values of all columns changed with the regeneration.
 #'
-#' @format A data frame with 180 rows (60 plants over 3 years) and 9
+#' @format A data frame with 180 rows (60 plants over 3 years) and 12
 #'   columns:
 #' \describe{
 #'   \item{plant}{Plant identifier.}
@@ -85,9 +97,28 @@
 #'   \item{raw_material}{Raw material input (tonnes CO2 potential).}
 #'   \item{flux}{Flux and alloy input (tonnes CO2 potential).}
 #'   \item{emissions}{Scope 1 CO2 emissions (tonnes).}
+#'   \item{captured}{CO2 leaving as an abatement output (tonnes): the
+#'     \code{a} slot of \code{\link{pgt_tech}}; zero where no
+#'     abatement is active.}
+#'   \item{capture_energy}{CO2 potential of the energy consumed by the
+#'     capture process (tonnes): a pollution-control input, the
+#'     natural \code{x_abate} marker.}
+#'   \item{abatement_tech}{Abatement active in the plant-year:
+#'     \code{"none"}, \code{"CCS"}, \code{"CCU"} or
+#'     \code{"mineralisation"}.}
 #' }
 #' @source Simulated; see \code{data-raw/steeldemo.R} in the package
 #'   sources.
+#' @examples
+#' data(steeldemo)
+#' tech <- pgt_tech(
+#'   x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux",
+#'                     "capture_energy")],
+#'   y = steeldemo$production, b = steeldemo$emissions,
+#'   a = steeldemo$captured, v = 0.01467, x_abate = "capture_energy",
+#'   group = steeldemo$route, id = steeldemo$plant)
+#' attr(mb_check(tech), "n_violations")
+#' table(steeldemo$abatement_tech, steeldemo$year)
 "steeldemo"
 
 #' US coal-fired power plants with a measured SO2 account, 2022

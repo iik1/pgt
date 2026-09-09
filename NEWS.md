@@ -1,7 +1,33 @@
 # pgt 0.6.1.9000
 
-Referee-driven documentation and test additions; no behaviour changes,
-so 0.6.1 results and console output are unaffected.
+Referee-driven documentation and test additions, and a regenerated
+`steeldemo` panel with abatement. No estimator changed, but every
+result computed on `steeldemo` differs from 0.6.1.
+
+* `steeldemo` now carries an observed abatement output and its
+  pollution-control input: `captured` (CO2 leaving through
+  post-combustion CCS at eight integrated plants adopting in 2022 or
+  2023, capture for utilisation at six plants, or slag mineralisation
+  at ten), `capture_energy` (the CO2 potential of the energy the
+  capture consumes, the natural `x_abate` marker) and `abatement_tech`.
+  The materials-balance identity now closes exactly in every row,
+  `u'x - v y = emissions + captured`, so the directional model and the
+  abatement stages of the five-component decomposition can be run on
+  the panel. The generator's seed and plant structure are unchanged,
+  but the earlier process-recovery slack is gone and the emissions
+  column is re-drawn, so scores computed on `steeldemo` with 0.6.1 do
+  not reproduce on this version (the shipped `uscoal` and `pigfarms`
+  data are untouched).
+
+* Numerical robustness: the directional kernel (`model = "fdmo"`) and
+  the stage kernel of `pgt_decompose(type = "rodseth")` retry a solve
+  that lp_solve reports as numerically failed on the same programme
+  with all quantities divided by a common scale, scaling the levels
+  back afterwards. The programmes are homogeneous of degree one in the
+  quantities, so results are identical wherever the first solve
+  succeeds; the retry only converts spurious status-5 failures at
+  tonne magnitudes (two rows of the regenerated `steeldemo`) into
+  solutions.
 
 * New `test-invariance.R`: DMU-order invariance and duplicate-DMU
   neutrality for the `wgd`, `wgd_input_fixed` and `envelope` models,
