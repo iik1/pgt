@@ -28,6 +28,8 @@ reference:
     contents:
       - pigfarms
       - steeldemo
+      - uscoal
+      - usfgd
 
 articles:
   - title: Vignettes
