@@ -9,10 +9,16 @@
 #'
 #' The models fall into two axiom families. The materials-balance models
 #' (\code{"wgd"}, \code{"wgd_input_fixed"}, \code{"envelope"},
-#' \code{"fdmo"}, \code{"mb_cost"}) enforce the identity
-#' \eqn{u'x_l - v'y_l \ge b_l}; the reference models (\code{"byprod"},
-#' \code{"wd"}) implement competing systems for cross-comparison (see
-#' [compare_models()]).
+#' \code{"fdmo"}, \code{"mb_cost"}) are built on the account
+#' \eqn{u'x_l - v'y_l \ge b_l}, which enters each programme
+#' differently: as a cap on the evaluated DMU's projected emission in
+#' \code{"wgd_input_fixed"}, as an equality in \code{"fdmo"}, as a
+#' price system in \code{"mb_cost"}, and only as a valuation of retained
+#' output content in the objective of \code{"wgd"} and
+#' \code{"envelope"}, whose programmes carry no row from the DMU's own
+#' account. The audit of the account is [mb_check()]. The reference
+#' models (\code{"byprod"}, \code{"wd"}) implement competing systems
+#' for cross-comparison (see [compare_models()]).
 #' \describe{
 #'   \item{\code{"wgd"}}{The weak-G-disposability model of Rodseth
 #'     (2025), Eq. 6 in reduced form. Equation 6 fixes only the
@@ -51,8 +57,9 @@
 #'     envelope of the \eqn{(y, b)} scatter. Self-reference is always
 #'     feasible, so all scores lie in \eqn{(0, 1]}.}
 #'   \item{\code{"fdmo"}}{The factorially determined multi-output
-#'     (directional) representation of Rodseth (2025), Eq. 13 with the
-#'     abatement output fixed at each DMU's own level. It jointly
+#'     (directional) representation of Rodseth (2025), Eq. 14, which
+#'     his Proposition 4 derives from Eq. 13 by fixing the abatement
+#'     output at each DMU's own level. It jointly
 #'     maximises the expansion of the good output (\eqn{\theta_y}) and
 #'     the contraction of the bad output (\eqn{\theta_b}) along the
 #'     materials-balance frontier; gross inefficiency is
@@ -223,7 +230,7 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "wgd_input_fixed",
   if (model == "fdmo") {
     if (tech$M > 1L) {
       stop("model = \"fdmo\" is defined for a single intended output; ",
-           "the direction of Rodseth (2025, Eq. 13) has no ",
+           "the direction of Rodseth (2025, Eq. 14) has no ",
            "multi-output form.", call. = FALSE)
     }
     if (is.null(tech$a)) {

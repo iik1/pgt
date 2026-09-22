@@ -46,8 +46,10 @@ benchmarking since.
 Existing R packages handle undesirable outputs by transforming the data
 (the Seiford and Zhu 2002 translation in `deaR`) or by imposing weak
 disposability and directional distances (`nonparaeff`, `Benchmarking`).
-Neither approach enforces the materials balance as a constraint. `pgt`
-does, and puts the competing axiom systems behind one interface.
+Neither approach carries a materials-balance account. `pgt` audits the
+account before estimation, lets it enter the estimators as a cap, an
+equality, a price system or an objective valuation depending on the
+model, and puts the competing axiom systems behind one interface.
 
 ## Building a technology
 
@@ -131,7 +133,7 @@ fit_env <- pgt(tech, model = "envelope")
 summary(fit_env)
 ```
 
-The directional representation of Rødseth (2025, Eq. 13) needs the
+The directional representation of Rødseth (2025, Eq. 14) needs the
 closed account and holds abatement at the DMU's own level; it expands
 the good output and contracts the bad output jointly, so its scores are
 in output units rather than ratios, and the materials-balance row ties

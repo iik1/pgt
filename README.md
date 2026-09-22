@@ -3,10 +3,10 @@
 `pgt` implements nonparametric efficiency analysis for
 pollution-generating technologies under the materials-balance
 principle. It packages the competing axiom systems for modelling bad
-outputs behind one interface, with an enforced materials-balance
-identity, a pre-estimation feasibility audit, source and metafrontier
-decompositions, bad-output shadow prices, marginal abatement cost
-curves, a productivity index and subsampling inference.
+outputs behind one interface, with a pre-estimation audit of every
+materials-balance account, source and metafrontier decompositions,
+bad-output shadow prices, marginal abatement cost curves, a
+productivity index and subsampling sensitivity intervals.
 
 The materials-balance principle goes back to Ayres and Kneese (1969);
 Lauwers (2009) makes the case for building it into frontier models, and
@@ -67,7 +67,7 @@ tech <- pgt_tech(
 mb_check(tech)
 
 # 3. Fit the weak-G-disposability model (Rodseth 2025, Eq. 6) and its
-#    directional representation (Eq. 13), which needs the closed account.
+#    directional representation (Eq. 14), which needs the closed account.
 fit <- pgt(tech, model = "wgd")
 summary(fit)
 summary(pgt(tech, model = "fdmo"))
@@ -94,7 +94,7 @@ compare_models(tech, models = c("wgd", "byprod", "mb_cost", "wd"))
 | `pgt(model = "wgd")` | Rodseth (2025) weak-G-disposability model, Eq. 6 in reduced form |
 | `pgt(model = "wgd_input_fixed")` | Input-fixed benchmark with the materials-balance cap (the pre-0.6.0 `wgd`) |
 | `pgt(model = "envelope")` | The v = 0 case of Eq. 6: convex lower (y, b) envelope |
-| `pgt(model = "fdmo")` | Rodseth (2025) directional representation, Eq. 13 (alias `"ddf"`) |
+| `pgt(model = "fdmo")` | Rodseth (2025) directional representation, Eq. 14 (alias `"ddf"`) |
 | `pgt(model = "mb_cost")` | Coelli et al. (2007) materials-balance cost model, `EE = TE x EAE` |
 | `pgt(model = "byprod")` | Murty-Russell-Levkoff (2012) by-production intersection technology |
 | `pgt(model = "wd")` | Kuosmanen (2005) weak-disposability reference model |

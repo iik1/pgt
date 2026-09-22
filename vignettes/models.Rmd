@@ -107,8 +107,9 @@ $(0, 1]$.
 
 ## The directional representation (`model = "fdmo"`)
 
-The factorially determined multi-output form of Rødseth (2025, Eq. 13),
-with the abatement output $a$ held at the evaluated unit's own level:
+The factorially determined multi-output form of Rødseth (2025, Eq. 14),
+which his Proposition 4 derives from Eq. 13 by holding the abatement
+output $a$ at the evaluated unit's own level:
 $$
 \begin{aligned}
 \max_{\lambda,\, \theta_y,\, \theta_b}\quad & \theta_y + \theta_b \\

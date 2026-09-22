@@ -54,6 +54,20 @@ result computed on `steeldemo` differs from 0.6.1.
   a package summary, not a measure defined in Murty, Russell and
   Levkoff (2012).
 
+* Documentation: the directional model `"fdmo"` is now cited as
+  Rodseth (2025) Eq. 14, the factorially determined multi-output form
+  that his Proposition 4 derives from Eq. 13 by fixing abatement at the
+  DMU's own level. Earlier versions cited Eq. 13 for the same programme;
+  no code changed.
+
+* Documentation: DESCRIPTION, the README, `?pgt` and the vignettes no
+  longer describe the materials-balance account as "enforced". The
+  account enters each programme differently (a cap in
+  `"wgd_input_fixed"`, an equality in `"fdmo"`, a price system in
+  `"mb_cost"`, an objective valuation only in `"wgd"` and
+  `"envelope"`), and `mb_check()` is where it is audited. No code
+  changed.
+
 # pgt 0.6.1
 
 Documentation scoping and validation hardening after a full
@@ -364,8 +378,8 @@ Competing axiom systems and a comparison harness.
 The directional representation and richer material accounting.
 
 * `pgt(model = "fdmo")`: the factorially determined multi-output
-  (directional) representation of Rodseth (2025), Eq. 13 with abatement
-  fixed at each DMU's own level (alias `"ddf"`). Jointly expands the good
+  (directional) representation of Rodseth (2025), Eq. 14, that is
+  Eq. 13 with abatement fixed at each DMU's own level (alias `"ddf"`). Jointly expands the good
   output and contracts the bad output; returns good-output, bad-output
   and gross efficiency. Unit tests reproduce the paper's Table 3.
 * DMU-specific material flow coefficients: `u` may be an `L x N` matrix

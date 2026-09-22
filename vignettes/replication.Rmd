@@ -68,7 +68,7 @@ farms the optimal peer mix is not unique and the split between
 
 ## Rødseth (2025), Table 3: the directional representation
 
-The factorially determined multi-output model (Eq. 13, abatement fixed at
+The factorially determined multi-output model (Eq. 14, abatement fixed at
 each farm's own level) jointly expands the good output and contracts the
 bad output. Its good-output coefficient $v = 7/6$ follows from farms A
 and B, which share inputs: their meat differs by 3 and their uncontrolled

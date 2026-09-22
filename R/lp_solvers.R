@@ -4,9 +4,10 @@
 # together with the peer weights and selected constraint duals.
 #
 # Formulations follow Rodseth (2025, JPA): Eq. 6 in reduced form for the
-# weak-G-disposability model and Eq. 13 (abatement fixed at the evaluated
-# DMU's own level) for the factorially determined multi-output /
-# directional representation. The unit tests replicate the paper's
+# weak-G-disposability model and Eq. 14 (the factorially determined
+# multi-output form that Proposition 4 derives from Eq. 13 by fixing
+# abatement at the evaluated DMU's own level) for the directional
+# representation. The unit tests replicate the paper's
 # numerical example (Tables 2-3) through these kernels.
 #
 # Material flow coefficients are DMU-specific (one row of the L x N x P
@@ -195,8 +196,8 @@
 }
 
 # Factorially determined multi-output / directional model (Rodseth 2025,
-# Eq. 13 with abatement fixed at the evaluated DMU's own level a_i, the
-# specification that yields the paper's Table 3). Pollutant p.
+# Eq. 14: Eq. 13 with abatement fixed at the evaluated DMU's own level
+# a_i, the specification that yields the paper's Table 3). Pollutant p.
 #
 #   max_{lambda, thy, thb} thy + thb
 #   s.t. sum_l lambda_l y_l  - thy        >= y_i           (good output)
