@@ -131,6 +131,12 @@ c8$sorb <- num(c8[["FGD Sorbent Quantity  (thousand tons)"]])
 c8$mwh <- num(c8[["FGD Electricity  Consumption  (Megawatthours)"]])
 c8s <- c8[!is.na(c8$pid) & !is.na(c8$so2id) & c8$so2id != "" &
             !is.na(c8$status) & c8$status == "OP", ]
+# Schedule 8C lists one row per equipment type served by a control
+# unit and repeats the unit's sorbent and electricity on each row
+# (plant 1356 reports its four FGDs under both "Dry sorbent injection"
+# and "Spray type (wet) scrubber"); keep one row per identical
+# (control ID, sorbent, electricity) tuple so each quantity counts once
+c8s <- c8s[!duplicated(c8s[c("pid", "so2id", "sorb", "mwh")]), ]
 fgd <- do.call(rbind, lapply(split(c8s, c8s$pid), function(d)
   data.frame(pid = d$pid[1],
              n_fgd = length(unique(d$so2id)),
@@ -223,8 +229,20 @@ cat(sprintf("sorbent > 0: %d; fgd_mwh > 0: %d\n", sum(usfgd$sorbent > 0), sum(us
 
 cat(sprintf("partially scrubbed plants (scrubbed_units < coal_units): %d\n",
             sum(usfgd$scrubbed_units < usfgd$coal_units)))
-stopifnot(nrow(usfgd) == 154, n_violating == 1,
-          all(usfgd$so2_removed > 0))
+# every figure quoted in ?usfgd is pinned here so a regeneration that
+# moves one fails instead of leaving the documentation stale
+pot <- 2 * usfgd$sulfur / 100 * usfgd$coal
+stopifnot(nrow(usfgd) == 154, ncol(usfgd) == 17, n_violating == 1,
+          all(usfgd$so2_removed > 0),
+          round(median(share), 3) == 0.953,
+          round(median(usfgd$efficiency, na.rm = TRUE), 3) == 0.950,
+          sum(is.na(usfgd$efficiency)) == 14,
+          round(cor(share, usfgd$efficiency, method = "spearman",
+                    use = "complete.obs"), 2) == 0.82,
+          abs(median(abs(usfgd$efficiency * pot / usfgd$so2_removed - 1),
+                     na.rm = TRUE) - 0.012) < 1e-3,
+          sum(usfgd$scrubbed_units < usfgd$coal_units) == 12,
+          sum(usfgd$sorbent == 0) == 31, sum(usfgd$fgd_mwh == 0) == 54)
 
 save(usfgd, file = "data/usfgd.rda", compress = "xz")
 cat("usfgd:", nrow(usfgd), "plants written to data/usfgd.rda\n")

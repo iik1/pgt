@@ -196,12 +196,14 @@ med[comps] <- round(med[comps], 3)
 med
 ```
 
-Two components are 1 by construction on this panel: the coefficients
-are homogeneous, so quality is 1, and with the account closed and every
-input held, the first stage pins emissions at the observed level, so
-production technical efficiency is 1. Production allocative
-efficiency, the stage that frees the material inputs, carries most of
-the gap. The abatement components separate the plants by what they
+Two features of the table follow from the stage programmes. Quality
+is 1 throughout because the coefficients are homogeneous. Production
+technical efficiency is 1 at the plants without capture and below 1 at
+many capturing plants: the first stage holds the captured tonnage at
+the plant's own level only as a floor, so a mix of peers that captures
+more from the same inputs reaches a lower controlled emission.
+Production allocative efficiency, the stage that frees the material
+inputs, carries most of the gap. The abatement components separate the plants by what they
 capture: abatement technical efficiency falls below 1 only where
 capture is active, where it measures how far the plant's captured
 tonnage falls short of the best capture observed at no more capture

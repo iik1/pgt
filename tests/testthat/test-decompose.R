@@ -102,12 +102,17 @@ test_that("decomposition methods run", {
 })
 
 test_that("stage LPs stay solvable on large-magnitude data (steeldemo)", {
-  # emissions of order 1e7 defeated the default lp_solve scaling: the
-  # self-feasible stage 1 was reported failed for 5 of 180 plants
+  # emissions of order 1e7 defeated lp_solve's default scaling: stage 1
+  # was reported failed for some plants and, on the four-input
+  # construction (no abatement output), stopped at a suboptimal vertex
+  # with status 0 for three, returning production technical efficiency
+  # above 1; the fit-level rescale removes both
   data(steeldemo)
   tech <- pgt_tech(
-    x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
-    y = steeldemo$production, b = steeldemo$emissions, v = 0.01467,
+    x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux",
+                      "capture_energy")],
+    y = steeldemo$production, b = steeldemo$emissions,
+    a = steeldemo$captured, v = 0.01467, x_abate = "capture_energy",
     group = steeldemo$route, id = steeldemo$plant
   )
   dec <- pgt_decompose(tech, type = "rodseth")
@@ -115,6 +120,15 @@ test_that("stage LPs stay solvable on large-magnitude data (steeldemo)", {
   comps <- c("te_production", "quality", "ae_production",
              "te_abatement", "ae_abatement", "total")
   expect_true(all(stats::complete.cases(r[comps])))
+  expect_true(all(r$te_production <= 1 + 1e-6))
   fit <- pgt(tech, model = "wgd")
   expect_equal(r$total, fit$results$efficiency, tolerance = 1e-6)
+  tech4 <- pgt_tech(
+    x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+    y = steeldemo$production, b = steeldemo$emissions, v = 0.01467,
+    group = steeldemo$route, id = steeldemo$plant
+  )
+  r4 <- pgt_decompose(tech4, type = "rodseth")$results
+  expect_true(all(stats::complete.cases(r4[comps])))
+  expect_true(all(r4$te_production <= 1 + 1e-6))
 })

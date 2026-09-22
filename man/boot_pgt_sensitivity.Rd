@@ -55,8 +55,10 @@ so replicate draws are comparable across \code{m}.
 data(steeldemo)
 steel60 <- steeldemo[steeldemo$year == 2021, ]
 tech <- pgt_tech(
-  x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
-  y = steel60$production, b = steel60$emissions, v = 0.01467,
+  x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux",
+                  "capture_energy")],
+  y = steel60$production, b = steel60$emissions, a = steel60$captured,
+  v = 0.01467, x_abate = "capture_energy",
   id = steel60$plant
 )
 \donttest{

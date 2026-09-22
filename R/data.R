@@ -80,7 +80,7 @@
 #' (0.10 to 0.20 tonnes per tonne captured for CCS and CCU, 0.01 to
 #' 0.03 for mineralisation), and its CO2 is part of the gross emissions
 #' the capture process treats. The data are synthetic; they mimic
-#' magnitudes, not any real plant. Versions before 0.6.2 shipped this
+#' magnitudes, not any real plant. Versions before 0.7.0 shipped this
 #' panel without abatement and with a small unexplained closure gap in
 #' every row; the values of all columns changed with the regeneration.
 #'
@@ -232,7 +232,7 @@
 #' of 0.953 against a median reported efficiency of 0.950, the
 #' efficiency-implied removal lies within 1.2 per cent of the derived
 #' one for half the plants, and the two rank with a Spearman
-#' correlation of 0.82 across the 141 plants reporting an efficiency.
+#' correlation of 0.82 across the 140 plants reporting an efficiency.
 #' The largest departures are low-sulfur plants, where a small error in
 #' the sulfur share moves the derived share a lot, and the 12 plants
 #' where \code{scrubbed_units < coal_units}. Emissions come from EPA's
@@ -273,7 +273,7 @@
 #'     \code{\link{pgt_tech}}.}
 #'   \item{efficiency}{Reported SO2 removal efficiency at the annual
 #'     operating factor, mean over the plant's operating SO2 control
-#'     units (fraction; \code{NA} for 13 plants).}
+#'     units (fraction; \code{NA} for 14 plants).}
 #'   \item{sorbent}{FGD sorbent quantity (short tons).}
 #'   \item{fgd_mwh}{FGD electricity consumption (MWh).}
 #'   \item{n_fgd}{Number of operating SO2 control units in

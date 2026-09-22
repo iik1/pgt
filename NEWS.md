@@ -1,6 +1,7 @@
-# pgt 0.6.1.9000
+# pgt 0.7.0
 
-Referee-driven documentation and test additions, and a regenerated
+New dataset with an observed abatement output, referee-driven
+documentation and test additions, and a regenerated
 `steeldemo` panel with abatement. No estimator changed, but every
 result computed on `steeldemo` differs from 0.6.1.
 
@@ -27,15 +28,17 @@ result computed on `steeldemo` differs from 0.6.1.
   reported removal efficiency as a cross-check. The account closes by
   construction, so the directional model and the abatement stages of
   the five-component decomposition run on real data.
-* Numerical robustness: the directional kernel (`model = "fdmo"`) and
-  the stage kernel of `pgt_decompose(type = "rodseth")` retry a solve
-  that lp_solve reports as numerically failed on the same programme
-  with all quantities divided by a common scale, scaling the levels
-  back afterwards. The programmes are homogeneous of degree one in the
-  quantities, so results are identical wherever the first solve
-  succeeds; the retry only converts spurious status-5 failures at
-  tonne magnitudes (two rows of the regenerated `steeldemo`) into
-  solutions.
+* Numerical robustness: `pgt()`, `boot_pgt()`, `pgt_decompose()` and
+  `pgt_ml()` now solve every programme on a copy of the technology
+  scaled to unit magnitude and scale level-valued results back. The
+  programmes are homogeneous of degree one in the quantities, so
+  weights, ratio scores and duals are unchanged in exact arithmetic;
+  at tonne magnitudes lp_solve's default scaling could fail, or stop
+  at a suboptimal vertex with status 0 (the decomposition's first
+  stage returned production technical efficiency above 1 for three
+  `steeldemo` plants built without the abatement output), and the
+  rescaled solves remove both. Results can differ from 0.6.1 at the
+  solver's tolerance.
 
 * New `test-invariance.R`: DMU-order invariance and duplicate-DMU
   neutrality for the `wgd`, `wgd_input_fixed` and `envelope` models,

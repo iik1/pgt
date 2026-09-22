@@ -56,10 +56,13 @@ interpretation. Audit before estimation.
 \examples{
 data(steeldemo)
 tech <- pgt_tech(
-  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+  x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux",
+                    "capture_energy")],
   y = steeldemo$production,
   b = steeldemo$emissions,
+  a = steeldemo$captured,
   v = 0.01467,
+  x_abate = "capture_energy",
   group = steeldemo$route,
   id = steeldemo$plant
 )

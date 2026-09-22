@@ -193,10 +193,13 @@
 #' @examples
 #' data(steeldemo)
 #' tech <- pgt_tech(
-#'   x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+#'   x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux",
+#'                     "capture_energy")],
 #'   y = steeldemo$production,
 #'   b = steeldemo$emissions,
+#'   a = steeldemo$captured,
 #'   v = 0.01467,
+#'   x_abate = "capture_energy",
 #'   group = steeldemo$route,
 #'   id = steeldemo$plant
 #' )
@@ -243,7 +246,9 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "wgd_input_fixed",
 
   peer_sets <- .peer_sets(tech, peers)
   L <- tech$L
-  ctx <- .solve_ctx(tech, model, p)
+  # solve on the unit-magnitude copy (see .scale_tech) and scale back
+  sc <- .scale_tech(tech)
+  ctx <- .solve_ctx(sc$tech, model, p)
   weights <- vector("list", L)
   names(weights) <- make.unique(tech$id)
   status <- rep(NA_integer_, L)
@@ -251,7 +256,8 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "wgd_input_fixed",
 
   for (i in seq_len(L)) {
     ps <- peer_sets[[i]]
-    sol <- .lp_solve_one(model, i, tech, ps, vrs, p = p, ctx = ctx)
+    sol <- .unscale_sol(.lp_solve_one(model, i, sc$tech, ps, vrs, p = p,
+                                      ctx = ctx), sc$s)
     sols[[i]] <- sol
     status[i] <- sol$status
     w <- if (model == "byprod") sol$mu else sol$lambda
@@ -272,7 +278,7 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "wgd_input_fixed",
         as.numeric(val[m])
     }, numeric(1))
   }
-  b_p <- ctx$b_p
+  b_p <- tech$b[, p]
 
   # one intended-output column when M = 1, one per named output else;
   # duals follow the same naming

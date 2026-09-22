@@ -89,7 +89,9 @@ steeldemo <- do.call(rbind, lapply(years, function(yr) {
   # Gross emissions E0 include the CO2 of the capture energy, which is
   # itself proportional to the captured tonnage:
   #   E0 = (potential - v y) + pen * r * E0.
-  net <- potential - v * d$production
+  # net of the retained carbon, taken from the summed input columns
+  # rather than `potential` so the shipped identity closes to the bit
+  net <- rowSums(X) - v * d$production
   E0 <- net / (1 - pen * r)
   d$captured <- r * E0
   d$capture_energy <- pen * d$captured

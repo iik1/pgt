@@ -218,7 +218,7 @@
 # z_i = b_i + a_i (uncontrolled = controlled + abatement) the materials
 # balance forces thb = v_i thy.
 .lp_fdmo_one <- function(i, X, y, a, v, z, b, peers, vrs = TRUE,
-                         input_constraints = TRUE, rescaled = FALSE) {
+                         input_constraints = TRUE) {
   L <- length(peers)
   N <- ncol(X)
   # column order: lambda_1..L, thy, thb
@@ -257,27 +257,6 @@
 
   status <- lpSolveAPI::solve.lpExtPtr(lp)
   if (status != 0) {
-    # A numerically failed solve at tonne magnitudes (quantities of
-    # order 1e6-1e7 against a unit VRS row) is retried once on data
-    # divided by a common scale; the programme is homogeneous of degree
-    # one in (X, y, a, z, b), so lambda is unchanged and the thetas
-    # scale back exactly.
-    if (!rescaled) {
-      sc <- max(X[peers, , drop = FALSE], y[peers], a[peers], z[i], b[i],
-                X[i, ], y[i], a[i])
-      if (is.finite(sc) && sc > 0) {
-        sol <- .lp_fdmo_one(i, X / sc, y / sc, a / sc, v, z / sc, b / sc,
-                            peers, vrs = vrs,
-                            input_constraints = input_constraints,
-                            rescaled = TRUE)
-        if (sol$status == 0) {
-          sol$gross <- sol$gross * sc
-          sol$theta_y <- sol$theta_y * sc
-          sol$theta_b <- sol$theta_b * sc
-          return(sol)
-        }
-      }
-    }
     return(list(status = status, gross = NA_real_, theta_y = NA_real_,
                 theta_b = NA_real_, lambda = NULL))
   }
@@ -493,6 +472,32 @@
        dual_output = NA_real_, mb_rhs = NA_real_)
 }
 
+# Every programme in this file is homogeneous of degree one in the
+# quantities (x, y, b, a): dividing them by a common scale leaves the
+# intensity weights, the ratio scores and the output duals unchanged
+# and multiplies the level-valued results by the scale. lp_solve's
+# default scaling can fail, or stop at a suboptimal vertex with status
+# 0, when tonne-magnitude rows (1e6-1e8) meet the unit VRS row, so the
+# fitting functions solve every kernel on a copy of the technology
+# scaled to unit magnitude and scale the levels back with
+# .unscale_sol().
+.scale_tech <- function(tech) {
+  s <- max(c(tech$x, tech$y, tech$b, tech$a))
+  if (!is.finite(s) || s <= 0) s <- 1
+  tech$x <- tech$x / s
+  tech$y <- tech$y / s
+  tech$b <- tech$b / s
+  if (!is.null(tech$a)) tech$a <- tech$a / s
+  list(tech = tech, s = s)
+}
+.unscale_sol <- function(sol, s) {
+  for (f in c("b_star", "z_star", "a_star", "mb_rhs", "gross",
+              "theta_y", "theta_b", "rho")) {
+    if (!is.null(sol[[f]])) sol[[f]] <- sol[[f]] * s
+  }
+  sol
+}
+
 # DMU-invariant quantities of a per-DMU solve loop, computed once per
 # fit and passed to every .lp_solve_one() call (they would otherwise be
 # recomputed L times per fit and L x B times in boot_pgt()).
@@ -586,27 +591,6 @@
                                 hold_xa, hold_a, hold_quality,
                                 scaling = sc)
       if (sol$status == 0) break
-    }
-  }
-  if (sol$status != 0) {
-    # Last resort: the stage programme is homogeneous of degree one in
-    # the quantities (x, y, b, a), so solve it on data divided by a
-    # common scale and scale the levels back; lambda is unchanged.
-    s <- max(tech$x, tech$y, tech$b, tech$a)
-    if (is.finite(s) && s > 0) {
-      tech_s <- tech
-      tech_s$x <- tech$x / s
-      tech_s$y <- tech$y / s
-      tech_s$b <- tech$b / s
-      if (!is.null(tech$a)) tech_s$a <- tech$a / s
-      sol <- .lp_wgd_stage_once(i, tech_s, peers, vrs, p, hold_xp,
-                                hold_xa, hold_a, hold_quality,
-                                scaling = NULL)
-      if (sol$status == 0) {
-        for (f in c("b_star", "z_star", "a_star", "rho")) {
-          sol[[f]] <- sol[[f]] * s
-        }
-      }
     }
   }
   sol

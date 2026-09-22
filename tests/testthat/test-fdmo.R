@@ -109,7 +109,7 @@ test_that("fdmo solves every steeldemo row with capture_energy as control input"
     group = steeldemo$route, id = steeldemo$plant
   )
   # the identity closes exactly, so no row may be infeasible; tonne
-  # magnitudes exercise the rescaled retry of the directional kernel
+  # magnitudes are solved on the unit-magnitude copy of the technology
   r <- pgt(tech, model = "fdmo")$results
   expect_true(all(r$status == 0))
   expect_equal(r$bad_eff, 0.01467 * r$good_eff, tolerance = 1e-6)

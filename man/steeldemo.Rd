@@ -60,7 +60,7 @@ energy: \code{capture_energy} is the CO2 potential of that energy
 (0.10 to 0.20 tonnes per tonne captured for CCS and CCU, 0.01 to
 0.03 for mineralisation), and its CO2 is part of the gross emissions
 the capture process treats. The data are synthetic; they mimic
-magnitudes, not any real plant. Versions before 0.6.2 shipped this
+magnitudes, not any real plant. Versions before 0.7.0 shipped this
 panel without abatement and with a small unexplained closure gap in
 every row; the values of all columns changed with the regeneration.
 }

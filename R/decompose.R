@@ -85,10 +85,13 @@
 #' @examples
 #' data(steeldemo)
 #' tech <- pgt_tech(
-#'   x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux")],
+#'   x = steeldemo[, c("coal_coke", "other_fuel", "raw_material", "flux",
+#'                     "capture_energy")],
 #'   y = steeldemo$production,
 #'   b = steeldemo$emissions,
+#'   a = steeldemo$captured,
 #'   v = 0.01467,
+#'   x_abate = "capture_energy",
 #'   group = steeldemo$route,
 #'   id = steeldemo$plant
 #' )
@@ -122,14 +125,16 @@ pgt_decompose <- function(tech, type = c("envelope", "rodseth"),
   b_p <- tech$b[, p]
   group_sets <- if (!is.null(tech$group)) .peer_sets(tech, "group")
   all_peers <- seq_len(L)
+  # solve on the unit-magnitude copy (see .scale_tech); b_star scales back
+  sc <- .scale_tech(tech)
   if (type == "envelope") {
-    ctx <- .solve_ctx(tech, "envelope", p)
+    ctx <- .solve_ctx(sc$tech, "envelope", p)
     b_group <- b_all <- rep(NA_real_, L)
     for (i in seq_len(L)) {
-      b_group[i] <- .lp_solve_one("envelope", i, tech, group_sets[[i]],
-                                  vrs, p = p, ctx = ctx)$b_star
-      b_all[i] <- .lp_solve_one("envelope", i, tech, all_peers,
-                                vrs, p = p, ctx = ctx)$b_star
+      b_group[i] <- .lp_solve_one("envelope", i, sc$tech, group_sets[[i]],
+                                  vrs, p = p, ctx = ctx)$b_star * sc$s
+      b_all[i] <- .lp_solve_one("envelope", i, sc$tech, all_peers,
+                                vrs, p = p, ctx = ctx)$b_star * sc$s
     }
     results <- data.frame(
       id = tech$id,
@@ -156,9 +161,9 @@ pgt_decompose <- function(tech, type = c("envelope", "rodseth"),
     has_a <- !is.null(tech$a)
     has_xa <- length(tech$x_abate) > 0L
     stage <- function(i, ps, hold_xp, hold_xa, hold_a, hold_q) {
-      .lp_wgd_stage(i, tech, ps, vrs, p = p, hold_xp = hold_xp,
+      .lp_wgd_stage(i, sc$tech, ps, vrs, p = p, hold_xp = hold_xp,
                     hold_xa = hold_xa, hold_a = hold_a,
-                    hold_quality = hold_q)$b_star
+                    hold_quality = hold_q)$b_star * sc$s
     }
     # the abatement output is held at its observed level in the early
     # stages only when it is observed; without abatement data the

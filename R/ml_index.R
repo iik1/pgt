@@ -121,6 +121,8 @@ pgt_ml <- function(tech, technology = c("wd", "input_envelope", "envelope"),
          call. = FALSE)
   }
   use_inputs <- technology == "input_envelope"
+  # the directional distances are ratios: solve on the unit-magnitude copy
+  tech <- .scale_tech(tech)$tech
 
   b_p <- tech$b[, p]
   periods <- levels(tech$period)

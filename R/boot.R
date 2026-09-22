@@ -120,8 +120,10 @@
 #' data(steeldemo)
 #' steel60 <- steeldemo[steeldemo$year == 2021, ]
 #' tech <- pgt_tech(
-#'   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
-#'   y = steel60$production, b = steel60$emissions, v = 0.01467,
+#'   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux",
+#'                   "capture_energy")],
+#'   y = steel60$production, b = steel60$emissions, a = steel60$captured,
+#'   v = 0.01467, x_abate = "capture_energy",
 #'   group = steel60$route, id = steel60$plant
 #' )
 #' \donttest{
@@ -182,6 +184,8 @@ boot_pgt <- function(tech, model = c("wgd", "wgd_input_fixed",
     set.seed(seed)
   }
 
+  # scores are ratios, so solve on the unit-magnitude copy throughout
+  tech <- .scale_tech(tech)$tech
   ctx <- .solve_ctx(tech, model, p)
   point <- .model_efficiency(tech, model, vrs, p,
                              .peer_sets(tech, peers), ctx)
@@ -338,8 +342,10 @@ boot_pgt <- function(tech, model = c("wgd", "wgd_input_fixed",
 #' data(steeldemo)
 #' steel60 <- steeldemo[steeldemo$year == 2021, ]
 #' tech <- pgt_tech(
-#'   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux")],
-#'   y = steel60$production, b = steel60$emissions, v = 0.01467,
+#'   x = steel60[, c("coal_coke", "other_fuel", "raw_material", "flux",
+#'                   "capture_energy")],
+#'   y = steel60$production, b = steel60$emissions, a = steel60$captured,
+#'   v = 0.01467, x_abate = "capture_energy",
 #'   id = steel60$plant
 #' )
 #' \donttest{
