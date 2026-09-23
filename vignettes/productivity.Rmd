@@ -155,30 +155,43 @@ aggregates of efficiency scores).
 The heuristic label invites the obvious question: how close to nominal
 do these intervals get when the truth is known? The package ships a
 Monte Carlo study (`inst/simulations/coverage.R`) for the envelope
-model under a data-generating process with a known linear frontier
-$b_{\min}(y) = 2 + 0.5y$ and exponential inefficiency, where the true
-score $\theta = b_{\min}(y)/b$ is the estimand. Two hundred replicates
-per sample size, `B = 100`, nominal level 95 per cent; the table
-reports the precomputed results shipped with the package.
+model with exponential inefficiency and two known frontiers, the
+affine $b_{\min}(y) = 2 + 0.5y$ and the curved
+$b_{\min}(y) = 1 + 0.05y^2$, where the true score
+$\theta = b_{\min}(y)/b$ is the estimand. Two hundred replicates per
+cell, `B = 100`, nominal level 95 per cent. A unit gets no interval
+when fewer than `B/2` of its subsample programmes are feasible, so the
+study reports availability, coverage among units with an interval
+("given interval") and the share of all units whose interval exists
+and covers ("delivered"). The table shows the cells at the defaults
+$m = \mathrm{round}(L^{0.7})$ and $\kappa = 2/3$ from the precomputed
+results shipped with the package.
 
 ```{r, echo = FALSE}
 cov <- read.csv(system.file("simulations", "coverage-results.csv",
                             package = "pgt"))
+dflt <- abs(cov$kappa - 2 / 3) < 1e-9 & cov$m == round(cov$L^0.7)
 knitr::kable(
-  cov[, c("L", "reps", "coverage_all", "coverage_frontier",
-          "coverage_interior", "coverage_group_means")],
-  digits = 3,
-  col.names = c("L", "replicates", "all DMUs", "frontier (theta > 0.9)",
-                "interior", "group means")
+  cov[dflt, c("dgp", "L", "available", "coverage_cond",
+              "coverage_delivered", "coverage_frontier",
+              "coverage_interior", "coverage_group_means")],
+  digits = 3, row.names = FALSE,
+  col.names = c("frontier", "L", "available", "given interval",
+                "delivered", "frontier (theta > 0.9)", "interior",
+                "group means")
 )
 ```
 
-Empirical coverage sits near the nominal 95 per cent for both sample
-sizes, for frontier and interior units alike, and errs on the
-conservative side at the larger sample. One simulation under one
-data-generating process is evidence, not proof: the DEA rate remains
-borrowed for the materials-balance programmes, which is why the
-intervals keep their heuristic label.
+On the affine frontier the intervals over-cover, and on the curved one
+they under-cover by two to three points at both sample sizes. The
+missing intervals fall on the units with the largest output. The
+shipped results also vary `m` and `kappa` at `L = 100`: a larger
+subsample or a faster rate narrows the intervals and lowers coverage,
+to 0.77 under `kappa = 1` on the curved frontier. One simulation
+design is evidence, not proof: the DEA rate remains borrowed for the
+materials-balance programmes, which is why the intervals keep their
+heuristic label and why `boot_pgt_sensitivity()` belongs in the
+workflow.
 
 ## References
 
