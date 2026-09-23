@@ -102,16 +102,37 @@ comparison
 
 Farms A, B and D are on the frontier (gross inefficiency 0), and farm C
 expands its good output by 3 and cuts its bad output by 3.5, a gross
-inefficiency of 6.5: farms A to D reproduce Table 3 exactly. Farm E is
-the one divergence, shown side by side above. The paper prints
-$(\theta_y, \theta_b) = (0.8, 1.0)$; the package returns
-$(0.789, 0.921)$. The two cannot both be exact: whenever the
-uncontrolled emission equals controlled plus abatement, the
-materials-balance row forces $\theta_b = v\,\theta_y$ for every farm,
-and $7/6 \times 0.8 \approx 0.93$, not $1.0$. The package's pair
-satisfies the forced ratio to machine precision, so we read the printed
-row as rounded; farm E's maximal good output still rounds to the
-paper's 10.8.
+inefficiency of 6.5: farms A to D reproduce Table 3. Farm E is the one
+divergence, shown side by side above. The paper prints
+$(\theta_y, \theta_b) = (0.8, 1.0)$; on the printed data the package
+returns $(0.789, 0.921)$, the exact optimum of the programme. The
+paper's data are printed to one decimal, so the divergence is
+conditional on treating them as exact. Common coefficients
+$v = 7/6$, $u_{\text{feed}} = 31/25$ and $u_{\text{piglet}} = 349/300$,
+with the printed inputs, meat and controlled emissions, give
+uncontrolled emissions and abatement that round to the printed columns,
+and a fitted Table 3 whose every row, farm E included, rounds to the
+printed one:
+
+```{r}
+u_c <- c(feed = 31 / 25, piglet = 349 / 300, labor = 0, capital = 0)
+x_pig <- as.matrix(pigfarms[, names(u_c)])
+z_c <- as.vector(x_pig %*% u_c) - v * pigfarms$meat
+a_c <- z_c - pigfarms$controlled
+c(uncontrolled = all(round(z_c, 1) == pigfarms$uncontrolled),
+  abatement = all(round(a_c, 1) == pigfarms$abatement))
+rc <- pgt(pgt_tech(x = x_pig, y = pigfarms$meat, b = pigfarms$controlled,
+                   u = u_c, v = v, a = a_c, id = pigfarms$farm),
+          model = "fdmo")$results
+data.frame(farm = rc$id, gross = round(rc$gross, 3),
+           good_eff = round(rc$good_eff, 3),
+           bad_eff = round(rc$bad_eff, 3),
+           maximal_y = round(rc$maximal_y, 3))
+```
+
+These coefficients are one set consistent with the printed data, not
+necessarily the paper's own; the farm E row can be confirmed only with
+the unrounded data.
 
 ## Murty, Russell and Levkoff (2012): the by-production example
 

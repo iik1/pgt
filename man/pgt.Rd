@@ -104,11 +104,14 @@ over the output rows \eqn{\sum_l \lambda_l y_{ml} \ge y_{mi}}
 and the returns-to-scale row, valued at the DMU's own
 coefficients \eqn{v_i}. Self-reference is always feasible, so
 every score lies in \eqn{(0, 1]}. When the abatement output
-\code{a} is observed, the optimal peer mix also delivers the
-implied uncontrolled emission \code{z_star}
-\eqn{= \sum_l \lambda_l z_l} and abatement \code{a_star}
-\eqn{= \sum_l \lambda_l a_l}, the Table 2 quantities of Rodseth
-(2025). \code{model = "wgd_rodseth"} is an alias.}
+\code{a} is observed, the fit also reports the projection's
+abatement \code{a_star} \eqn{= \sum_l \lambda_l a_l} and implied
+uncontrolled emission \code{z_star}
+\eqn{= \sum_l \lambda_l z_l + v_i'(\sum_l \lambda_l y_l - y_i)},
+the Table 2 quantities of Rodseth (2025): the retained content of
+the output overshoot is disposed of as emission, so
+\code{z_star - a_star} equals \code{b_star} whenever the peers'
+accounts close. \code{model = "wgd_rodseth"} is an alias.}
 \item{\code{"wgd_input_fixed"}}{The input-fixed companion benchmark
 (the model estimated as \code{"wgd"} before version 0.6.0):
 minimise the bad output subject to output feasibility, the input
@@ -135,13 +138,18 @@ maximises the expansion of the good output (\eqn{\theta_y}) and
 the contraction of the bad output (\eqn{\theta_b}) along the
 materials-balance frontier; gross inefficiency is
 \eqn{\theta_y + \theta_b}, with 0 for a frontier DMU. The gross
-score adds good-output units to bad-output units (direction
-\eqn{(1, 1)}), so it is unit-dependent and comparable only
-within one unit system, as in Rodseth's Table 3; rescaling
-\code{y} or \code{b} changes the direction's implicit weighting
-and can change the optimiser, not merely the reported number. Requires an
-abatement output \code{a} in \code{\link[=pgt_tech]{pgt_tech()}} and a single intended
-output. The model imposes the
+score adds good-output units to bad-output units, so the reported
+number is unit-dependent and comparable only within one unit
+system, as in Rodseth's Table 3. The optimum is not: the balance
+row fixes \eqn{\theta_b = v_i\theta_y - g_i} (closure gap
+\eqn{g_i}), so the programme maximises \eqn{\theta_y}, and a
+coherent change of the units of \code{y} and \code{b} leaves the
+projection unchanged. The row \eqn{\theta_b \le b_i} keeps the
+projected emission non-negative; it is the package's addition for
+producer-specific coefficients (Rodseth derives Eq. 14 for common
+coefficients, under which, with closed accounts, it never binds).
+Requires an abatement output \code{a} in \code{\link[=pgt_tech]{pgt_tech()}} and a
+single intended output. The model imposes the
 materials-balance identity as an exact equality
 \eqn{u'x_l - v y_l = b_l + a_l}: accounts that do not close
 exactly either make the LP infeasible or shift the closure gap

@@ -33,6 +33,51 @@
   `"wgd_input_fixed"` programmes are reported infeasible. The tests
   mock an internal kernel, so `testthat (>= 3.1.7)` is suggested.
 
+* `model = "fdmo"` adds the row `theta_b <= b` (projected emission
+  non-negative). Rodseth's Eq. 14 is derived for coefficients common
+  to all units; with producer-specific coefficients the balance row
+  applies the evaluated unit's coefficients to a peer mix of units with
+  other coefficients, and a unit whose inputs carry little pollutant
+  could borrow a pollutant-rich peer's output and receive a negative
+  projected emission (two closed accounts suffice). Under common
+  coefficients and closed accounts the row never binds, so the
+  `pigfarms` Table 3 replication and every closed-account result with
+  common coefficients are unchanged.
+
+* `model = "wgd"`: `z_star` now adds the retained content of the output
+  overshoot, `z_star = sum(lambda * z) + v_i'(sum(lambda * y) - y_i)`,
+  so that `z_star - a_star = b_star` whenever the peers' accounts
+  close. The earlier `z_star` was the peer mix of caps alone and did
+  not match `b_star` when the optimal mix produced more than the unit
+  with `v > 0`. `b_star` and the scores are unchanged, and so is the
+  `pigfarms` Table 2 replication (`v = 0`).
+
+* `compare_models()` ranks scores within 1e-8 of each other as ties
+  in the Spearman matrix and the bottom-quartile overlap. Efficient
+  units score 1 up to solver noise (below 1e-9 on the shipped data),
+  and ranking that noise made the correlations depend on the solver
+  build: `mb_cost`-`wd` on `uscoal` was 0.221 with one 0.7.0 build and
+  0.247 with another. The returned `scores` are unrounded.
+
+* The Monte Carlo study `inst/simulations/coverage.R` now records
+  interval availability (`boot_pgt()` returns `NA` bounds when fewer
+  than `B/2` subsample LPs are feasible, which under VRS hits the units
+  with the largest output), reports coverage among units with an
+  interval and the share of all units whose interval exists and
+  covers, adds a curved frontier to the affine one and an `m` and
+  `kappa` sensitivity at `L = 100`, keeps per-replication results in
+  `coverage-reps.csv`, and reports Monte Carlo standard errors across
+  replications.
+
+* Documentation: the unit dependence of the `"fdmo"` gross score ends
+  at the reported sum. The balance row fixes `theta_b` given
+  `theta_y`, so the programme maximises `theta_y` and a coherent change
+  of units leaves the optimum unchanged; the earlier help text said
+  the optimiser could change. The replication vignette no longer calls
+  the farm E row of Rodseth's Table 3 inconsistent with a common `v`:
+  the paper prints one decimal, and common coefficients within that
+  rounding reproduce every printed row, as a new test asserts.
+
 # pgt 0.7.0
 
 New dataset with an observed abatement output, referee-driven
