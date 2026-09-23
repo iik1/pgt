@@ -61,6 +61,29 @@ test_that("fdmo bad-output efficiency equals v * good-output efficiency", {
   expect_equal(round(e$maximal_y, 1), 10.8)
 })
 
+test_that("common coefficients within the paper's rounding reproduce all of Table 3", {
+  # The paper prints one decimal, so the farm E divergence on the printed
+  # data is conditional. Common coefficients v = 7/6, u_feed = 31/25 and
+  # u_piglet = 349/300 with the printed inputs, meat and controlled
+  # emissions give uncontrolled emissions and abatement that round to
+  # Table 1, and every fitted row, farm E included, rounds to Table 3.
+  data(pigfarms, package = "pgt", envir = environment())
+  v <- 7 / 6
+  u <- c(feed = 31 / 25, piglet = 349 / 300, labor = 0, capital = 0)
+  x <- as.matrix(pigfarms[, names(u)])
+  z <- as.vector(x %*% u) - v * pigfarms$meat
+  a <- z - pigfarms$controlled
+  expect_equal(round(z, 1), pigfarms$uncontrolled)
+  expect_equal(round(a, 1), pigfarms$abatement)
+  r <- pgt(pgt_tech(x = x, y = pigfarms$meat, b = pigfarms$controlled,
+                    u = u, v = v, a = a, id = pigfarms$farm),
+           model = "fdmo")$results
+  expect_equal(round(r$gross, 1), c(0, 0, 6.5, 0, 1.8))
+  expect_equal(round(r$good_eff, 1), c(0, 0, 3, 0, 0.8))
+  expect_equal(round(r$bad_eff, 1), c(0, 0, 3.5, 0, 1.0))
+  expect_equal(round(r$maximal_y, 1), c(10, 7, 10, 11, 10.8))
+})
+
 test_that("fdmo requires an abatement output", {
   data(pigfarms, package = "pgt", envir = environment())
   tech <- pgt_tech(
@@ -113,4 +136,20 @@ test_that("fdmo solves every steeldemo row with capture_energy as control input"
   r <- pgt(tech, model = "fdmo")$results
   expect_true(all(r$status == 0))
   expect_equal(r$bad_eff, 0.01467 * r$good_eff, tolerance = 1e-6)
+})
+
+test_that("fdmo keeps projected emissions non-negative under heterogeneous coefficients", {
+  # Two closed accounts (u x - v y = b + a) with different input
+  # coefficients. Without the admissibility row unit A (u = 0.2) borrows
+  # B's output 9 and contracts its emission by 8, to -7; with it the
+  # contraction stops at A's own emission: theta_y = theta_b = 1.
+  tech <- pgt_tech(x = matrix(c(10, 10), 2, 1), y = c(1, 9), b = c(1, 1),
+                   a = c(0, 0), u = matrix(c(0.2, 1), 2, 1), v = c(1, 1),
+                   id = c("A", "B"))
+  r <- pgt(tech, model = "fdmo")$results
+  expect_equal(r$status, c(0L, 0L))
+  expect_true(all(r$b - r$bad_eff >= -1e-8))
+  expect_equal(r$good_eff, c(1, 0), tolerance = 1e-8)
+  expect_equal(r$bad_eff, c(1, 0), tolerance = 1e-8)
+  expect_equal(r$gross, c(2, 0), tolerance = 1e-8)
 })

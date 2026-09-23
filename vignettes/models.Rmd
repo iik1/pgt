@@ -42,12 +42,14 @@ produced beyond the unit's own levels, valued at the unit's own
 coefficients $v_i$. Self-reference is always feasible, so every score
 $b^*_i/b_i$ lies in $(0, 1]$, and a materials-balance violation in the
 data does not affect the programme (the audit in `mb_check()` remains
-a data-quality check). When the abatement output is observed the
-optimal peer mix also delivers the projection's implied uncontrolled
-emission $z^* = \sum_l \lambda_l z_l$, with
-$z_l = u_l'x_l - v_l'y_l$ the peer's materials-balance cap
-(equal to $b_l + a_l$ when the peer's account closes), and abatement
-$a^* = \sum_l \lambda_l a_l$. Correspondence to the paper is exercised
+a data-quality check). When the abatement output is observed the fit
+also reports the projection's abatement, held at the peer mix,
+$a^* = \sum_l \lambda_l a_l$, and its implied uncontrolled emission
+$z^* = \sum_l \lambda_l z_l + v_i'(\sum_l \lambda_l y_l - y_i)$, with
+$z_l = u_l'x_l - v_l'y_l$ the peer's materials-balance cap: the
+retained content of the output overshoot is disposed of as emission,
+so $z^* - a^* = b^*_i$ whenever every peer's account closes
+($z_l = b_l + a_l$). Correspondence to the paper is exercised
 numerically: the programme reproduces the Table 2 minima of Rødseth
 (2025) and agrees with an independent reference implementation in the
 test suite. The reported output duals are the total derivatives
@@ -117,7 +119,8 @@ $$
 & \textstyle\sum_l \lambda_l y_l - \theta_y \ge y_i, \\
 & \textstyle\sum_l \lambda_l a_l \ge a_i, \\
 & \textstyle\sum_l \lambda_l x_{nl} \le x_{ni}, \qquad n = 1, \dots, N,\\
-& v_i\,\theta_y - \theta_b = c_{pi} - b_i - a_i, \\
+& v_i\,\theta_y - \theta_b = c_{pi} - b_i - a_i, \qquad
+  \theta_b \le b_i, \\
 & \textstyle\sum_l \lambda_l = 1, \qquad
   \lambda \ge 0,\ \theta_y \ge 0,\ \theta_b \ge 0.
 \end{aligned}
@@ -128,8 +131,23 @@ either make the programme infeasible or shift the closure gap into the
 scores, and `pgt()` warns when it detects them. When the account
 closes, the row forces $\theta_b = v_i\,\theta_y$. The gross
 inefficiency $\theta_y + \theta_b$ adds good-output units to bad-output
-units (direction $(1, 1)$), so it is unit-dependent. The model is
-defined for a single intended output.
+units, so the reported number is unit-dependent. The optimum is not:
+with closure gap $g_i = c_{pi} - b_i - a_i$ the balance row sets
+$\theta_b = v_i\,\theta_y - g_i$, the objective equals
+$(1 + v_i)\,\theta_y - g_i$, and a coherent change of units rescales
+it to $(s + r v_i)\,\theta_y - r g_i$ with the same maximiser. The
+model is defined for a single intended output.
+
+Rødseth derives the programme for coefficients common to all units
+(his Proposition 3 assumes no input or output quality differences).
+The row $\theta_b \le b_i$ is the package's addition for
+producer-specific coefficients: the balance row applies the evaluated
+unit's coefficients to a peer mix whose members carry other
+coefficients, and without the row a unit whose inputs carry little
+pollutant could borrow a pollutant-rich peer's output and receive a
+negative projected emission. With common coefficients and closed
+accounts the projected emission is at least the peer mix's emission
+$\sum_l \lambda_l b_l \ge 0$, so the row never binds.
 
 ## The decomposition stage programmes (`pgt_decompose(type = "rodseth")`)
 

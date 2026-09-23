@@ -43,11 +43,13 @@
 #
 # with the evaluated unit's own coefficients v_i (Eq. 9 form under
 # producer-specific coefficients). Self-reference is always feasible,
-# so scores b*/b lie in (0, 1] with no feasibility screen. The optimal
-# peer mix also delivers the implied uncontrolled emission
-# z* = sum lambda z_l, abatement a* = sum lambda a_l (when observed)
-# and input point x* = sum lambda x_l, the quantities in the paper's
-# Table 2. The reported output duals are the total derivatives
+# so scores b*/b lie in (0, 1] with no feasibility screen. With an
+# observed abatement output the optimal peer mix also delivers the
+# projection's abatement a* = sum lambda a_l and implied uncontrolled
+# emission z* = sum lambda z_l + v_i'(sum lambda y_l - y_i), the
+# quantities in the paper's Table 2: the retained content of the output
+# overshoot is disposed of as emission, so z* - a* = b* whenever the
+# peers' accounts close (z_l = b_l + a_l). The reported output duals are the total derivatives
 # d b*/d y_mi = mu_m - v_mi, where mu_m is the output-row dual; they
 # can be negative when the retained content v is large (producing more
 # output binds more pollutant into the product).
@@ -82,7 +84,9 @@
     b_star = lpSolveAPI::get.objective(lp) - sum(v_i * Y[i, ]),
     lambda = lambda,
     dual_output = duals[seq_len(M)] - v_i,
-    z_star = if (is.null(z)) NA_real_ else sum(lambda * z[peers]),
+    z_star = if (is.null(z)) NA_real_ else
+      sum(lambda * z[peers]) +
+        sum(v_i * (crossprod(Y[peers, , drop = FALSE], lambda) - Y[i, ])),
     a_star = if (is.null(a)) NA_real_ else sum(lambda * a[peers])
   )
 }
@@ -210,6 +214,7 @@
 #        sum_l lambda_l x_nl              <= x_ni  (n=1..N)
 #        v_i thy - thb                     = z_i - b_i - a_i (materials
 #                                                            balance)
+#        thb                              <= b_i           (admissibility)
 #        sum_l lambda_l                    = 1             (VRS)
 #        lambda, thy, thb >= 0
 #
@@ -222,6 +227,15 @@
 # efficiency thb, and the maximal good output is y_i + thy. When
 # z_i = b_i + a_i (uncontrolled = controlled + abatement) the materials
 # balance forces thb = v_i thy.
+#
+# The admissibility row (projected emission b_i - thb >= 0) is the
+# package's addition: Eq. 14 is derived for coefficients common to all
+# DMUs (Proposition 3 assumes no quality differences), under which, with
+# closed accounts, the projection emits at least sum_l lambda_l b_l >= 0
+# and the row never binds. With producer-specific coefficients the
+# balance row applies u_i, v_i to peers carrying other coefficients, and
+# a DMU whose inputs carry little pollutant could otherwise borrow a
+# pollutant-rich peer's output and contract its emission below zero.
 .lp_fdmo_one <- function(i, X, y, a, v, z, b, peers, vrs = TRUE,
                          input_constraints = TRUE) {
   L <- length(peers)
@@ -259,6 +273,8 @@
     lpSolveAPI::add.constraint(lp, r, "=", 1)
   }
   lpSolveAPI::set.bounds(lp, lower = rep(0, ncol_lp))
+  # admissibility: thb <= b_i
+  lpSolveAPI::set.bounds(lp, upper = b[i], columns = ithb)
 
   status <- lpSolveAPI::solve.lpExtPtr(lp)
   if (status != 0) {

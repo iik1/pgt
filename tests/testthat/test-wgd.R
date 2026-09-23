@@ -248,3 +248,18 @@ test_that("wgd agrees with an independent reference implementation", {
 
   expect_equal(fit$results$b_star, ref, tolerance = 1e-8)
 })
+
+test_that("z_star - a_star = b_star on closed accounts with an output overshoot", {
+  # Both accounts close (u'x - v y = b + a). Unit A (y = 1) takes B
+  # (y = 2) as its peer: b* = 1 + 0.5 * (2 - 1) = 1.5. The peer caps mix
+  # to 2, and the overshoot's retained content 0.5 is disposed of as
+  # emission, so z* = 2.5 and z* - a* = b*.
+  tech <- pgt_tech(x = matrix(c(3.5, 3), 2, 1), y = c(1, 2), b = c(2, 1),
+                   a = c(1, 1), u = 1, v = 0.5, id = c("A", "B"))
+  expect_equal(attr(mb_check(tech), "n_violations"), 0L)
+  r <- pgt(tech, model = "wgd")$results
+  expect_equal(r$b_star, c(1.5, 1), tolerance = 1e-8)
+  expect_equal(r$z_star, c(2.5, 2), tolerance = 1e-8)
+  expect_equal(r$a_star, c(1, 1), tolerance = 1e-8)
+  expect_equal(r$z_star - r$a_star, r$b_star, tolerance = 1e-8)
+})

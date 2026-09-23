@@ -38,7 +38,7 @@ test_that("bottom_q_overlap is the model's own worst-quartile share", {
   expect_true(all(ag$bottom_q_overlap >= -1e-9 &
                     ag$bottom_q_overlap <= 1 + 1e-9, na.rm = TRUE))
   # Definition: |bottom_m intersect bottom_wgd| / |bottom_m|.
-  s <- cmp$scores
+  s <- lapply(cmp$scores[cmp$models], pgt:::.tie_scores)
   ref_bottom <- s$wgd <= stats::quantile(s$wgd, 0.25, na.rm = TRUE)
   mb <- s$mb_cost <= stats::quantile(s$mb_cost, 0.25, na.rm = TRUE)
   expect_equal(ag$bottom_q_overlap[ag$model == "mb_cost"],
@@ -74,4 +74,19 @@ test_that("print.pgt_compare never reports a self-comparison", {
   out <- paste(capture.output(print(cmp)), collapse = "\n")
   expect_false(grepl("wgd vs wgd", out))
   expect_false(grepl("wd vs wd", out))
+})
+
+test_that("near-tied scores rank as ties, so solver noise cannot reorder them", {
+  s <- c(1, 1 - 5e-10, 0.5, 1 - 3e-10, NA, 0.5 + 1e-6)
+  expect_equal(pgt:::.tie_scores(s),
+               c(rep(1 - 5e-10, 2), 0.5, 1 - 5e-10, NA, 0.5 + 1e-6))
+  # two copies differing only by noise below the tolerance rank
+  # identically; ranked raw, the noise reorders the efficient block
+  set.seed(1)
+  base <- c(rep(1, 20), seq(0.3, 0.9, length.out = 20))
+  s1 <- base - runif(40, 0, 1e-9) * (base == 1)
+  s2 <- base - runif(40, 0, 1e-9) * (base == 1)
+  expect_lt(stats::cor(s1, s2, method = "spearman"), 1)
+  expect_equal(stats::cor(pgt:::.tie_scores(s1), pgt:::.tie_scores(s2),
+                          method = "spearman"), 1)
 })

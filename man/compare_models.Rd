@@ -69,7 +69,14 @@ Because the scores measure different quantities, only the rank-based
 statistics (the Spearman matrix and the bottom-quartile overlap) are
 strictly comparable across models; the median column is a per-model
 summary. Rank agreement is measured by Spearman correlation over the
-DMUs solved by both members of each pair. Note that
+DMUs solved by both members of each pair. Before ranking, scores
+that lie within \eqn{10^{-8}} of their neighbour in sorted order are
+treated as tied (a run of such scores takes the run's smallest
+value). The LP optima carry solver noise far below that tolerance,
+and ranking the noise among efficient DMUs, whose scores equal 1 up
+to that noise, makes the correlations and the bottom-quartile
+overlap depend on the solver build; the reported \code{scores} stay
+unrounded. Note that
 \code{"wgd_input_fixed"} scores can exceed 1 for DMUs violating another
 pollutant's materials-balance identity (see \code{\link[=pgt]{pgt()}}); such DMUs
 enter the comparison unflagged.
