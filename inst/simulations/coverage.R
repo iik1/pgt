@@ -36,7 +36,7 @@
 # standard errors sd / sqrt(R) across replications.
 #
 # Run from the package root:  Rscript inst/simulations/coverage.R
-# (about 20 minutes on 12 worker processes). Results:
+# (46 minutes on 12 worker processes of a laptop). Results:
 # inst/simulations/coverage-reps.csv (one row per replication and cell)
 # and inst/simulations/coverage-results.csv (cell summaries, read by the
 # R Journal article's Table 3).
