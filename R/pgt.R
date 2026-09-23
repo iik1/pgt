@@ -143,7 +143,9 @@
 #'       be negative when the retained-content coefficient is large),
 #'       \code{z_star} and \code{a_star} (only when \code{a} is
 #'       observed) and \code{status}, the \code{lp_solve} solver code
-#'       (0 = solved; 2 = infeasible; 5 = numerically failed). For
+#'       (0 = solved; 2 = infeasible; 5 = numerically failed; 1 =
+#'       suboptimal: every solve attempt returned \eqn{b^* > b} although
+#'       self-reference is feasible, so the scores are \code{NA}). For
 #'       \code{"wgd_input_fixed"}, \code{"envelope"} and \code{"wd"}: the
 #'       same score columns with non-negative output duals (\code{NA}
 #'       for \code{"wd"}, which reports no duals) and
@@ -372,6 +374,13 @@ pgt <- function(tech, model = c("wgd", "wgd_rodseth", "wgd_input_fixed",
       fdmo = paste0(" For model = \"fdmo\" this flags DMUs whose ",
                     "accounts do not close exactly; run mb_check()."),
       "")
+    n_subopt <- sum(status == 1L)
+    if (n_subopt > 0) {
+      hint <- paste0(sprintf(paste0(
+        " %d of them (status 1) returned b* > b although self-reference ",
+        "is feasible, under every lp_solve setting tried."), n_subopt),
+        hint)
+    }
     warning(sprintf(
       "%d of %d LPs infeasible or failed; their scores are NA.%s",
       n_failed, L, hint), call. = FALSE)

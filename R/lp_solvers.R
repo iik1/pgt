@@ -52,12 +52,13 @@
 # can be negative when the retained content v is large (producing more
 # output binds more pollutant into the product).
 .lp_wgd_one <- function(i, Y, b, v_i, peers, vrs = TRUE,
-                        z = NULL, a = NULL) {
+                        z = NULL, a = NULL, control = NULL) {
   L <- length(peers)
   M <- ncol(Y)
 
   lp <- lpSolveAPI::make.lp(nrow = 0, ncol = L)
   invisible(lpSolveAPI::lp.control(lp, sense = "min"))
+  .lp_set_control(lp, control)
   penalty <- as.vector(Y[peers, , drop = FALSE] %*% v_i)
   lpSolveAPI::set.objfn(lp, b[peers] + penalty)
   for (m in seq_len(M)) {
@@ -107,13 +108,15 @@
 # violating DMUs.
 .lp_wgd_input_fixed_one <- function(i, X, Y, b, mb_rhs, peers, vrs = TRUE,
                                  input_constraints = TRUE,
-                                 b_other = NULL, cap_other = NULL) {
+                                 b_other = NULL, cap_other = NULL,
+                                 control = NULL) {
   L <- length(peers)
   N <- ncol(X)
   M <- ncol(Y)
 
   lp <- lpSolveAPI::make.lp(nrow = 0, ncol = L + 1)
   invisible(lpSolveAPI::lp.control(lp, sense = "min"))
+  .lp_set_control(lp, control)
   lpSolveAPI::set.objfn(lp, c(rep(0, L), 1))
 
   for (m in seq_len(M)) {
@@ -166,11 +169,12 @@
 # emissions follow the pollutant they carry), so the program reduces to
 # the convex lower envelope of the (y, b) scatter. Self-reference is
 # always feasible, so scores b*/b lie in (0, 1] with no screen.
-.lp_envelope_one <- function(i, Y, b, peers, vrs = TRUE) {
+.lp_envelope_one <- function(i, Y, b, peers, vrs = TRUE, control = NULL) {
   L <- length(peers)
   M <- ncol(Y)
   lp <- lpSolveAPI::make.lp(nrow = 0, ncol = L)
   invisible(lpSolveAPI::lp.control(lp, sense = "min"))
+  .lp_set_control(lp, control)
   lpSolveAPI::set.objfn(lp, b[peers])
   for (m in seq_len(M)) {
     lpSolveAPI::add.constraint(lp, Y[peers, m], ">=", Y[i, m])
@@ -499,6 +503,64 @@
   sol
 }
 
+# Even on the scaled copy lp_solve can report a numerical failure
+# (status 5) for an infeasible programme, or stop at a suboptimal vertex
+# with status 0. A retry rebuilds the LP (re-solving a failed LP object
+# carries solver state into the retry) under progressively stronger
+# scalings, then the primal simplex, each under a time limit since
+# these settings can cycle when applied unconditionally. The default
+# settings stay first, so every solve they get right is unchanged.
+.lp_alt_controls <- list(
+  list(scaling = c("range", "equilibrate", "dynupdate")),
+  list(scaling = c("extreme", "equilibrate", "dynupdate")),
+  list(simplextype = c("primal", "primal"))
+)
+.lp_set_control <- function(lp, control) {
+  if (length(control)) {
+    invisible(do.call(lpSolveAPI::lp.control,
+                      c(list(lp), control, list(timeout = 10))))
+  }
+}
+
+# Acceptance test of one solve. When self-reference is feasible (the
+# evaluated unit is among its peers in wgd, envelope and every
+# decomposition stage, and in wgd_input_fixed when it also meets its
+# caps) the unit's own observation attains b_i, so a valid solve has
+# status 0 and b* <= b_i; infeasibility or b* > b_i marks a failed or
+# suboptimal solve. Elsewhere a solve is accepted once lp_solve returns
+# a definitive status (0 = optimal, 2 = infeasible). The tolerance is
+# relative to the unit magnitude of the scaled data.
+.lp_ok <- function(b_i, self_feasible) {
+  if (!self_feasible) return(function(sol) sol$status %in% c(0L, 2L))
+  function(sol) sol$status == 0 && .within_cap(sol$b_star, b_i)
+}
+.within_cap <- function(b, cap) b <= cap + 1e-8 * (abs(cap) + 1)
+
+# Solve with lp_solve's default settings and retry under the
+# alternative ones until ok() accepts a solution. `solve(control)`
+# builds and solves a fresh LP. If every attempt solves but violates the
+# self-reference bound, the result is reported with lp_solve's
+# SUBOPTIMAL code 1 and NA values; if none solves, the first attempt's
+# status is returned.
+.lp_retry <- function(solve, ok) {
+  sol <- solve(NULL)
+  if (ok(sol)) return(sol)
+  tries <- list(sol)
+  for (ctrl in .lp_alt_controls) {
+    alt <- solve(ctrl)
+    if (ok(alt)) return(alt)
+    tries <- c(tries, list(alt))
+  }
+  solved <- Filter(function(s) s$status == 0, tries)
+  if (!length(solved)) return(sol)
+  out <- solved[[1]]
+  num <- vapply(out, is.numeric, logical(1))
+  out[num] <- lapply(out[num], function(v) rep(NA_real_, length(v)))
+  out$lambda <- NULL
+  out$status <- 1L
+  out
+}
+
 # DMU-invariant quantities of a per-DMU solve loop, computed once per
 # fit and passed to every .lp_solve_one() call (they would otherwise be
 # recomputed L times per fit and L x B times in boot_pgt()).
@@ -534,15 +596,25 @@
 .lp_solve_one <- function(model, i, tech, peers, vrs, p = 1L,
                           input_constraints = TRUE, ctx = NULL) {
   if (is.null(ctx)) ctx <- .solve_ctx(tech, model, p)
+  self <- i %in% peers
   switch(
     model,
-    wgd = .lp_wgd_one(i, tech$y, ctx$b_p, ctx$v_p[i, ], peers,
-                      vrs = vrs, z = ctx$z, a = ctx$a_p),
-    wgd_input_fixed = .lp_wgd_input_fixed_one(
-      i, tech$x, tech$y, ctx$b_p, ctx$mb_cap, peers, vrs = vrs,
-      input_constraints = input_constraints,
-      b_other = ctx$b_other, cap_other = ctx$cap_other),
-    envelope = .lp_envelope_one(i, tech$y, ctx$b_p, peers, vrs = vrs),
+    wgd = .lp_retry(function(ctrl) {
+      .lp_wgd_one(i, tech$y, ctx$b_p, ctx$v_p[i, ], peers, vrs = vrs,
+                  z = ctx$z, a = ctx$a_p, control = ctrl)
+    }, .lp_ok(ctx$b_p[i], self)),
+    wgd_input_fixed = .lp_retry(function(ctrl) {
+      .lp_wgd_input_fixed_one(
+        i, tech$x, tech$y, ctx$b_p, ctx$mb_cap, peers, vrs = vrs,
+        input_constraints = input_constraints,
+        b_other = ctx$b_other, cap_other = ctx$cap_other, control = ctrl)
+    }, .lp_ok(ctx$b_p[i], self &&
+                .within_cap(ctx$b_p[i], ctx$mb_cap[i]) &&
+                (is.null(ctx$b_other) ||
+                   all(.within_cap(ctx$b_other[i, ], ctx$cap_other[i, ]))))),
+    envelope = .lp_retry(function(ctrl) {
+      .lp_envelope_one(i, tech$y, ctx$b_p, peers, vrs = vrs, control = ctrl)
+    }, .lp_ok(ctx$b_p[i], self)),
     fdmo = {
       if (is.null(tech$a)) {
         stop("model = \"fdmo\" requires an abatement output 'a' in ",
@@ -576,31 +648,19 @@
 .lp_wgd_stage <- function(i, tech, peers, vrs, p = 1L,
                           hold_xp = TRUE, hold_xa = TRUE,
                           hold_a = TRUE, hold_quality = TRUE) {
-  # lp_solve's default scaling occasionally reports self-feasible
-  # stages as numerically failed when the equality rows span many
-  # orders of magnitude (emissions of order 1e7 against the unit VRS
-  # row); alternative scalings solve those cases but can cycle when
-  # applied unconditionally, so failures retry under progressively
-  # stronger scalings, each attempt a fresh build (re-solving a failed
-  # LP object carries solver state into the retry) under a time limit
-  sol <- .lp_wgd_stage_once(i, tech, peers, vrs, p, hold_xp, hold_xa,
-                            hold_a, hold_quality, scaling = NULL)
-  if (sol$status != 0) {
-    for (sc in list(c("range", "equilibrate", "dynupdate"),
-                    c("extreme", "equilibrate", "dynupdate"))) {
-      sol <- .lp_wgd_stage_once(i, tech, peers, vrs, p, hold_xp,
-                                hold_xa, hold_a, hold_quality,
-                                scaling = sc)
-      if (sol$status == 0) break
-    }
-  }
-  sol
+  # every stage is self-feasible (the unit's own observation meets each
+  # row with rho = 0), so a solve returning b* > b is retried like a
+  # failed one (see .lp_retry)
+  .lp_retry(function(ctrl) {
+    .lp_wgd_stage_once(i, tech, peers, vrs, p, hold_xp, hold_xa,
+                       hold_a, hold_quality, control = ctrl)
+  }, .lp_ok(tech$b[i, p], i %in% peers))
 }
 
 .lp_wgd_stage_once <- function(i, tech, peers, vrs, p = 1L,
                                hold_xp = TRUE, hold_xa = TRUE,
                                hold_a = TRUE, hold_quality = TRUE,
-                               scaling = NULL) {
+                               control = NULL) {
   L <- length(peers)
   M <- tech$M
   x_abate <- tech$x_abate
@@ -637,9 +697,7 @@
 
   lp <- lpSolveAPI::make.lp(nrow = 0, ncol = nc)
   invisible(lpSolveAPI::lp.control(lp, sense = "min", timeout = 10))
-  if (!is.null(scaling)) {
-    invisible(lpSolveAPI::lp.control(lp, scaling = scaling))
-  }
+  .lp_set_control(lp, control)
   obj <- numeric(nc); obj[iz] <- 1; obj[ia] <- -1
   lpSolveAPI::set.objfn(lp, obj)
 

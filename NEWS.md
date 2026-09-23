@@ -1,3 +1,38 @@
+# pgt 0.7.1
+
+* Numerical robustness: every solve of `"wgd"`, `"envelope"`,
+  `"wgd_input_fixed"` and the stages of `pgt_decompose(type =
+  "rodseth")` is now checked against the bound that self-reference
+  gives. When the evaluated unit is among its peers (and, for
+  `"wgd_input_fixed"`, meets its own materials-balance caps), its
+  observation is feasible and attains `b`, so a solve returning
+  `b* > b`, or infeasibility, is a suboptimal vertex or a failed solve
+  of lp_solve. Such a solve, and any numerical failure (status 5), is
+  rebuilt and re-solved under two alternative lp_solve scalings and
+  then the primal simplex, a retry the decomposition stages alone had
+  before and only for failed solves. A unit whose every attempt still
+  returns `b* > b` gets status 1 (lp_solve's SUBOPTIMAL code) and `NA`
+  scores, and `pgt()` counts such units in its warning. A solve that
+  passes the check at the first attempt is unchanged. On a
+  1,142-plant-year steel panel in tonnes, 0.7.0 reported up to three
+  infeasible `"wgd_input_fixed"` programmes per specification as
+  numerical failures (status 5); every infeasible programme now
+  reports status 2, and every status matches an independent GLPK
+  solve.
+
+* New `test-scaling.R` on `steeldemo` with every quantity multiplied
+  by 1e6 (up to 1e13). It checks the decomposition's first stage
+  against its reduced form, solved separately on a copy in million
+  tonnes; `"wgd"`, `"wgd_input_fixed"`, `"envelope"` and the
+  decomposition against a common rescaling of the quantities;
+  `"wgd_input_fixed"` feasibility with and without
+  materials-balance violators; and the retry and its status-1
+  report. Without the rescaling of 0.7.0, 96 of the 180 first-stage
+  optima are suboptimal at this magnitude, two with production
+  technical efficiency above 1, and three self-feasible
+  `"wgd_input_fixed"` programmes are reported infeasible. The tests
+  mock an internal kernel, so `testthat (>= 3.1.7)` is suggested.
+
 # pgt 0.7.0
 
 New dataset with an observed abatement output, referee-driven
