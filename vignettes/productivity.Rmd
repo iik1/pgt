@@ -20,14 +20,18 @@ library(pgt)
 
 The Malmquist-Luenberger index (Chung, Färe and Grosskopf 1997) measures
 productivity change when part of the output is undesirable, by scoring
-each unit on a directional distance function (Chambers, Chung and Färe
-1996) that expands the good output and contracts the bad output
-together. The adjacent-period version can be infeasible across periods
-(Aparicio, Pastor and Zofío 2013); the global
-index of Oh (2010) pools every period into one reference technology,
-which removes the infeasibility and makes the index circular. `pgt_ml()`
-computes it under the pollution-generating technology and splits it into
-efficiency change and best-practice change,
+each unit on a directional output distance function, the output
+counterpart of the directional input distance function of Chambers,
+Chung and Färe (1996), that expands the good output and contracts the
+bad output together. The adjacent-period version can be infeasible
+across periods; the global index of Oh (2010) pools every period into
+one reference technology, which removes the infeasibility and makes
+the index circular. It does not address the separate inconsistency
+shown by Aparicio, Pastor and Zofío (2013), in which the
+technical-change component signals regress although the frontier
+moves toward more good and less bad output. `pgt_ml()`
+computes the global index under the pollution-generating technology
+and splits it into efficiency change and best-practice gap change,
 $GML = EC \times BPC$, with $GML > 1$ signalling growth.
 
 This estimator is experimental: the global Malmquist-Luenberger index
@@ -37,9 +41,12 @@ materials-balance cap on the projected point.
 
 The `technology` argument selects the reference technology. The
 default `"wd"` imposes weak disposability of the bad output in the
-Kuosmanen (2005) form; this is the technology under which Chung, Färe
-and Grosskopf (1997) and Oh (2010) define the index, so it is the
-comparator under which the index is defined. The `"input_envelope"` and `"envelope"` options
+Kuosmanen (2005) form. With `returns = "crs"` its abatement weights
+are redundant and, for one bad output, it is the constant-returns
+technology of Chung, Färe and Grosskopf (1997, Eq. 3.9), which Oh (2010)
+also uses; both papers index several bad outputs jointly, whereas
+`pgt_ml()` indexes one pollutant at a time; the
+variable-returns default extends it. The `"input_envelope"` and `"envelope"` options
 treat the bad output as reducible to the peer emission envelope and
 are exploratory companions; the input-keeping variant matches the
 shape of the input-fixed benchmark of `pgt()` rather than its Eq. 6
@@ -63,7 +70,7 @@ ml <- pgt_ml(panel)
 summary(ml)
 ```
 
-The median index exceeds 1, and best-practice change carries it: the
+The median index exceeds 1, and best-practice gap change carries it: the
 frontier moved out while each unit kept its position relative to the
 frontier, so efficiency change stays near 1.
 
@@ -95,9 +102,14 @@ summary(rice_ml)
 Efficiency scores are point estimates from a finite sample of DMUs.
 `boot_pgt()` gauges their sampling variability by re-solving each unit
 against random subsamples of the reference set (m out of n, without
-replacement), the resampling scheme with the firmest footing for
-boundary estimators (Politis and Romano 1994; Politis, Romano and Wolf
-1999; Kneip, Simar and Wilson 2008). `boot_pgt()` covers cross-sectional
+replacement). Subsampling gives valid intervals under minimal
+assumptions (Politis and Romano 1994; Politis, Romano and Wolf 1999);
+for DEA, Kneip, Simar and Wilson (2008) prove the m-out-of-n
+bootstrap, which draws with replacement, consistent under variable
+returns for the score of a fixed point, and Simar and Wilson (2011) note
+that the resampling can also be done without replacement, although in
+their simulations resampling with replacement gave coverage closer to
+nominal. `boot_pgt()` covers cross-sectional
 efficiency scores only; no inference is currently available for the
 `pgt_ml()` index. The example takes the sixty plants of one year of
 the synthetic `steeldemo` panel, an independent cross-section.

@@ -16,8 +16,9 @@ library(pgt)
 ```
 
 The estimators with a numerical example printed in their source paper
-are validated against it: the weak-G-disposability and directional
-models against Rødseth (2025) Tables 2 and 3, and the by-production
+are validated against it: the weak-G-disposability model of Hampf and
+Rødseth (2015) and its directional representation against Rødseth
+(2025) Tables 2 and 3, and the by-production
 model against the analytic Example 1 of Murty, Russell and Levkoff
 (2012). These replications run as unit tests on every check; this
 vignette reproduces them in the open. The remaining estimators carry
@@ -30,14 +31,11 @@ internal-consistency check for the materials-balance cost model.
 The `pigfarms` data is Table 1 of Rødseth (2025): five pig-finishing
 farms with feed and piglets as material inputs, meat as the good output,
 and controlled, uncontrolled and abatement emission columns for
-nitrogen. Because the paper does not print the nitrogen coefficients of
-feed and piglets, the uncontrolled-emission aggregate replaces them as
-the single material carrier ($u = 1$, $v = 0$); the uncontrolled
-emission equals controlled plus abatement, so the accounts close
-exactly. Keeping all five columns as inputs with zero material
-coefficients on feed and piglets (the mapping in the `pigfarms` help
-page) yields the same Table 2 minima; the test suite asserts the two
-mappings agree.
+nitrogen. The paper prints no nitrogen coefficients for the inputs or
+the meat. The good-output coefficient $v = 7/6$ follows from farms A
+and B, which share inputs: their meat differs by 3 and their
+uncontrolled emissions by 3.5. Each farm's feed coefficient then closes
+its account exactly to the uncontrolled column.
 
 ```{r}
 data(pigfarms)
@@ -45,11 +43,14 @@ pigfarms
 ```
 
 ```{r}
+v <- 7 / 6
+u_feed <- (pigfarms$uncontrolled + v * pigfarms$meat) / pigfarms$feed
 tech <- pgt_tech(
-  x = pigfarms[, c("uncontrolled", "labor", "capital")],
+  x = pigfarms[, c("feed", "piglet", "labor", "capital")],
   y = pigfarms$meat,
   b = pigfarms$controlled,
-  u = c(1, 0, 0),
+  u = cbind(u_feed, 0, 0, 0),
+  v = v,
   a = pigfarms$abatement,
   id = pigfarms$farm
 )
@@ -61,33 +62,25 @@ data.frame(farm = fit$results$id, b_star = fit$results$b_star,
 The minimal controlled emissions are $(16, 16, 16, 20, 16)$, which match
 the paper's Table 2. Because the abatement output is observed, the fit
 also reports the projection's implied uncontrolled emission `z_star`
-and abatement `a_star`; for farms A, D and E these match the paper's
-Table 2 uncontrolled and abatement entries, while for the frontier
-farms the optimal peer mix is not unique and the split between
-`z_star` and `a_star` is solver-dependent.
+and abatement `a_star`, and for every farm these match the paper's
+Table 2 uncontrolled and abatement entries. The retained content of the
+meat decides the peer of farms B and C: at $v = 0$ farms A and B would
+tie as peers at $b = 16$, but the three extra units of meat that farm A
+produces retain 3.5 units of nitrogen, so farm B is the unique peer.
+Setting $v = 0$ (for example by using the uncontrolled column as the
+only carrier input, $u = 1$) leaves the minima unchanged but makes the
+targets of farms B and C solver-dependent.
 
 ## Rødseth (2025), Table 3: the directional representation
 
-The factorially determined multi-output model (Eq. 14, abatement fixed at
-each farm's own level) jointly expands the good output and contracts the
-bad output. Its good-output coefficient $v = 7/6$ follows from farms A
-and B, which share inputs: their meat differs by 3 and their uncontrolled
-emissions by 3.5. Each farm's feed coefficient closes its account to the
-uncontrolled column.
+The directional model (Eq. 13, the indirect form of the directional
+programme of Eq. 12, with abatement fixed at each farm's own
+level, which Proposition 4 equates with the factorially determined
+multi-output form of Eq. 14) jointly expands the good output and
+contracts the bad output. It uses the same technology.
 
 ```{r}
-v <- 7 / 6
-u_feed <- (pigfarms$uncontrolled + v * pigfarms$meat) / pigfarms$feed
-tech3 <- pgt_tech(
-  x = pigfarms[, c("feed", "piglet", "labor", "capital")],
-  y = pigfarms$meat,
-  b = pigfarms$controlled,
-  u = cbind(u_feed, 0, 0, 0),
-  v = v,
-  a = pigfarms$abatement,
-  id = pigfarms$farm
-)
-fdmo <- pgt(tech3, model = "fdmo")
+fdmo <- pgt(tech, model = "fdmo")
 r3 <- fdmo$results
 comparison <- data.frame(
   farm = r3$id,
@@ -155,7 +148,8 @@ data.frame(id = rb$id, output_eff = round(rb$output_eff, 4),
 ```
 
 For DMU3 the output efficiency is $1/3$, the emission efficiency $1/2$
-and the graph measure $5/12$; for DMU2 they are $3/4$, $1$ and $7/8$.
+and their mean, the by-production efficiency index, $5/12$; for DMU2
+they are $3/4$, $1$ and $7/8$.
 These match the analytic scores in the paper.
 
 ## Coelli, Lauwers and Van Huylenbroeck (2007): coefficients and the EE = TE x EAE decomposition
@@ -199,6 +193,9 @@ themselves are checked by hand in the test suite.)
 - Coelli, T., Lauwers, L., & Van Huylenbroeck, G. (2007). Environmental
   efficiency measurement and the materials balance condition. *Journal
   of Productivity Analysis*, 28(1-2), 3-12. doi:10.1007/s11123-007-0052-8
+- Hampf, B., & Rødseth, K. L. (2015). Carbon dioxide emission standards
+  for U.S. power plants: An efficiency analysis perspective. *Energy
+  Economics*, 50, 140-153. doi:10.1016/j.eneco.2015.04.001
 - Murty, S., Russell, R. R., & Levkoff, S. B. (2012). On modeling
   pollution-generating technologies. *Journal of Environmental
   Economics and Management*, 64(1), 117-135.

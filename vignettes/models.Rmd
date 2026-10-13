@@ -23,12 +23,13 @@ row of the $L \times M \times P$ array).
 
 ## Weak-G-disposability (`model = "wgd"`)
 
-Equation 6 of Rødseth (2025) minimises emissions over peer mixes that
+Equation 6 of Rødseth (2025), which he presents as the DEA model of
+Hampf and Rødseth (2015), minimises emissions over peer mixes that
 hold only the intended outputs at the evaluated unit's levels: the
-inputs are decision variables, and the weak-G summing-up condition
+inputs are decision variables, and the weak-G slack constraint
 $u_i'\varepsilon_x + v_i'\varepsilon_y = \varepsilon_b$ ties the
 disposal slacks of inputs, outputs and the bad output together.
-Substituting the condition and setting the input slacks to zero
+Substituting the constraint and setting the input slacks to zero
 collapses the programme to the reduced form solved by the package,
 $$
 b^*_i = \min_{\lambda}\ \textstyle\sum_l \lambda_l
@@ -109,9 +110,13 @@ $(0, 1]$.
 
 ## The directional representation (`model = "fdmo"`)
 
-The factorially determined multi-output form of Rødseth (2025, Eq. 14),
-which his Proposition 4 derives from Eq. 13 by holding the abatement
-output $a$ at the evaluated unit's own level:
+Rødseth (2025) writes the weak-G directional programme as Eq. 12 and,
+under common coefficients (Proposition 3), its indirect form as Eq. 13.
+The package fits Eq. 13 with the abatement output $a$ held at the
+evaluated unit's own level and the sign restrictions
+$\theta_y, \theta_b \ge 0$ of Eq. 14; Proposition 4 states that this
+programme can equally be written as the factorially determined
+multi-output convex regression of Eq. 14:
 $$
 \begin{aligned}
 \max_{\lambda,\, \theta_y,\, \theta_b}\quad & \theta_y + \theta_b \\
@@ -213,9 +218,12 @@ EE = \frac{\min\{u_{pi}'\chi :\ \sum_l \lambda_l x_{nl} \le \chi_n\
 $$
 with environmental-allocative efficiency $EAE = EE / TE$. The principal
 score is $EE$, a material-inflow ratio rather than an emission ratio;
-the implied minimal controlled emission $u_{pi}'\chi^* - v_{pi}'y_i$
+the implied minimal uncontrolled emission (material surplus)
+$u_{pi}'\chi^* - v_{pi}'y_i$
 is reported as `b_star` and can be negative under DMU-specific
-coefficients, in which case `pgt()` warns.
+coefficients, in which case `pgt()` warns. Coelli et al. solve both
+programmes under constant returns, which `returns = "crs"` reproduces
+by dropping the row $\sum_l \lambda_l = 1$.
 
 ## The by-production intersection (`model = "byprod"`)
 
@@ -236,9 +244,11 @@ E_2 = \min\{\psi :\ \textstyle\sum_l \mu_l b_l \le \psi b_i,\ \sum_l
 1\}.
 $$
 $E_2$ is the principal environmental efficiency; `mean_eff` is the arithmetic
-mean $(E_1 + E_2)/2$, a package summary in the spirit of, but not
-identical to, the Färe-Grosskopf-Lovell graph measure, and not a
-measure defined in the source. If either sub-programme fails, every
+mean $(E_1 + E_2)/2$. With one good and one bad output it is the
+by-production efficiency index of Murty, Russell and Levkoff (2012);
+with several outputs their index averages output-specific factors in
+the manner of the Russell measure (Färe and Lovell 1978), whereas $E_1$
+is radial. If either sub-programme fails, every
 score of that unit is `NA`.
 
 ## Weak disposability (`model = "wd"`)
@@ -269,9 +279,12 @@ reference set $R$ (a period or the pooled panel); the index is
 defined for a single good output. Under
 `technology = "wd"` the distance uses the Kuosmanen weak-disposability
 technology above with $\sum_{l \in R} z_l b_l = (1 - \beta) b_k$ and
-$\sum_{l \in R} z_l y_l \ge (1 + \beta) y_k$; this is the technology
-under which Chung, Färe and Grosskopf (1997) and Oh (2010) define the
-index. Under `technology = "input_envelope"` and `"envelope"` the
+$\sum_{l \in R} z_l y_l \ge (1 + \beta) y_k$. With `returns = "crs"`
+the abatement weights $w$ are redundant and, for one bad output, this
+is the constant-returns technology of Chung, Färe and Grosskopf (1997,
+Eq. 3.9), which Oh (2010) also uses; both papers index several bad
+outputs jointly, whereas `pgt_ml()` indexes one pollutant at a time.
+The variable-returns default extends it. Under `technology = "input_envelope"` and `"envelope"` the
 bad-output row is the free-disposal envelope
 $\sum_{l \in R} \lambda_l b_l \le (1 - \beta) b_k$, with and without
 the input rows; these exploratory variants bound emissions by the
@@ -286,6 +299,12 @@ peer envelope rather than imposing weak disposability.
 - Coelli, T., Lauwers, L., & Van Huylenbroeck, G. (2007). Environmental
   efficiency measurement and the materials balance condition. *Journal
   of Productivity Analysis*, 28(1-2), 3-12. doi:10.1007/s11123-007-0052-8
+- Färe, R., & Lovell, C. A. K. (1978). Measuring the technical
+  efficiency of production. *Journal of Economic Theory*, 19(1),
+  150-162. doi:10.1016/0022-0531(78)90060-1
+- Hampf, B., & Rødseth, K. L. (2015). Carbon dioxide emission standards
+  for U.S. power plants: An efficiency analysis perspective. *Energy
+  Economics*, 50, 140-153. doi:10.1016/j.eneco.2015.04.001
 - Kuosmanen, T. (2005). Weak disposability in nonparametric production
   analysis with undesirable outputs. *American Journal of Agricultural
   Economics*, 87(4), 1077-1082. doi:10.1111/j.1467-8276.2005.00788.x

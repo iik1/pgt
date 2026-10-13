@@ -36,8 +36,9 @@ component columns are \code{WR}, \code{TGR}, \code{total} for
 }
 \description{
 Multiplicative decompositions of the environmental efficiency score
-\eqn{b^*/b} of Rodseth's (2025) weak-G-disposability technology: the
-five-component source decomposition of Rodseth (2025, Eq. 11), and a
+\eqn{b^*/b} of the weak-G-disposability technology (Hampf and Rodseth
+2015, in the representation of Rodseth 2025): the
+five-component decomposition of Rodseth (2025, Eq. 11), and a
 metafrontier decomposition across technology groups in the tradition
 of Battese, Rao and O'Donnell (2004) and O'Donnell, Rao and Battese
 (2008).
@@ -50,17 +51,21 @@ of Battese, Rao and O'Donnell (2004) and O'Donnell, Rao and Battese
 \deqn{Total = \frac{b^*_{all}}{b} = WR \times TGR, \quad
           WR = \frac{b^*_{group}}{b}, \quad
           TGR = \frac{b^*_{all}}{b^*_{group}}.}
-\eqn{WR} is within-group reallocation efficiency; \eqn{TGR} is the
-technology-gap ratio (O'Donnell, Rao and Battese 2008).
+\eqn{WR} is the efficiency against the DMU's own group frontier;
+\eqn{TGR} is the technology gap ratio of Battese, Rao and
+O'Donnell (2004), which O'Donnell, Rao and Battese (2008) call the
+metatechnology ratio.
 Self-reference is always feasible, so every component lies in
 \eqn{(0, 1]} with no feasibility screen. Requires a \code{group}
 in \code{\link[=pgt_tech]{pgt_tech()}}.}
-\item{\code{"rodseth"}}{The five-component source decomposition of
+\item{\code{"rodseth"}}{The five-component decomposition of
 Rodseth (2025, Eq. 11), computed from stage programmes of the
 extended representation (Eq. 9). Stage 1 holds the evaluated
 DMU's production inputs, pollution-control inputs, coefficient
-quality and (when observed) abatement output at their observed
-levels; the later stages free them one at a time, so each stage
+quality at their observed levels and, when observed, the
+abatement output as a floor (Rodseth 2025, p. 311, describes this
+stage as keeping abatement at its current level, but the abatement
+row of Eq. 9 lets the peer mix abate more); the later stages free them one at a time, so each stage
 relaxes the previous one. The components are the stage-to-stage
 ratios \code{te_production} (\eqn{b^*_1/b}), \code{quality}
 (\eqn{b^*_2/b^*_1}), \code{ae_production} (\eqn{b^*_3/b^*_2}),
@@ -116,6 +121,11 @@ metafrontier production function for estimation of technical
 efficiencies and technology gaps for firms operating under different
 technologies. \emph{Journal of Productivity Analysis}, 21(1), 91--103.
 \doi{10.1023/B:PROD.0000012454.06094.29}
+
+Hampf, B., & Rodseth, K. L. (2015). Carbon dioxide emission
+standards for U.S. power plants: An efficiency analysis perspective.
+\emph{Energy Economics}, 50, 140--153.
+\doi{10.1016/j.eneco.2015.04.001}
 
 O'Donnell, C. J., Rao, D. S. P., & Battese, G. E. (2008).
 Metafrontier frameworks for the study of firm-level efficiencies and

@@ -50,7 +50,10 @@ duals (total derivatives
 be negative when the retained-content coefficient is large),
 \code{z_star} and \code{a_star} (only when \code{a} is
 observed) and \code{status}, the \code{lp_solve} solver code
-(0 = solved; 2 = infeasible; 5 = numerically failed; 1 =
+(0 = solved; 2 = infeasible, which includes a point that
+\code{lp_solve} reports as optimal but that misses a row of the
+programme by more than a relative \eqn{10^{-5}}, a check run
+after every solve; 5 = numerically failed; 1 =
 suboptimal: every solve attempt returned \eqn{b^* > b} although
 self-reference is feasible, so the scores are \code{NA}). For
 \code{"wgd_input_fixed"}, \code{"envelope"} and \code{"wd"}: the
@@ -91,10 +94,13 @@ account. The audit of the account is \code{\link[=mb_check]{mb_check()}}. The re
 models (\code{"byprod"}, \code{"wd"}) implement competing systems
 for cross-comparison (see \code{\link[=compare_models]{compare_models()}}).
 \describe{
-\item{\code{"wgd"}}{The weak-G-disposability model of Rodseth
-(2025), Eq. 6 in reduced form. Equation 6 fixes only the
+\item{\code{"wgd"}}{The weak-G-disposability technology of Hampf
+and Rodseth (2015, Eq. 2.4), scored by the minimal-emission
+programme of Rodseth (2025, Eq. 6) in a reduced form; Hampf and
+Rodseth's own programmes maximise the ratio of output to emission.
+Equation 6 fixes only the
 intended outputs at the evaluated DMU's levels; the inputs are
-decision variables. Substituting the weak-G summing-up condition
+decision variables. Substituting the weak-G slack constraint
 on the disposal slacks therefore collapses the programme to
 minimising the peer emission envelope plus the retained content
 of the good output produced beyond the DMU's own levels,
@@ -117,7 +123,10 @@ accounts close. \code{model = "wgd_rodseth"} is an alias.}
 minimise the bad output subject to output feasibility, the input
 rows \eqn{\sum_l \lambda_l x_{nl} \le x_{ni}}, the peer emission
 envelope, and the evaluated DMU's own materials-balance cap
-\eqn{b \le u_i'x_i - v_i'y_i}. With several pollutants the caps
+\eqn{b \le u_i'x_i - v_i'y_i}. Unlike weak G-disposability at
+fixed inputs, which charges the pollutant of any input the peer mix
+leaves unused to the emission (stage 1 of \code{\link[=pgt_decompose]{pgt_decompose()}}), the
+peer mix may leave inputs unused at no charge. With several pollutants the caps
 of the remaining pollutants constrain the peer mix as well, so
 the projection respects every pollutant's materials balance.
 DMUs whose data violate a materials-balance identity lose the
@@ -130,10 +139,14 @@ pollutant than the DMU reports. Audit with \code{\link[=mb_check]{mb_check()}} f
 retained-content term (its \eqn{v = 0} case): the convex lower
 envelope of the \eqn{(y, b)} scatter. Self-reference is always
 feasible, so all scores lie in \eqn{(0, 1]}.}
-\item{\code{"fdmo"}}{The factorially determined multi-output
-(directional) representation of Rodseth (2025), Eq. 14, which
-his Proposition 4 derives from Eq. 13 by fixing the abatement
-output at each DMU's own level. It jointly
+\item{\code{"fdmo"}}{The directional representation of Rodseth
+(2025): Eq. 13, the indirect form of the weak-G directional
+programme of Eq. 12 under common coefficients (Proposition 3),
+with the abatement output fixed at each DMU's own level and the
+sign restrictions \eqn{\theta_y, \theta_b \ge 0} of Eq. 14.
+Proposition 4 states that this programme can equally be written
+as the factorially determined multi-output convex regression of
+Eq. 14. It jointly
 maximises the expansion of the good output (\eqn{\theta_y}) and
 the contraction of the bad output (\eqn{\theta_b}) along the
 materials-balance frontier; gross inefficiency is
@@ -146,7 +159,7 @@ row fixes \eqn{\theta_b = v_i\theta_y - g_i} (closure gap
 coherent change of the units of \code{y} and \code{b} leaves the
 projection unchanged. The row \eqn{\theta_b \le b_i} keeps the
 projected emission non-negative; it is the package's addition for
-producer-specific coefficients (Rodseth derives Eq. 14 for common
+producer-specific coefficients (Rodseth derives Eq. 13 for common
 coefficients, under which, with closed accounts, it never binds).
 Requires an abatement output \code{a} in \code{\link[=pgt_tech]{pgt_tech()}} and a
 single intended output. The model imposes the
@@ -164,24 +177,33 @@ the ratio of minimal to observed aggregate material inflow
 and environmental-allocative efficiency (returned as \code{te}
 and \code{eae}). A unit that uses none of the pollutant-bearing
 inputs has an undefined inflow ratio: its scores are \code{NA}
-with \code{status} 2, reported without a solver call.}
+with \code{status} 2, reported without a solver call. Coelli et
+al. solve both programmes under constant returns, which
+\code{returns = "crs"} reproduces.}
 \item{\code{"byprod"}}{The by-production intersection technology of
 Murty, Russell and Levkoff (2012): the good output is produced by
 one sub-technology and the bad output generated by another over
 the emission-causing inputs. The implemented model is the
-original Murty-Russell-Levkoff intersection technology without
-integrated abatement; Hampf (2014) develops the
-abatement-integrated extension. Returns emission efficiency
+Murty-Russell-Levkoff intersection technology (their Eq. 4.8)
+without the abatement output of their Eq. 7.1, which their
+empirical application also omits; they use constant returns
+(Eqs. 4.5 and 4.7), which \code{returns = "crs"} reproduces; Hampf (2014) develops a two-stage
+production-and-abatement model. Returns emission efficiency
 (\eqn{b^*/b}, reported as \code{efficiency}), output
 efficiency (\code{output_eff})
-and \code{mean_eff}, the arithmetic mean of the two sub-efficiencies:
-a package summary in the spirit of, but not identical to, the
-Fare-Grosskopf-Lovell graph measure, and not a measure defined
-in the source. Set the
+and \code{mean_eff}, the arithmetic mean of the two
+sub-efficiencies. With one good and one bad output the mean is
+the by-production efficiency index of Murty, Russell and Levkoff
+(2012, Eq. 5.7);
+with several outputs their index averages output-specific factors
+in the manner of the Russell measure (Fare and Lovell 1978),
+whereas \code{output_eff} is radial. Set the
 emission-causing inputs with \code{polluting} in \code{\link[=pgt_tech]{pgt_tech()}}.}
-\item{\code{"wd"}}{The weak-disposability model (Kuosmanen 2005
-correct VRS formulation; see the exchange settled in Kuosmanen
-and Podinovski 2009), a reference axiom system that imposes no
+\item{\code{"wd"}}{The weak-disposability model in the
+variable-returns formulation of Kuosmanen (2005), which
+Kuosmanen and Podinovski (2009), replying to Fare and Grosskopf
+(2009), show to be the smallest convex technology satisfying the
+maintained axioms: a reference axiom system that imposes no
 materials balance. Returns emission efficiency \eqn{b^*/b}.}
 }
 
@@ -213,14 +235,24 @@ Environmental efficiency measurement and the materials balance
 condition. \emph{Journal of Productivity Analysis}, 28(1--2), 3--12.
 \doi{10.1007/s11123-007-0052-8}
 
-Fare, R., Grosskopf, S., & Lovell, C. A. K. (1985). \emph{The
-Measurement of Efficiency of Production}. Kluwer-Nijhoff, Boston.
-\doi{10.1007/978-94-015-7721-2}
+Fare, R., & Grosskopf, S. (2009). A comment on weak disposability in
+nonparametric production analysis. \emph{American Journal of
+Agricultural Economics}, 91(2), 535--538.
+\doi{10.1111/j.1467-8276.2008.01237.x}
+
+Fare, R., & Lovell, C. A. K. (1978). Measuring the technical
+efficiency of production. \emph{Journal of Economic Theory}, 19(1),
+150--162. \doi{10.1016/0022-0531(78)90060-1}
 
 Hampf, B. (2014). Separating environmental efficiency into production
 and abatement efficiency: A nonparametric model with application to
 US power plants. \emph{Journal of Productivity Analysis}, 41(3),
 457--473. \doi{10.1007/s11123-013-0357-8}
+
+Hampf, B., & Rodseth, K. L. (2015). Carbon dioxide emission
+standards for U.S. power plants: An efficiency analysis perspective.
+\emph{Energy Economics}, 50, 140--153.
+\doi{10.1016/j.eneco.2015.04.001}
 
 Kuosmanen, T. (2005). Weak disposability in nonparametric production
 analysis with undesirable outputs. \emph{American Journal of

@@ -4,10 +4,11 @@
 # together with the peer weights and selected constraint duals.
 #
 # Formulations follow Rodseth (2025, JPA): Eq. 6 in reduced form for the
-# weak-G-disposability model and Eq. 14 (the factorially determined
-# multi-output form that Proposition 4 derives from Eq. 13 by fixing
-# abatement at the evaluated DMU's own level) for the directional
-# representation. The unit tests replicate the paper's
+# weak-G-disposability model of Hampf and Rodseth (2015), and Eq. 13 with
+# abatement fixed at the evaluated DMU's own level for the directional
+# representation (Proposition 4 states that this programme can equally
+# be written as the factorially determined multi-output convex
+# regression of Eq. 14). The unit tests replicate the paper's
 # numerical example (Tables 2-3) through these kernels.
 #
 # Material flow coefficients are DMU-specific (one row of the L x N x P
@@ -72,6 +73,7 @@
   lpSolveAPI::set.bounds(lp, lower = rep(0, L))
 
   status <- lpSolveAPI::solve.lpExtPtr(lp)
+  if (status == 0 && !.lp_verified(lp, L)) status <- 2L
   if (status != 0) {
     return(list(status = status, b_star = NA_real_, lambda = NULL,
                 dual_output = rep(NA_real_, M),
@@ -145,6 +147,7 @@
   lpSolveAPI::set.bounds(lp, lower = rep(0, L + 1))
 
   status <- lpSolveAPI::solve.lpExtPtr(lp)
+  if (status == 0 && !.lp_verified(lp, L, level = b[i])) status <- 2L
   if (status != 0) {
     return(list(status = status, b_star = NA_real_, lambda = NULL,
                 dual_output = rep(NA_real_, M), mb_rhs = mb_rhs[i]))
@@ -189,6 +192,7 @@
   lpSolveAPI::set.bounds(lp, lower = rep(0, L))
 
   status <- lpSolveAPI::solve.lpExtPtr(lp)
+  if (status == 0 && !.lp_verified(lp, L)) status <- 2L
   if (status != 0) {
     return(list(status = status, b_star = NA_real_, lambda = NULL,
                 dual_output = rep(NA_real_, M), mb_rhs = NA_real_))
@@ -204,8 +208,9 @@
 }
 
 # Factorially determined multi-output / directional model (Rodseth 2025,
-# Eq. 14: Eq. 13 with abatement fixed at the evaluated DMU's own level
-# a_i, the specification that yields the paper's Table 3). Pollutant p.
+# Eq. 13 with abatement fixed at the evaluated DMU's own level a_i, the
+# specification that yields the paper's Table 3; Proposition 4 states
+# its equivalence to the convex regression of Eq. 14). Pollutant p.
 #
 #   max_{lambda, thy, thb} thy + thb
 #   s.t. sum_l lambda_l y_l  - thy        >= y_i           (good output)
@@ -229,7 +234,7 @@
 # balance forces thb = v_i thy.
 #
 # The admissibility row (projected emission b_i - thb >= 0) is the
-# package's addition: Eq. 14 is derived for coefficients common to all
+# package's addition: Eq. 13 is derived for coefficients common to all
 # DMUs (Proposition 3 assumes no quality differences), under which, with
 # closed accounts, the projection emits at least sum_l lambda_l b_l >= 0
 # and the row never binds. With producer-specific coefficients the
@@ -277,6 +282,7 @@
   lpSolveAPI::set.bounds(lp, upper = b[i], columns = ithb)
 
   status <- lpSolveAPI::solve.lpExtPtr(lp)
+  if (status == 0 && !.lp_verified(lp, L, level = b[i])) status <- 2L
   if (status != 0) {
     return(list(status = status, gross = NA_real_, theta_y = NA_real_,
                 theta_b = NA_real_, lambda = NULL))
@@ -309,10 +315,11 @@
 #                     sum_l mu_l x_nl >= x_ni  (n in polluting),
 #                     [sum mu = 1], mu >= 0 }.
 #
-# The arithmetic mean of the two sub-efficiencies (in the spirit of the
-# Fare-Grosskopf-Lovell graph measure) is
-# E_FGL = (E1 + E2) / 2. E2 = b*/b is the environmental efficiency,
-# reported as the principal score; E1 and E_FGL are returned alongside.
+# The arithmetic mean of the two sub-efficiencies,
+# E_mean = (E1 + E2) / 2, is Murty, Russell and Levkoff's by-production
+# efficiency index when there is one good and one bad output. E2 = b*/b
+# is the environmental efficiency, reported as the principal score; E1
+# and E_mean are returned alongside.
 .lp_byprod_one <- function(i, X, Y, b, pol, peers, vrs = TRUE) {
   L <- length(peers)
   N <- ncol(X)
@@ -331,6 +338,7 @@
   if (vrs) lpSolveAPI::add.constraint(lp1, c(rep(1, L), 0), "=", 1)
   lpSolveAPI::set.bounds(lp1, lower = rep(0, L + 1))
   st1 <- lpSolveAPI::solve.lpExtPtr(lp1)
+  if (st1 == 0 && !.lp_verified(lp1, L, level = b[i])) st1 <- 2L
   phi <- if (st1 == 0) lpSolveAPI::get.variables(lp1)[L + 1] else NA_real_
   lam <- if (st1 == 0) lpSolveAPI::get.variables(lp1)[seq_len(L)] else NULL
 
@@ -345,6 +353,7 @@
   if (vrs) lpSolveAPI::add.constraint(lp2, c(rep(1, L), 0), "=", 1)
   lpSolveAPI::set.bounds(lp2, lower = rep(0, L + 1))
   st2 <- lpSolveAPI::solve.lpExtPtr(lp2)
+  if (st2 == 0 && !.lp_verified(lp2, L, level = b[i])) st2 <- 2L
   psi <- if (st2 == 0) lpSolveAPI::get.variables(lp2)[L + 1] else NA_real_
   mu <- if (st2 == 0) lpSolveAPI::get.variables(lp2)[seq_len(L)] else NULL
 
@@ -377,7 +386,9 @@
 #
 # TE holds the input mix fixed (radial); EE lets the input mix move
 # toward low-pollutant inputs, so EE <= TE and EAE lies in (0, 1]. The
-# implied minimal controlled emission is u_i'xproj* - v_i y_i.
+# implied minimal uncontrolled emission (material surplus) is
+# u_i'xproj* - v_i y_i. Coelli et al. solve both programmes under
+# constant returns ([sum lambda = 1] dropped, vrs = FALSE).
 .lp_mbcost_one <- function(i, X, Y, u_row, ret_i, peers, vrs = TRUE) {
   L <- length(peers)
   N <- ncol(X)
@@ -402,6 +413,7 @@
   if (vrs) lpSolveAPI::add.constraint(lp1, c(rep(1, L), 0), "=", 1)
   lpSolveAPI::set.bounds(lp1, lower = c(rep(0, L), 0))
   st1 <- lpSolveAPI::solve.lpExtPtr(lp1)
+  if (st1 == 0 && !.lp_verified(lp1, L, level = pot_i)) st1 <- 2L
   te <- if (st1 == 0) lpSolveAPI::get.variables(lp1)[L + 1] else NA_real_
 
   # material-inflow minimisation (min u_i'xproj)
@@ -422,6 +434,7 @@
   }
   lpSolveAPI::set.bounds(lp2, lower = rep(0, nc))
   st2 <- lpSolveAPI::solve.lpExtPtr(lp2)
+  if (st2 == 0 && !.lp_verified(lp2, L, level = pot_i)) st2 <- 2L
   pot_star <- if (st2 == 0) lpSolveAPI::get.objective(lp2) else NA_real_
   lam <- if (st2 == 0) lpSolveAPI::get.variables(lp2)[seq_len(L)] else NULL
 
@@ -483,6 +496,7 @@
   }
   lpSolveAPI::set.bounds(lp, lower = rep(0, nc))
   status <- lpSolveAPI::solve.lpExtPtr(lp)
+  if (status == 0 && !.lp_verified(lp, 2L * L, level = b[i])) status <- 2L
   if (status != 0) {
     return(list(status = status, b_star = NA_real_, lambda = NULL,
                 dual_output = NA_real_, mb_rhs = NA_real_))
@@ -541,16 +555,75 @@
 # Acceptance test of one solve. When self-reference is feasible (the
 # evaluated unit is among its peers in wgd, envelope and every
 # decomposition stage, and in wgd_input_fixed when it also meets its
-# caps) the unit's own observation attains b_i, so a valid solve has
-# status 0 and b* <= b_i; infeasibility or b* > b_i marks a failed or
-# suboptimal solve. Elsewhere a solve is accepted once lp_solve returns
-# a definitive status (0 = optimal, 2 = infeasible). The tolerance is
-# relative to the unit magnitude of the scaled data.
+# caps by .meets_cap()) the unit's own observation attains b_i, so a
+# valid solve has status 0 and b* <= b_i; infeasibility or b* > b_i
+# marks a failed or suboptimal solve. Elsewhere a solve is accepted once
+# lp_solve returns a definitive status (0 = optimal, 2 = infeasible,
+# which includes a point failing the row check of .lp_verified()). The
+# tolerance of the bound b* <= b_i is relative to the unit magnitude of
+# the scaled data.
 .lp_ok <- function(b_i, self_feasible) {
   if (!self_feasible) return(function(sol) sol$status %in% c(0L, 2L))
   function(sol) sol$status == 0 && .within_cap(sol$b_star, b_i)
 }
 .within_cap <- function(b, cap) b <= cap + 1e-8 * (abs(cap) + 1)
+
+# Row check of a status-0 solve. lp_solve accepts a point once every row
+# holds within its tolerances on its own internally scaled model, and on
+# the unit-magnitude copy a small unit's rows are of order 1e-7, where
+# those tolerances can exceed several per cent of the row: on uscoal
+# with the sulfur coefficients scaled by 0.9, lp_solve reported as
+# optimal a point 6 per cent above the input-fixed cap of the 38 MWh
+# Painesville plant. Every row r of the stored model is re-evaluated at
+# the returned point x (only the columns with x_j != 0 are read) and
+# must hold within
+#   tol * max(|rhs_r|, max_j |a_rj x_j|, level) + tol_w * W * max_w |a_rj|,
+# relative to its own magnitude whatever its scale. `level` is the
+# evaluated unit's own pollutant level (its emission, or its potential
+# in the cost model), which measures rows whose terms and right-hand
+# side are rounding noise (a closed account's balance row, a stage's
+# summing-up row). The last term, over the peer weights (the first n_w
+# columns) in the solution, whose total is W, forgives rows broken only
+# by weights below tol_w * W, such as an input the unit does not use:
+# lp_solve leaves weights of up to 1e-8 * W on peers it does not use,
+# and weights sum to within 1e-6 of 1 in its least precise stage solves
+# on the shipped data. Bounds are checked alike: a peer weight may leave its
+# bound by tol_w * W, any other variable by tol times the larger of the
+# bound and `level`. A point that fails is not a solution, and the
+# kernels report it as infeasible (status 2).
+.lp_tol <- 1e-5
+.lp_verified <- function(lp, n_w, level = 0, tol = .lp_tol, tol_w = 1e-7) {
+  x <- lpSolveAPI::get.variables(lp)
+  tol_w <- tol_w * sum(abs(x[seq_len(n_w)]))
+  m <- dim(lp)[1L]
+  act <- mag <- wmag <- numeric(m)
+  for (j in which(x != 0)) {
+    col <- lpSolveAPI::get.column(lp, j)
+    k <- col$nzrow > 0L
+    r <- col$nzrow[k]
+    a <- col$column[k]
+    act[r] <- act[r] + a * x[j]
+    mag[r] <- pmax(mag[r], abs(a * x[j]))
+    if (j <= n_w) wmag[r] <- pmax(wmag[r], abs(a))
+  }
+  rhs <- lpSolveAPI::get.rhs(lp)
+  type <- lpSolveAPI::get.constr.type(lp, as.char = FALSE)
+  res <- ifelse(type == 1L, act - rhs,
+                ifelse(type == 2L, rhs - act, abs(act - rhs)))
+  if (any(res > tol * pmax(abs(rhs), mag, level) + tol_w * wmag)) {
+    return(FALSE)
+  }
+  bd <- lpSolveAPI::get.bounds(lp)
+  fin <- function(v) ifelse(is.finite(v), abs(v), 0)
+  btol <- ifelse(seq_along(x) <= n_w, tol_w,
+                 tol * pmax(fin(bd$lower), fin(bd$upper), level))
+  all(bd$lower - x <= btol & x - bd$upper <= btol)
+}
+
+# Whether a unit meets a materials-balance cap, judged on the data with
+# the tolerance of .lp_verified(), so that its own observation then
+# passes the row check of that cap.
+.meets_cap <- function(b, cap) b - cap <= .lp_tol * pmax(abs(cap), abs(b))
 
 # Solve with lp_solve's default settings and retry under the
 # alternative ones until ok() accepts a solution. `solve(control)`
@@ -625,9 +698,9 @@
         input_constraints = input_constraints,
         b_other = ctx$b_other, cap_other = ctx$cap_other, control = ctrl)
     }, .lp_ok(ctx$b_p[i], self &&
-                .within_cap(ctx$b_p[i], ctx$mb_cap[i]) &&
+                .meets_cap(ctx$b_p[i], ctx$mb_cap[i]) &&
                 (is.null(ctx$b_other) ||
-                   all(.within_cap(ctx$b_other[i, ], ctx$cap_other[i, ]))))),
+                   all(.meets_cap(ctx$b_other[i, ], ctx$cap_other[i, ]))))),
     envelope = .lp_retry(function(ctrl) {
       .lp_envelope_one(i, tech$y, ctx$b_p, peers, vrs = vrs, control = ctrl)
     }, .lp_ok(ctx$b_p[i], self)),
@@ -766,6 +839,10 @@
   lpSolveAPI::set.bounds(lp, lower = lower, upper = upper)
 
   status <- lpSolveAPI::solve.lpExtPtr(lp)
+  if (status == 0 &&
+      !.lp_verified(lp, L, level = tech$b[i, p] + abs(a_i))) {
+    status <- 2L
+  }
   if (status != 0) {
     return(list(status = status, b_star = NA_real_, z_star = NA_real_,
                 a_star = NA_real_, rho = NA_real_, lambda = NULL))

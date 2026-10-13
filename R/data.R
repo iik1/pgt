@@ -8,14 +8,19 @@
 #' and Van Huylenbroeck (2007) via Rodseth (2016). The columns satisfy
 #' \code{uncontrolled - controlled = abatement} exactly.
 #'
-#' The paper does not print the nitrogen coefficients of feed and
-#' piglets, so the technology is constructed in pollutant-potential
-#' units: the uncontrolled-emission aggregate carries the material with
+#' The paper prints no nitrogen coefficients for the inputs or the meat.
+#' The simplest technology is constructed in pollutant-potential units:
+#' the uncontrolled-emission aggregate carries the material with
 #' \code{u = 1} on that column and \code{v = 0}, which reproduces the
 #' paper's materials-balance cap exactly. With this mapping,
 #' \code{pgt(tech, model = "wgd")} reproduces the minimal controlled
 #' emissions of the paper's Table 2 (16, 16, 16, 20, 16), and
-#' [mb_check()]'s closure gap recovers the abatement column.
+#' [mb_check()]'s closure gap recovers the abatement column. The paper's
+#' meat retains nitrogen, however: with the good-output coefficient
+#' \code{v = 7/6} implied by farms A and B, the fit also reproduces the
+#' Table 2 uncontrolled-emission and abatement targets of every farm,
+#' which at \code{v = 0} are solver-dependent for farms B and C (see
+#' \code{vignette("replication", package = "pgt")}).
 #'
 #' @format A data frame with 5 rows and 9 columns:
 #' \describe{
@@ -130,7 +135,9 @@
 #' air-emissions-control information) and EPA eGRID2022 (measured SO2
 #' emissions, net generation, nameplate capacity). The SO2 potential of
 #' a plant's coal is \code{2 * sulfur/100} short tons per short ton of
-#' coal (molar mass ratio, full conversion), giving a producer-specific
+#' coal (molar mass ratio, full conversion; Rodseth (2017) puts the
+#' converted share at about 95 per cent, at which 14 instead of 8
+#' accounts violate the balance), giving a producer-specific
 #' material flow coefficient; electricity retains no sulfur, so
 #' \code{v = 0}. Unlike the synthetic \code{steeldemo} panel, the two
 #' sides of the account here come from separate data collections, and

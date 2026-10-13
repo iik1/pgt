@@ -38,14 +38,19 @@ and Van Huylenbroeck (2007) via Rodseth (2016). The columns satisfy
 \code{uncontrolled - controlled = abatement} exactly.
 }
 \details{
-The paper does not print the nitrogen coefficients of feed and
-piglets, so the technology is constructed in pollutant-potential
-units: the uncontrolled-emission aggregate carries the material with
+The paper prints no nitrogen coefficients for the inputs or the meat.
+The simplest technology is constructed in pollutant-potential units:
+the uncontrolled-emission aggregate carries the material with
 \code{u = 1} on that column and \code{v = 0}, which reproduces the
 paper's materials-balance cap exactly. With this mapping,
 \code{pgt(tech, model = "wgd")} reproduces the minimal controlled
 emissions of the paper's Table 2 (16, 16, 16, 20, 16), and
-\code{\link[=mb_check]{mb_check()}}'s closure gap recovers the abatement column.
+\code{\link[=mb_check]{mb_check()}}'s closure gap recovers the abatement column. The paper's
+meat retains nitrogen, however: with the good-output coefficient
+\code{v = 7/6} implied by farms A and B, the fit also reproduces the
+Table 2 uncontrolled-emission and abatement targets of every farm,
+which at \code{v = 0} are solver-dependent for farms B and C (see
+\code{vignette("replication", package = "pgt")}).
 }
 \examples{
 data(pigfarms)

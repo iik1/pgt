@@ -1,5 +1,80 @@
 # pgt 0.7.1
 
+* Every LP kernel now checks the point lp_solve returns against the
+  rows and bounds of its programme. lp_solve accepts a point once each
+  row holds within its tolerances on its own internally scaled model,
+  and on the unit-magnitude copy of the data a small unit's rows are of
+  order 1e-7, where those tolerances can exceed several per cent of
+  the row. On `uscoal` with the sulfur coefficients scaled by 0.9,
+  `model = "wgd_input_fixed"` returned status 0 at Painesville (plant
+  2936, 38 MWh) with `b_star` 6 per cent above the cap (`mb_headroom`
+  -0.39 t), although no peer mix emits less than the plant's own
+  6.543 t and the programme is infeasible. A row now fails when its
+  residual exceeds 1e-5 times the largest of its right-hand side, its
+  largest term and the unit's own pollutant level, plus 1e-7 times the
+  total peer weight times the row's largest coefficient on a peer
+  weight in the solution (lp_solve leaves weights of about 1e-8 on
+  peers it does not use); a failing point is reported as infeasible
+  (status 2) with `NA` scores, and a unit whose own observation is
+  feasible is retried under the alternative lp_solve settings as
+  before. On the shipped data no other status or score changes: across
+  every model, both peer sets and returns to scale, the decompositions
+  and 50 perturbations of the `uscoal` sulfur coefficients, the only
+  change is Painesville's status in the 0.9 scenario and in the 13
+  draws where it was reported above its cap.
+
+* `model = "wgd_input_fixed"` now decides whether a unit meets its
+  materials-balance caps (and so whether an infeasibility verdict is
+  retried) on the data with the relative 1e-5. The previous test
+  allowed an absolute 1e-8 on the unit-magnitude copy, 0.78 t of SO2 on
+  `uscoal`, so it took Painesville's 0.39 t excess for a met cap,
+  rejected lp_solve's correct verdict of infeasibility and accepted the
+  point above the cap from the first alternative scaling.
+
+* Documentation: citations corrected after a check against the cited
+  papers. No estimator changes.
+  - The weak-G-disposability technology is credited to Hampf and
+    Rodseth (2015); `"wgd"` scores it by the minimal-emission programme
+    of Rodseth (2025, Eq. 6).
+  - `model = "fdmo"` is Rodseth's Eq. 13 with abatement fixed at the
+    DMU's own level; Eq. 14 is the equivalent convex-regression form
+    (Proposition 4). Version 0.7.0 cited Eq. 14 for the programme.
+  - The `pigfarms` replication (vignette and tests) uses the good-output
+    coefficient v = 7/6 implied by farms A and B, under which `"wgd"`
+    reproduces every Table 2 target of Rodseth (2025). The v = 0 mapping
+    left farms A and B tied as peers, so the targets of farms B and C
+    were solver-dependent; that was a property of the mapping, not of
+    the source.
+  - `mean_eff` of `"byprod"` is described as Murty, Russell and
+    Levkoff's by-production efficiency index (one good and one bad
+    output), not as a variant of the graph measure.
+  - `boot_pgt()`: Kneip, Simar and Wilson (2008) prove the m-out-of-n
+    bootstrap with replacement consistent under VRS; the default rates
+    are credited to Kneip, Park and Simar (1998) for VRS and to Park,
+    Jeong and Simar (2010) for CRS.
+  - `pgt_ml()`: the global frontier removes the cross-period
+    infeasibility (Oh 2010), not the inconsistency of Aparicio, Pastor
+    and Zofio (2013); BPC is the best-practice gap change; the default
+    `"wd"` technology reproduces Oh's constant-returns technology with
+    `returns = "crs"`.
+  - `pgt_decompose()`: TGR is the technology gap ratio of Battese, Rao
+    and O'Donnell (2004), the metatechnology ratio of O'Donnell, Rao and
+    Battese (2008); WR is the efficiency against the group frontier.
+  - A second check against the full sources: `"wgd"` fits the
+    technology of Hampf and Rodseth (2015) with the minimal-emission
+    programme of Rodseth (2025, Eq. 6), whereas Hampf and Rodseth score
+    by a ratio of output to emission. For `"fdmo"`, Eq. 13 is the
+    indirect form of the directional programme of Eq. 12 under common
+    coefficients, and the sign restrictions come from Eq. 14.
+    `"byprod"` cites Murty, Russell and Levkoff (2012, Eqs. 4.5, 4.7,
+    5.7 and 7.1): their technology has constant returns, and their
+    application omits the abatement output, as `"byprod"` does.
+    `"wgd_input_fixed"` is documented as differing from weak
+    G-disposability at fixed inputs. The `uscoal` help notes that about
+    95 per cent of fuel sulfur converts to SO2 (Rodseth 2017). The
+    `boot_pgt()` and `pgt_ml()` help state the conditions of the cited
+    results.
+
 * Numerical robustness: every solve of `"wgd"`, `"envelope"`,
   `"wgd_input_fixed"` and the stages of `pgt_decompose(type =
   "rodseth")` is now checked against the bound that self-reference

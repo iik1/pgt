@@ -31,11 +31,18 @@ This update follows 0.7.0 closely because it corrects results that
 * `compare_models()` ranked efficient units' scores (1 up to solver
   noise) by that noise, so its Spearman matrix depended on the solver
   build; scores within 1e-8 now rank as ties.
+* Every LP kernel now checks the point lp_solve returns against the
+  rows of its programme. On a rescaled copy of a very small unit,
+  lp_solve could accept a point whose rows hold only within its own
+  tolerances; such a point is now reported as infeasible. On the
+  shipped data this changes a single status, in one perturbation
+  scenario of `uscoal`, and no score.
 
 NEWS.md lists the remaining changes: a new test file of large-magnitude
 cases, extended precomputed Monte Carlo results in `inst/simulations/`
 (read by a vignette; the study script is not run during checks), and
-documentation.
+documentation corrected after a check of every citation against the
+cited papers.
 
 ## Test environments
 

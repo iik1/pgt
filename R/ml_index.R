@@ -2,20 +2,25 @@
 #'
 #' Computes the global Malmquist-Luenberger (GML) productivity index of
 #' Oh (2010) for a panel of pollution-generating technologies, decomposed
-#' into efficiency change and best-practice (frontier) change. The index
-#' is built on the directional distance function of the pollution-
-#' generating technology, which expands the good output and contracts the
-#' bad output jointly, so productivity change accounts for emissions
-#' rather than ignoring them.
+#' into efficiency change and best-practice gap change. The index is
+#' built on the directional output distance function of Chung, Fare and
+#' Grosskopf (1997), the output counterpart of the directional input
+#' distance function of Chambers, Chung and Fare (1996), which expands
+#' the good output and contracts the bad output jointly, so productivity
+#' change accounts for emissions rather than ignoring them.
 #'
 #' The directional distance to a reference technology \eqn{R} is
 #' \deqn{D_R(x, y, b) = \max\{\beta : (y + \beta g_y, b - \beta g_b)
 #'   \textrm{ feasible in } R \textrm{ given } x\},}
 #' with direction \eqn{g = (y, b)} (each observation is scaled by its own
 #' level). The global reference pools every period into one technology
-#' (Oh 2010), which removes the cross-period infeasibility of the
-#' adjacent-period Malmquist-Luenberger index (Aparicio, Pastor and Zofio
-#' 2013) and makes the index circular. For a DMU observed in periods
+#' (Oh 2010). Every observation lies in its own period's technology
+#' and in the pooled one, so every distance is feasible, which removes the cross-period infeasibility of the
+#' adjacent-period Malmquist-Luenberger index and makes the index
+#' circular (Oh 2010). It does not address the separate inconsistency
+#' shown by Aparicio, Pastor and Zofio (2013), in which the
+#' technical-change component signals regress although the frontier
+#' moves toward more good and less bad output. For a DMU observed in periods
 #' \eqn{t} and \eqn{t+1},
 #' \deqn{GML = \frac{1 + D_G(t)}{1 + D_G(t+1)}
 #'   = \underbrace{\frac{1 + D_t(t)}{1 + D_{t+1}(t+1)}}_{EC}
@@ -23,15 +28,19 @@
 #' where \eqn{D_G} is the distance to the global frontier and \eqn{D_t}
 #' the distance to period \eqn{t}'s own frontier. \eqn{GML > 1} is
 #' productivity growth; \eqn{EC} is catch-up to the frontier and
-#' \eqn{BPC} is frontier movement.
+#' \eqn{BPC}, the best-practice gap change, is frontier movement.
 #'
 #' Three reference technologies are available. \code{"wd"} (the
 #' default) imposes weak disposability of the bad output (the Kuosmanen
 #' 2005 VRS form, with the intensity weights split into an active and
-#' an abatement part): this is the technology under which Chung, Fare
-#' and Grosskopf (1997) and Oh (2010) define the (global)
-#' Malmquist-Luenberger index, so \code{technology = "wd"} is the
-#' comparator defined by Oh (2010). \code{"input_envelope"} and
+#' an abatement part). With \code{returns = "crs"} and one bad output it
+#' reproduces the constant-returns technology of Chung, Fare and
+#' Grosskopf (1997, Eq. 3.9), which Oh (2010) also uses, and the
+#' abatement weights are then redundant (Kuosmanen 2005). Both papers
+#' index several bad outputs jointly, whereas \code{pgt_ml()} indexes
+#' one pollutant at a time, holding the inputs at their observed levels
+#' as in Chung, Fare and Grosskopf (1997, Eq. 2.6); the
+#' variable-returns default extends it. \code{"input_envelope"} and
 #' \code{"envelope"} instead treat the bad output as reducible down to
 #' the peer emission envelope with no proportional output sacrifice,
 #' with (\code{"input_envelope"}) and without (\code{"envelope"}) the
@@ -56,8 +65,9 @@
 #'   and \code{id} identifying the same DMU across periods. The index
 #'   is defined for a single good output.
 #' @param technology Reference technology: \code{"wd"} (the default)
-#'   imposes weak disposability of the bad output, the technology of
-#'   Oh (2010); \code{"input_envelope"} keeps the input constraints
+#'   imposes weak disposability of the bad output, which with
+#'   \code{returns = "crs"} is the technology of Oh (2010);
+#'   \code{"input_envelope"} keeps the input constraints
 #'   and the lower emission envelope; \code{"envelope"} frees the
 #'   inputs, so the frontier becomes the \eqn{(y, b)} envelope. See
 #'   Details.
@@ -81,6 +91,11 @@
 #' undesirable outputs: A directional distance function approach.
 #' \emph{Journal of Environmental Management}, 51(3), 229--240.
 #' \doi{10.1006/jema.1997.0146}
+#'
+#' Kuosmanen, T. (2005). Weak disposability in nonparametric production
+#' analysis with undesirable outputs. \emph{American Journal of
+#' Agricultural Economics}, 87(4), 1077--1082.
+#' \doi{10.1111/j.1467-8276.2005.00788.x}
 #'
 #' Oh, D.-h. (2010). A global Malmquist-Luenberger productivity index.
 #' \emph{Journal of Productivity Analysis}, 34(3), 183--197.
@@ -209,9 +224,10 @@ pgt_ml <- function(tech, technology = c("wd", "input_envelope", "envelope"),
   lpSolveAPI::get.variables(lp)[ib]
 }
 
-# Weak-disposability directional distance (Kuosmanen 2005 VRS form):
-# the technology under which Chung, Fare and Grosskopf (1997) and Oh
-# (2010) define the (global) Malmquist-Luenberger index. Intensity
+# Weak-disposability directional distance (Kuosmanen 2005 VRS form); with
+# vrs = FALSE the abatement weights are redundant and this is the
+# constant-returns technology on which Chung, Fare and Grosskopf (1997)
+# and Oh (2010) compute the (global) Malmquist-Luenberger index. Intensity
 # weights split into an active part z (scales goods and bads together)
 # and an abatement part w (scales inputs only); direction g = (y_k, b_k).
 #

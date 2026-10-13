@@ -160,3 +160,82 @@ test_that("pgt() retries and reports solves that exceed b", {
   expect_equal(fit$results$status, rep(1L, 3))
   expect_true(all(is.na(fit$results$efficiency)))
 })
+
+# uscoal with the sulfur coefficients scaled by 0.9. Painesville (plant
+# 2936, 38 MWh) is the smallest generator and the lowest emitter, so no
+# peer mix emits less than its own 6.543 t, above its cap of 6.153 t:
+# its input-fixed programme is infeasible. On the unit-magnitude copy its
+# cap row is of order 1e-7. 0.7.1 took the plant for one meeting its cap
+# (an absolute tolerance of 1e-8 there is 0.78 t), retried lp_solve's
+# infeasibility verdict and accepted the first alternative scaling's
+# point 6 per cent above the cap with status 0.
+uscoal_u <- function(ucoal) {
+  d <- pgt::uscoal
+  pgt_tech(x = d[, c("coal", "other_heat", "capacity", "sorbent")],
+           y = d$gen, b = d$so2,
+           u = cbind(coal = ucoal, other_heat = 0, capacity = 0,
+                     sorbent = 0),
+           v = 0, x_abate = "sorbent", id = d$plant)
+}
+
+test_that("wgd_input_fixed reports no point above the cap as optimal", {
+  d <- pgt::uscoal
+  u <- 0.9 * 2 * d$sulfur / 100
+  r <- suppressWarnings(pgt(uscoal_u(u), model = "wgd_input_fixed"))$results
+  i <- which(d$plant == "2936")
+  expect_equal(r$status[i], 2L)
+  expect_true(is.na(r$b_star[i]) && is.na(r$mb_headroom[i]))
+  cap <- u * d$coal
+  ok <- r$status == 0
+  expect_true(all(r$mb_headroom[ok] >= -1e-5 * cap[ok]))
+  # the programme is feasible exactly when its optimum without the cap
+  # row lies within the cap, and then keeps that optimum; a cap out of
+  # reach gives the uncapped programme
+  nocap <- pgt(uscoal_u(rep(1e6, nrow(d))), model = "wgd_input_fixed")$results
+  expect_equal(r$status != 0, nocap$b_star > cap * (1 + 1e-5))
+  expect_equal(r$b_star[ok], nocap$b_star[ok], tolerance = 1e-8)
+})
+
+test_that("the input-fixed kernel rejects lp_solve's point above the cap", {
+  # the solve that produced the point in 0.7.1: Painesville's programme
+  # on the unit-magnitude copy under the first alternative scaling
+  d <- pgt::uscoal
+  sc <- pgt:::.scale_tech(uscoal_u(0.9 * 2 * d$sulfur / 100))$tech
+  ctx <- pgt:::.solve_ctx(sc, "wgd_input_fixed", 1L)
+  i <- which(d$plant == "2936")
+  expect_false(pgt:::.meets_cap(ctx$b_p[i], ctx$mb_cap[i]))
+  sol <- pgt:::.lp_wgd_input_fixed_one(
+    i, sc$x, sc$y, ctx$b_p, ctx$mb_cap, seq_len(sc$L),
+    control = pgt:::.lp_alt_controls[[1]])
+  expect_equal(sol$status, 2L)
+  expect_true(is.na(sol$b_star))
+})
+
+test_that("the row check measures each row against its own magnitude", {
+  lp <- lpSolveAPI::make.lp(0, 2)
+  lpSolveAPI::set.objfn(lp, c(1, 1))
+  lpSolveAPI::add.constraint(lp, c(1, 0), ">=", 1e-7)
+  lpSolveAPI::add.constraint(lp, c(0, 1), ">=", 1)
+  expect_equal(lpSolveAPI::solve.lpExtPtr(lp), 0L)
+  expect_true(pgt:::.lp_verified(lp, n_w = 0))
+  # lpSolveAPI keeps the point when a right-hand side changes: the first
+  # row, of order 1e-7, is now missed by 5 per cent, then by 1e-7
+  lpSolveAPI::set.rhs(lp, 1.05e-7, 1)
+  expect_false(pgt:::.lp_verified(lp, n_w = 0))
+  lpSolveAPI::set.rhs(lp, 1e-7 * (1 + 1e-7), 1)
+  expect_true(pgt:::.lp_verified(lp, n_w = 0))
+
+  # two peer weights summing to one, the second forced to 5e-9 and
+  # carrying an input the unit does not use: once that input's row
+  # allows none, it is broken by the small weight alone, which passes
+  # when the columns are peer weights and fails when they are not
+  lp <- lpSolveAPI::make.lp(0, 2)
+  lpSolveAPI::set.objfn(lp, c(0, 1))
+  lpSolveAPI::add.constraint(lp, c(1, 1), "=", 1)
+  lpSolveAPI::add.constraint(lp, c(0, 1), ">=", 5e-9)
+  lpSolveAPI::add.constraint(lp, c(0, 0.5), "<=", 1e-8)
+  expect_equal(lpSolveAPI::solve.lpExtPtr(lp), 0L)
+  lpSolveAPI::set.rhs(lp, 0, 3)
+  expect_true(pgt:::.lp_verified(lp, n_w = 2))
+  expect_false(pgt:::.lp_verified(lp, n_w = 0))
+})

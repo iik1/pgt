@@ -2,11 +2,14 @@
 #'
 #' Constructs subsampling confidence intervals for the environmental
 #' efficiency scores of a pgt model and for group means, by re-solving
-#' each DMU against random subsamples of the reference set. Subsampling
-#' (m out of n, without replacement) is the resampling scheme with the
-#' firmest footing for the boundary-estimator, slow-convergence setting
-#' of nonparametric frontiers (Kneip, Simar and Wilson 2008; Simar and
-#' Wilson 2011).
+#' each DMU against random subsamples of the reference set (m out of n,
+#' without replacement). Kneip, Simar and Wilson (2008) prove the
+#' m-out-of-n bootstrap, which draws with replacement, consistent for
+#' the variable-returns DEA score of a fixed point when
+#' \eqn{m \to \infty} and \eqn{m/n \to 0}, and Simar and Wilson (2011,
+#' p. 38) note that the resampling can also be done without replacement,
+#' although in their simulations resampling with replacement gave
+#' coverage closer to nominal (p. 49).
 #'
 #' The intervals follow the subsampling recipe of Politis and Romano
 #' (1994): the law of \eqn{L^\kappa(\hat\theta - \theta)} is
@@ -67,8 +70,10 @@
 #'   check the default with [boot_pgt_sensitivity()].
 #' @param level Confidence level for the intervals.
 #' @param kappa Convergence-rate exponent used to rescale the subsample
-#'   distribution. Defaults to the DEA rate \eqn{2/(d+1)} under VRS and
-#'   \eqn{2/d} under CRS (Kneip, Simar and Wilson 2008) for the model's
+#'   distribution. Defaults to the DEA rates \eqn{2/(d+1)} under VRS
+#'   (Kneip, Park and Simar 1998; Kneip, Simar and Wilson 2008, who
+#'   assume a strictly convex technology) and
+#'   \eqn{2/d} under CRS (Park, Jeong and Simar 2010) for the model's
 #'   effective frontier dimension \eqn{d}: \eqn{M+1} for \code{"wgd"}
 #'   and \code{"envelope"}, whose frontiers live in the \eqn{(y, b)}
 #'   space with the inputs free; \eqn{N+M+1} for \code{"wgd_input_fixed"}
@@ -91,6 +96,11 @@
 #'   settings.
 #'
 #' @references
+#' Kneip, A., Park, B. U., & Simar, L. (1998). A note on the convergence
+#' of nonparametric DEA estimators for production efficiency scores.
+#' \emph{Econometric Theory}, 14(6), 783--793.
+#' \doi{10.1017/S0266466698146042}
+#'
 #' Kneip, A., Simar, L., & Wilson, P. W. (2008). Asymptotics and
 #' consistent bootstraps for DEA estimators in nonparametric frontier
 #' models. \emph{Econometric Theory}, 24(6), 1663--1697.
@@ -100,6 +110,11 @@
 #' variance: Central limit theorems for DEA and FDH efficiency scores.
 #' \emph{Econometric Theory}, 31(2), 394--422.
 #' \doi{10.1017/S0266466614000413}
+#'
+#' Park, B. U., Jeong, S.-O., & Simar, L. (2010). Asymptotic
+#' distribution of conical-hull estimators of directional edges.
+#' \emph{The Annals of Statistics}, 38(3), 1320--1340.
+#' \doi{10.1214/09-AOS746}
 #'
 #' Politis, D. N., & Romano, J. P. (1994). Large sample confidence
 #' regions based on subsamples under minimal assumptions. \emph{The

@@ -1,6 +1,7 @@
-# Rodseth (2025) Table 3: the factorially determined multi-output
-# (directional) representation, Eq. 14 (Eq. 13 with abatement fixed at
-# each DMU's own level), applied to the Table 1 pig-finishing example.
+# Rodseth (2025) Table 3: the directional representation, Eq. 13 with
+# abatement fixed at each DMU's own level (by Proposition 4 equivalent to
+# the factorially determined multi-output form of Eq. 14), applied to the
+# Table 1 pig-finishing example.
 #
 # The evaluated DMU's uncontrolled emission is z_i = u_i'x_i - v y_i, and
 # equals the data's `uncontrolled` column by definition. The good-output

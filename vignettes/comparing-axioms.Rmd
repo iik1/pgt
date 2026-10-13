@@ -20,9 +20,10 @@ library(pgt)
 
 How to model a technology that produces both a good and a bad output is
 an open question in the productivity literature. The 2021 symposium in
-the *Journal of Productivity Analysis*, opened by Førsund (2021) and
-continued in the comments of Murty and Russell (2021), Ang and Dakpo
-(2021) and Färe and Grosskopf (2021), with Førsund's (2021) rejoinder,
+the *Journal of Productivity Analysis*, built around a target article by
+Førsund (2021), which argues for a multi-equation model in the tradition
+of Frisch, with comments by Murty and Russell (2021), Ang and Dakpo
+(2021) and Färe and Grosskopf (2021) and Førsund's (2021) rejoinder,
 set the weak-disposability school against the by-production school, with
 the materials-balance view running through both. The choice of axiom
 changes the efficiency scores, so a
@@ -34,7 +35,8 @@ The models split into two families. The materials-balance models are
 built on the account $u'x_l - v y_l \ge b_l$, which enters each
 programme differently:
 
-- `wgd`: weak-G-disposability (Rødseth 2025), where the account enters
+- `wgd`: weak-G-disposability (Hampf and Rødseth 2015, in the form of
+  Rødseth 2025), where the account enters
   only as a valuation of retained output content in the objective.
 - `mb_cost`: the materials-balance cost model (Coelli et al. 2007),
   where the flow coefficients act as a price system on the inputs,
@@ -45,7 +47,7 @@ The reference models come from the competing systems:
 
 - `byprod`: the by-production intersection technology (Murty, Russell and
   Levkoff 2012), reporting output efficiency, emission efficiency and
-  their graph average.
+  their average, the by-production efficiency index.
 - `wd`: weak disposability (Kuosmanen 2005), which imposes no materials
   balance.
 
@@ -136,6 +138,10 @@ Førsund, F. R. (2021). Rejoinders to the comments on my paper
 "Performance measurement and joint production of intended and unintended
 outputs". *Journal of Productivity Analysis*, 55(3), 195-201.
 doi:10.1007/s11123-021-00605-0
+
+Hampf, B., & Rødseth, K. L. (2015). Carbon dioxide emission standards
+for U.S. power plants: An efficiency analysis perspective. *Energy
+Economics*, 50, 140-153. doi:10.1016/j.eneco.2015.04.001
 
 Kuosmanen, T. (2005). Weak disposability in nonparametric production
 analysis with undesirable outputs. *American Journal of Agricultural

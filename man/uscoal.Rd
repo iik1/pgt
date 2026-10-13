@@ -42,7 +42,9 @@ consumption, coal receipts with sulfur content, and Schedule 8C
 air-emissions-control information) and EPA eGRID2022 (measured SO2
 emissions, net generation, nameplate capacity). The SO2 potential of
 a plant's coal is \code{2 * sulfur/100} short tons per short ton of
-coal (molar mass ratio, full conversion), giving a producer-specific
+coal (molar mass ratio, full conversion; Rodseth (2017) puts the
+converted share at about 95 per cent, at which 14 instead of 8
+accounts violate the balance), giving a producer-specific
 material flow coefficient; electricity retains no sulfur, so
 \code{v = 0}. Unlike the synthetic \code{steeldemo} panel, the two
 sides of the account here come from separate data collections, and

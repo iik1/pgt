@@ -44,7 +44,8 @@ pollution-generating technologies have been modelled in nonparametric
 benchmarking since.
 
 Existing R packages handle undesirable outputs by transforming the data
-(the Seiford and Zhu 2002 translation in `deaR`) or by imposing weak
+(the Seiford and Zhu 2002 translation in `deaR`, which also offers a
+directional formulation) or by imposing weak
 disposability and directional distances (`nonparaeff`, `Benchmarking`).
 Neither approach carries a materials-balance account. `pgt` audits the
 account before estimation, lets it enter the estimators as a cap, an
@@ -112,7 +113,8 @@ self-feasible, so its scores lie in $(0, 1]$ on any data.
 
 ## Estimating environmental efficiency
 
-The weak-G-disposability model of Rødseth (2025, Eq. 6) minimises
+The weak-G-disposability model of Hampf and Rødseth (2015), in the
+form of Eq. 6 of Rødseth (2025), minimises
 emissions over peer mixes that hold the good output at the DMU's
 level, pricing any extra good output at the DMU's retained-content
 coefficient $v$; the inputs are decision variables (the programmes are
@@ -133,7 +135,7 @@ fit_env <- pgt(tech, model = "envelope")
 summary(fit_env)
 ```
 
-The directional representation of Rødseth (2025, Eq. 14) needs the
+The directional representation of Rødseth (2025, Eqs. 12 and 13) needs the
 closed account and holds abatement at the DMU's own level; it expands
 the good output and contracts the bad output jointly, so its scores are
 in output units rather than ratios, and the materials-balance row ties
@@ -169,16 +171,16 @@ plot(mac)
 With a technology group, `pgt_decompose()` splits environmental
 efficiency into a within-group and a technology-gap component. The
 envelope decomposition is an exact identity, Total $=$ WR $\times$ TGR,
-where WR is within-route reallocation and TGR the technology-gap ratio
-of the metafrontier tradition (Battese, Rao and O'Donnell 2004;
-O'Donnell, Rao and Battese 2008).
+where WR is the efficiency against the plant's own route frontier and
+TGR the technology gap ratio of Battese, Rao and O'Donnell (2004),
+which O'Donnell, Rao and Battese (2008) call the metatechnology ratio.
 
 ```{r}
 dec <- pgt_decompose(tech, type = "envelope")
 summary(dec)
 ```
 
-The five-component source decomposition of Rødseth (2025, Eq. 11)
+The five-component decomposition of Rødseth (2025, Eq. 11)
 traces each score to production technical efficiency, coefficient
 quality, production allocative efficiency, abatement technical
 efficiency and abatement allocative efficiency; it needs no groups,
@@ -268,6 +270,9 @@ measurement with inference (`vignette("productivity", "pgt")`).
   developments, limits and future prospects in the nonparametric
   framework. *European Journal of Operational Research*, 250(2),
   347-359. doi:10.1016/j.ejor.2015.07.024
+- Hampf, B., & Rødseth, K. L. (2015). Carbon dioxide emission standards
+  for U.S. power plants: An efficiency analysis perspective. *Energy
+  Economics*, 50, 140-153. doi:10.1016/j.eneco.2015.04.001
 - Lauwers, L. (2009). Justifying the incorporation of the materials
   balance principle into frontier-based eco-efficiency models.
   *Ecological Economics*, 68(6), 1605-1614.

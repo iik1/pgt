@@ -20,18 +20,18 @@ test_that("byprod reproduces MRL (2012) Example 1 analytic scores", {
   rownames(r) <- r$id
 
   # DMU3: output efficiency E1 = 1/3, emission efficiency E2 = 1/2,
-  # graph measure E_FGL = 5/12.
+  # by-production index (E1 + E2) / 2 = 5/12.
   expect_equal(r["DMU3", "output_eff"], 1 / 3, tolerance = 1e-7)
   expect_equal(r["DMU3", "efficiency"], 1 / 2, tolerance = 1e-7)
   expect_equal(r["DMU3", "mean_eff"], 5 / 12, tolerance = 1e-7)
 
-  # DMU2: E1 = 3/4, E2 = 1, E_FGL = 7/8.
+  # DMU2: E1 = 3/4, E2 = 1, (E1 + E2) / 2 = 7/8.
   expect_equal(r["DMU2", "output_eff"], 3 / 4, tolerance = 1e-7)
   expect_equal(r["DMU2", "efficiency"], 1, tolerance = 1e-7)
   expect_equal(r["DMU2", "mean_eff"], 7 / 8, tolerance = 1e-7)
 })
 
-test_that("byprod scores are ratios in (0, 1] with FGL their average", {
+test_that("byprod scores are ratios in (0, 1] with mean_eff their average", {
   fit <- pgt(mrl_example1(), model = "byprod", returns = "crs")
   r <- fit$results
   expect_true(all(r$efficiency > 0 & r$efficiency <= 1 + 1e-9))

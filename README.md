@@ -12,7 +12,8 @@ The materials-balance principle goes back to Ayres and Kneese (1969);
 Lauwers (2009) makes the case for building it into frontier models, and
 Dakpo, Jeanneaux and Latruffe (2016) survey the modelling landscape.
 Existing R packages handle undesirable outputs by data translation
-(`deaR`'s Seiford-Zhu undesirable-output models) or by weak
+(`deaR`'s Seiford-Zhu undesirable-output models, alongside a
+directional formulation) or by weak
 disposability and directional distances (`Benchmarking::dea.direct`,
 `nonparaeff`'s directional-distance routines), but, to our knowledge,
 no maintained package in R or any other major statistical ecosystem
@@ -67,7 +68,7 @@ tech <- pgt_tech(
 mb_check(tech)
 
 # 3. Fit the weak-G-disposability model (Rodseth 2025, Eq. 6) and its
-#    directional representation (Eq. 14), which needs the closed account.
+#    directional representation (Eqs. 12 and 13), which needs the closed account.
 fit <- pgt(tech, model = "wgd")
 summary(fit)
 summary(pgt(tech, model = "fdmo"))
@@ -91,10 +92,10 @@ compare_models(tech, models = c("wgd", "byprod", "mb_cost", "wd"))
 |---|---|
 | `pgt_tech()` | Technology constructor: inputs, good/bad outputs, material flow coefficients `u`, `v`, abatement `a`, technology groups, panel `period` |
 | `mb_check()` | Audit of `u'x - v y >= b` per DMU and pollutant, and of the closed identity `u'x - v y = b + a` when abatement is observed |
-| `pgt(model = "wgd")` | Rodseth (2025) weak-G-disposability model, Eq. 6 in reduced form |
+| `pgt(model = "wgd")` | Hampf and Rodseth (2015) weak-G-disposability technology, scored by the minimal-emission programme of Rodseth (2025) Eq. 6 in a reduced form |
 | `pgt(model = "wgd_input_fixed")` | Input-fixed benchmark with the materials-balance cap (the pre-0.6.0 `wgd`) |
 | `pgt(model = "envelope")` | The v = 0 case of Eq. 6: convex lower (y, b) envelope |
-| `pgt(model = "fdmo")` | Rodseth (2025) directional representation, Eq. 14 (alias `"ddf"`) |
+| `pgt(model = "fdmo")` | Rodseth (2025) directional representation, Eq. 13 (indirect form of Eq. 12) with abatement fixed (alias `"ddf"`) |
 | `pgt(model = "mb_cost")` | Coelli et al. (2007) materials-balance cost model, `EE = TE x EAE` |
 | `pgt(model = "byprod")` | Murty-Russell-Levkoff (2012) by-production intersection technology |
 | `pgt(model = "wd")` | Kuosmanen (2005) weak-disposability reference model |
@@ -116,7 +117,7 @@ strength.
 - **Published-table replication.** `pgt(model = "wgd")` reproduces the
   Rødseth (2025) Table 2 minimal controlled emissions
   (16, 16, 16, 20, 16) and the implied uncontrolled-emission and
-  abatement targets for farms A, D and E,
+  abatement targets for every farm,
   `pgt(model = "fdmo")` the Table 3 directional
   scores for farms A to D exactly (farm E is discussed in the
   replication vignette), and `pgt(model = "byprod")` the analytic
@@ -170,6 +171,9 @@ The vignettes reproduce the published-table replications in the open:
   developments, limits and future prospects in the nonparametric
   framework. *European Journal of Operational Research*, 250(2),
   347-359. doi:10.1016/j.ejor.2015.07.024
+- Hampf, B., & Rødseth, K. L. (2015). Carbon dioxide emission standards
+  for U.S. power plants: An efficiency analysis perspective. *Energy
+  Economics*, 50, 140-153. doi:10.1016/j.eneco.2015.04.001
 - Kuosmanen, T. (2005). Weak disposability in nonparametric production
   analysis with undesirable outputs. *American Journal of Agricultural
   Economics*, 87(4), 1077-1082. doi:10.1111/j.1467-8276.2005.00788.x
